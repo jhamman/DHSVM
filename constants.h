@@ -42,6 +42,10 @@
 #define EPS            0.622	/* ratio of molecular weight of water vapor to
 				   that for dry air */
 
+#define FS_CRITERIA    1.0       /* Criteria for determining is a pixel is failed. 
+				    Pixels with factor of safety's less than this number,
+				    are considered failed */
+
 #define G              9.81	/* gravitational accelleration (m/(s^2)) */
 
 #define GRAMSPKG    1000.	/* grams per kilogram */

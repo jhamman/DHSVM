@@ -369,7 +369,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 						     SnowMap[i][j].Swq, SnowMap[i][j].Depth);
 		    
 		    /* check if fine pixel fails */
-		    if (factor_safety < 1 && factor_safety > 0) {
+		    if (factor_safety < FS_CRITERIA && factor_safety > 0) {
                       numfailures++;
 		      numpixels = 1;
 		      failure[y][x] = 1;	      
@@ -426,7 +426,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 							     SnowMap[coursei][coursej].Depth);
 			    
 			    /* check if fine pixel fails */
-			    if (factor_safety < 1 && factor_safety > 0) {
+			    if (factor_safety < FS_CRITERIA && factor_safety > 0) {
 			      numpixels += 1;
 			      failure[y][x] = 1;
 			      
