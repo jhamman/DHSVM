@@ -228,7 +228,7 @@ void PrintDate(DATE * Day, FILE * OutFile)
    ------------------------------------------------------------- */
 void SPrintDate(DATE * Day, char *buffer)
 {
-  sprintf(buffer, "%02d/%02d/%4d-%02d:%02d:%02d", Day->Month, Day->Day,
+  sprintf(buffer, "%02d.%02d.%4d-%02d:%02d:%02d", Day->Month, Day->Day,
 	  Day->Year, Day->Hour, Day->Min, Day->Sec);
 }
 

@@ -88,8 +88,10 @@
 void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
 		     VEGTABLE *VType, VEGPIX **VegMap,
 		     ROADSTRUCT **Network, SOILTABLE *SType,
-		     SOILPIX **SoilMap, CHANNEL *ChannelData)
+		     SOILPIX **SoilMap, CHANNEL *ChannelData,
+		     TIMESTRUCT *Time, OPTIONSTRUCT *Options, DUMPSTRUCT *Dump)
 {
+  const char *Routine = "RouteSubSurface";
   int x;			/* counter */
   int y;			/* counter */
   float BankHeight;
@@ -102,6 +104,16 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
   float AvailableWater;
   int k;
 
+    /* variables for mass wasting dump. */
+  int dumpflag; 
+  int count;
+  void *Array;
+  char buffer[32];
+  char FileName[100];
+  float mgrid;
+
+  FILE *FilePtr;
+
   /* reset the saturated subsurface flow to zero */
   for (y = 0; y < Map->NY; y++) {
     for (x = 0; x < Map->NX; x++) {
@@ -112,6 +124,49 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
       }
     }
   }
+
+
+  /**********************************************************************/
+  /* Hack code to output soil moisture maps for mass wasting algorithm. */
+  
+  if(Options->Sediment && Time->Current.Hour == 00) {
+
+    if (!(Array = calloc(Map->NY * Map->NX, sizeof(float))))
+      ReportError((char *) Routine, 1);
+    
+    count =0;
+    for (y = 0; y < Map->NY; y++) {
+      for (x = 0; x < Map->NX; x++) {
+	if (INBASIN(TopoMap[y][x].Mask)) {
+	  mgrid = (SoilMap[y][x].Depth - SoilMap[y][x].TableDepth)/SoilMap[y][x].Depth;
+	  ((float *)Array)[y*Map->NX + x] = mgrid;
+	  if(mgrid > .85) count += 1;
+	}
+	else ((float *)Array)[y*Map->NX + x] =-99;
+      }
+    }
+
+    if(count > 500) dumpflag = 1;
+    else dumpflag = 0;
+
+    if(dumpflag == 1) {
+      
+      SPrintDate(&(Time->Current), buffer);
+      
+      sprintf(FileName, "%sMap.%s.SatFrac.bin",Dump->Path, buffer);
+      
+      if (!(FilePtr = fopen(FileName, "wb")))
+	ReportError(FileName, 3);
+
+      fwrite(Array, sizeof(float), Map->NY*Map->NX, FilePtr);
+      fclose(FilePtr);
+      free(Array);
+    }
+  }
+
+  
+    /**********************************************************************/
+    /* End added code. */
 
   /* next sweep through all the grid cells, calculate the amount of
      flow in each direction, and divide the flow over the surrounding

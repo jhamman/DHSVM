@@ -41,7 +41,7 @@ int (*Write2DMatrix) (char *FileName, void *Matrix, int NumberType, int NY,
 		      int NX, ...);
 
 /* global strings */
-char *version = "version 0.99 Thu Oct 3, 2002"; /* store version string */
+char *version = "Version 2.0.1 Tues January 21, 2003"; /* store version string */
 char commandline[BUFSIZE + 1] = "";	/* store command line */
 char fileext[BUFSIZ + 1] = "";	/* file extension */
 char errorstr[BUFSIZ + 1] = "";	/* error message */
@@ -328,15 +328,15 @@ int main(int argc, char **argv)
 #ifndef SNOW_ONLY
 
     RouteSubSurface(Time.Dt, &Map, TopoMap, VType, VegMap, Network,
-		    SType, SoilMap, &ChannelData);
+		    SType, SoilMap, &ChannelData, &Time, &Options, &Dump);
 
     if (Options.HasNetwork)
       RouteChannel(&ChannelData, &Time, &Map, TopoMap, SoilMap, &Total);
 
     if (Options.Extent == BASIN)
-      RouteSurface(&Map, &Time, TopoMap, SoilMap, Options.HasNetwork,
+      RouteSurface(&Map, &Time, TopoMap, SoilMap, &Options,
 		   UnitHydrograph, &HydrographInfo, Hydrograph,
-		   &(Dump.Stream), VegMap, VType);
+		   &Dump, VegMap, VType);
 
 #endif
 

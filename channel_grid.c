@@ -247,8 +247,10 @@ ChannelMapPtr **channel_grid_read_map(Channel * net, const char *file,
 	  break;
 	case 4:
 	  cell->cut_height = map_fields[i].value.real;
-	  /*      printf("warning overriding cut depths with 0.95 soil depth \n");
-	     cell->cut_height = SoilMap[row][col].Depth*0.95; */
+	  if (cell->cut_height > SoilMap[row][col].Depth) {
+	    printf("warning overriding cut depths with 0.95 soil depth \n");
+	    cell->cut_height = SoilMap[row][col].Depth*0.95;
+	  }
 	  if (cell->cut_height < 0.0
 	      || cell->cut_height > SoilMap[row][col].Depth) {
 	    error_handler(ERRHDL_ERROR, "%s, line %d: bad cut_depth", file,
@@ -260,7 +262,7 @@ ChannelMapPtr **channel_grid_read_map(Channel * net, const char *file,
 	  cell->cut_width = map_fields[i].value.real;
 	  if (cell->cut_width < 0.0) {
 	    error_handler(ERRHDL_ERROR,
-			  "%s, line %d: bad cut_depth", file, table_lineno());
+			  "%s, line %d: bad cut_width", file, table_lineno());
 	    err++;
 	  }
 	  break;

@@ -38,10 +38,10 @@
 
 *****************************************************************************/
 void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
-		  SOILPIX ** SoilMap, int HasNetwork,
+		  SOILPIX ** SoilMap, OPTIONSTRUCT *Options,
 		  UNITHYDR ** UnitHydrograph,
 		  UNITHYDRINFO * HydrographInfo, float *Hydrograph,
-		  FILES * StreamFile, VEGPIX ** VegMap, VEGTABLE * VType)
+		  DUMPSTRUCT *Dump, VEGPIX ** VegMap, VEGTABLE * VType)
 {
   const char *Routine = "RouteSurface";
   int Lag;			/* Lag time for hydrograph */
@@ -57,7 +57,16 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
   int n;
   float **surface;
 
-  if (HasNetwork) {
+  int dumpflag; 
+  int count;
+  void *Array;
+  char buffer[32];
+  char FileName[100];
+  FILE *FilePtr;
+
+  count = 0;
+
+  if (Options->HasNetwork) {
     if ((surface = (float **) malloc(Map->NY * sizeof(float *))) == NULL) {
       ReportError((char *) Routine, 1);
     }
@@ -71,6 +80,8 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	  if (INBASIN(TopoMap[y][x].Mask)) {
 	    surface[y][x] = SoilMap[y][x].Runoff;
 	    SoilMap[y][x].Runoff = 0.0;
+	    if(surface[y][x] > .01)
+	      count += 1;
 	  }
 	}
       }
@@ -91,11 +102,42 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 		  surface[y][x] * ((float) TopoMap[y][x].Dir[n] /
 				   (float) TopoMap[y][x].TotalDir);
 	      }
-	    }
+ 	    }
 	  }
 	}
       }
     }
+
+    /*************************************************************/
+    /* Hack code added to dump surface runoff maps. */
+    if (Options->Sediment) {
+      dumpflag = 0;
+    
+      if(count > 97) dumpflag = 1;
+
+      if(dumpflag == 1) {
+
+	if (!(Array = calloc(Map->NY * Map->NX, sizeof(float))))
+	  ReportError((char *) Routine, 1);
+	for (y = 0; y < Map->NY; y++)
+	  for (x = 0; x < Map->NX; x++)
+	    ((float *)Array)[y*Map->NX + x] = surface[y][x];
+	SPrintDate(&(Time->Current), buffer);
+	
+	sprintf(FileName, "%s/Map.%s.Runoff.bin",Dump->Path, buffer);
+	
+	if (!(FilePtr = fopen(FileName, "wb")))
+	  ReportError(FileName, 3);
+
+	fwrite(Array, sizeof(float), Map->NY*Map->NX, FilePtr);
+	fclose(FilePtr);
+	free(Array);
+      }
+    }
+
+     /*************************************************************/
+    /* End added code. */
+
 
     for (y = 0; y < Map->NY; y++) {
       free(surface[y]);
@@ -137,7 +179,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
     for (i = 0; i < Time->Dt; i++)
       Hydrograph[HydrographInfo->TotalWaveLength - (i + 1)] = 0.0;
 
-    PrintDate(&(Time->Current), StreamFile->FilePtr);
-    fprintf(StreamFile->FilePtr, " %g\n", StreamFlow);
+    PrintDate(&(Time->Current), Dump->Stream.FilePtr);
+    fprintf(Dump->Stream.FilePtr, " %g\n", StreamFlow);
   }
 }

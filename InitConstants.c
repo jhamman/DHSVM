@@ -67,6 +67,7 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
     {"OPTIONS", "GRADIENT", "", ""},
     {"OPTIONS", "FLOW ROUTING", "", ""},
     {"OPTIONS", "SENSIBLE HEAT FLUX", "", ""},
+    {"OPTIONS", "SEDIMENT", "", ""},
     {"OPTIONS", "INTERPOLATION", "", ""},
     {"OPTIONS", "MM5", "", ""},
     {"OPTIONS", "QPF", "", ""},
@@ -196,6 +197,14 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
     Options->HeatFlux = FALSE;
   else
     ReportError(StrEnv[sensible_heat_flux].KeyName, 51);
+
+  /* Determine whether sediment model variables should be output */
+  if (strncmp(StrEnv[sediment].VarStr, "TRUE", 4) == 0)
+    Options->Sediment = TRUE;
+  else if (strncmp(StrEnv[sediment].VarStr, "FALSE", 5) == 0)
+    Options->Sediment = FALSE;
+  else
+    ReportError(StrEnv[sediment].KeyName, 51);
 
   /* Determine whether the mm5 interface should be used */
   if (strncmp(StrEnv[mm5].VarStr, "TRUE", 4) == 0)

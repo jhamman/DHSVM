@@ -297,13 +297,15 @@ int Round(double x);
 void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
 		     VEGTABLE *VType, VEGPIX **VegMap,
 		     ROADSTRUCT **Network, SOILTABLE *SType,
-		     SOILPIX **SoilMap, CHANNEL *ChannelData);
+		     SOILPIX **SoilMap, CHANNEL *ChannelData, 
+		     TIMESTRUCT *Time, OPTIONSTRUCT *Options, 
+		     DUMPSTRUCT *Dump);
 
 void RouteSurface(MAPSIZE *Map, TIMESTRUCT *Time, TOPOPIX **TopoMap,
-		  SOILPIX **SoilMap, int HasNetwork,
+		  SOILPIX **SoilMap, OPTIONSTRUCT *Options,
 		  UNITHYDR **UnitHydrograph,
 		  UNITHYDRINFO *HydrographInfo, float *Hydrograph,
-		  FILES *StreamFile, VEGPIX **VegMap, VEGTABLE *VType);
+		  DUMPSTRUCT *Dump, VEGPIX **VegMap, VEGTABLE *VType);
 
 float SatVaporPressure(float Temperature);
 

@@ -143,6 +143,7 @@ float WaterTableDepth(int NRootLayers, float TotalDepth, float *RootDepth,
       TotalExcessFCap += ExcessFCap;
     }
     TableDepth = TotalDepth * (1 - TotalExcessFCap / TotalStorage);
+  
     if (TableDepth < 0)
       TableDepth = -(TotalExcessFCap - TotalStorage);
   }

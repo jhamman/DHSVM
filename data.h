@@ -213,6 +213,8 @@ typedef struct {
 				   STATION */
   int HeatFlux;			/* Specifies whether a sensible heat flux 
 				   should be calculated, TRUE or FALSE */
+  int Sediment;                 /* Specifies whether sediment variables should be output,
+				   TRUE or FALSE. */
   int FlowGradient;		/* Specifies whether the flow gradient is based
 				   on the terrain elevation (TOPOGRAPHY) or the 
 				   water table elevation (WATERTABLE).  The 
