@@ -348,7 +348,8 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 		   
 		    /* Assume that all the sediments belong to the smallest  
 		    category of sediment particle sizes (first size, index 0) */
-		    /* COD why is this [xn][yn] instead of [yn][xn] */
+                    /* Note that stream_map and road_map are indexed by [x][y],
+                    unlike the other "map"-type variables. */
 		    ChannelData->stream_map[xn][yn]->channel->sediment.overlandinflow[0] += 
 		      SedOut * ((float) TopoMap[y][x].Dir[n] /(float) TopoMap[y][x].TotalDir); 
 		   
