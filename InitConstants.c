@@ -286,6 +286,14 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
 	      "model. Road Routing being reset to CONVENTIONAL.\n\n");
       Options->RoadRouting = FALSE;
     }
+/* turn off all sediment options if (!Options->Sediment) */
+    if(Options->MassWaste || Options->SurfaceErosion)
+ fprintf(stderr, 
+	      "WARNING: Sediment option has not been chosen. All erosion options are being turned off.\n\n");
+ 
+ Options->MassWaste = FALSE;
+ Options->SurfaceErosion = FALSE;
+
   }
  
 
