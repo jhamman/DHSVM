@@ -48,6 +48,8 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 		  PRECIPPIX **PrecipMap, SEDTABLE *SedType,
 		  float Tair)
 {
+
+  FILE *fo;
   const char *Routine = "RouteSurface";
   int Lag;			/* Lag time for hydrograph */
   int Step;
@@ -64,7 +66,6 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 
 /* JSL: slope is manning's slope; alpha is channel parameter including wetted perimeter, manning's n, and manning's slope.  Beta is 3/5 */
   float knviscosity;           /* kinematic viscosity JSL */  
-float outflowmax=0;             /*max outflow observed JSL */
   double slope, alpha, beta;    
   double outflow;              /* Outflow of water from a pixel during a sub-time step */    
   float VariableDT;            /* Maximum stable time step (s) */  
@@ -73,13 +74,17 @@ float outflowmax=0;             /*max outflow observed JSL */
   float DS;                    /* Median particle diameter (mm) */
   float h;                     /* Water depth (m) */
   float term1, term2, term3;
-  float streampower;           /* (g/s3) */
-  float effectivepower;        /* (g^1.5 * s^-4.5 * cm^-2/3) */
-  float soliddischarge;        /* (g/cm*s) */
+  float streampower;           /* Unit streampower from KINEROS (M/s) */
   float TC;                    /* Transport capacity (m3/m3) */
   float floweff;               /* Flow detachment efficiency (unitless) */
   float settling;              /* Settling velocity (m/s) */
   float Fw;                      /* Water depth correction factor */
+  
+
+ if((fo = fopen("TC.out","a+")) == NULL) {
+    printf("Cannot open/read output file\n");  
+    exit(0);  }  
+
 
   if (Options->Sediment) {
     if ((SedIn = (float **) calloc(Map->NY, sizeof(float *))) == NULL) {
@@ -194,15 +199,16 @@ float outflowmax=0;             /*max outflow observed JSL */
 	    exit(0);
 	  }
 	  
-	  /*COD check for validity of Manning's equation? */
+	
 	  beta = 3./5.;
+
 	  alpha = pow(SType[SoilMap[y][x].Soil-1].Manning*pow(Map->DX,2./3.)/sqrt(slope),beta);
 
-	 
-	 
-	  
-	  /* Calculate discharge (m3/s) from the grid cell using an explicit finite difference
-	     solution of the linear kinematic wave. */
+	  /* calculate unit flow area h according to Kineros */
+
+	  h=((outflow+Runon[y][x])/2.0);
+
+	  /* Calculate discharge (m3/s) from the grid cell using an explicit finite difference solution of the linear kinematic wave. */
 	  
 	  if (channel_grid_has_channel(ChannelData->stream_map, x, y)  
 	      || (channel_grid_has_channel(ChannelData->road_map, x, y) 
@@ -213,11 +219,9 @@ float outflowmax=0;             /*max outflow observed JSL */
 	 
 	      if(Runon[y][x] > 0.0001 || outflow > 0.0001) {
 		outflow = ((VariableDT/Map->DX)*Runon[y][x] + 
-			   alpha*beta*outflow * pow((outflow+Runon[y][x])/2.0,
-						    beta-1.) +
+			   alpha*beta*outflow * pow(h,beta-1.) +
 			   SoilMap[y][x].IExcess*Map->DX*VariableDT/Time->Dt)/
-		  ((VariableDT/Map->DX) + alpha*beta*pow((outflow+
-						Runon[y][x])/2.0, beta-1.));
+		  ((VariableDT/Map->DX) + alpha*beta*pow(h, beta-1.));
 	      }
 	      else if(SoilMap[y][x].IExcess > 0.0)
 		outflow = SoilMap[y][x].IExcess*Map->DX*Map->DY/Time->Dt; 
@@ -229,9 +233,6 @@ float outflowmax=0;             /*max outflow observed JSL */
 	  if(outflow < 0.0) 
 	    outflow = 0.0; /* (m3/s) */
 	  
-	  /* Save flow depth for sediment routing */ 
-	  h = SoilMap[y][x].IExcess; 
-
 	   /*Make sure calculated outflow doesn't exceed available water, 
 	     and update surface water storage */
 	  
@@ -242,63 +243,61 @@ float outflowmax=0;             /*max outflow observed JSL */
 	  else
 	    SoilMap[y][x].IExcess += (Runon[y][x] - outflow)*
 	      VariableDT/(Map->DX*Map->DY);
-	  if (outflow<0){ outflowmax=outflow;
-	  printf("%f \n", outflow);}
+	 
 	  /*************************************************************/
 	  /* PERFORM HILLSLOPE SEDIMENT ROUTING.                       */
 	  /*************************************************************/
 	  
 	  if(Options->Sediment) {
 
-	    /* Only perform sediment routing if there is outflow*/
-	    if((outflow > 0.) && (h > 0.)){
+	    DS = SedType[SoilMap[y][x].Soil-1].d50/1000000.;
+
+            /* calculate unit streampower =u*S in m/s  */
+
+	    streampower= (outflow/Map->DX/h)*slope;
+
+            /* avoid dividing by zero */
+
+	    if (h<=0) streampower=0;
+
+	    /* Only perform sediment routing if there is depth greater than the particle diameter, there is outflow, and streampower is greater than critical streampower */
+	    if((outflow > 0.) && (h > DS ) && (streampower>SETTLECRIT)){
 	      
 	      /* First find potential erosion due to rainfall Morgan et al. (1998). 
 		 Momentum squared of the precip is determined in MassEnergyBalance.c
 		 Converting from kg/m2*s to m3/s*m */
+
 	      if (h <= PrecipMap[y][x].Dm)
 		Fw = 1.;
 	      else
 		Fw = exp(1 - (h/PrecipMap[y][x].Dm));
-
+	      
 	      /* If there is an understory, it is assumed to cover the entire
 		 grid cell. Fract = 1 and DR = 0. */
+
 	      if (VType->OverStory == TRUE) 
 		/* Then (1-VType->Fract[1]) is the fraction of understory */
 		DR = SedType->KIndex * Fw * (1-VType->Fract[1]) *
-		PrecipMap[y][x].MomentSq; /* ((kg/m^2*s) */
+		  PrecipMap[y][x].MomentSq; /* ((kg/m^2*s) */
 	      else
 		/* There is no Overstory, then (1-VType->Fract[0]) is the 
 		   fraction of understory */
 		DR = SedType->KIndex * Fw * (1-VType->Fract[0]) *
-		    PrecipMap[y][x].MomentSq; /* ((kg/m^2*s) */
-	
+		  PrecipMap[y][x].MomentSq; /* ((kg/m^2*s) */
+	      
 	      /* converting units to m3 m-1 s-1*/
 	      DR = DR/PARTDENSITY * Map->DX;
 
-       	      /* from Everaert equations (5) */
-	      streampower= WATER_DENSITY*G*1000.*(outflow/Map->DX)*slope;
+       	      /* from Julien particle settling velocity */
 
-	      effectivepower = pow(streampower,1.5)/pow(h*100.,2./3.);
-	      soliddischarge = (0.000001977) * pow(effectivepower, 1.044) * 
-		pow(SedType[SoilMap[y][x].Soil-1].d50, 0.478); 
-
-	      /* JSL: Convert mass solid discharge to volumetric w/ soil density */ 
-	      /* 0.1 is a conversion factor to get TC in m3/m3*/
-	      
-	      TC = (0.1 * soliddischarge)/((outflow/Map->DX) * PARTDENSITY);
-	      
-	      /* Find erosion due to overland flow after Morgan et al. (1998). */
-	      floweff = 0.79*exp(-0.85*SedType[SoilMap[y][x].Soil-1].Cohesion.mean);
-
-
-			  
-	      DS = SedType[SoilMap[y][x].Soil-1].d50/1000.;
 	      settling = (8.0*knviscosity/DS) *
 		(sqrt(1.+ ((PARTDENSITY/WATER_DENSITY)-1.)*(G*1000)*DS*DS*DS/
 		      (72.*knviscosity*knviscosity)) - 1.0)/1000.;
 	      
-	    
+	      /* calculate transport capacity eq. 7 kineros */
+	      
+	      TC=0.05/(DS*pow((PARTDENSITY/WATER_DENSITY-1),2.))*sqrt(slope*h/G)*(streampower-SETTLECRIT);
+
 	      /* Calculate sediment mass balance. */
 	      term1 = (TIMEWEIGHT/Map->DX);
 	      term2 = alpha/(2.*VariableDT);
@@ -447,7 +446,11 @@ float outflowmax=0;             /*max outflow observed JSL */
     PrintDate(&(Time->Current), Dump->Stream.FilePtr);
     fprintf(Dump->Stream.FilePtr, " %g\n", StreamFlow);
   }
+ fclose(fo);
 }
+
+
+ 
 
 
 /*****************************************************************************

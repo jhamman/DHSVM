@@ -90,6 +90,7 @@
 #define TIMEWEIGHT 0.65
 
 #define VISCOSITY 1.0 /* kinematic viscosity of water in mm2/s */
+#define SETTLECRIT 0.004 /*JSL critical streampower threshold for sediment transport in m/s from KINEROS2 Documentation */
 
 /**************** extern constants - see globals.c ****************/
 
