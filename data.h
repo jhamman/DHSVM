@@ -78,9 +78,9 @@ typedef struct {
 				   soil layer */
   float *EInt;			/* Evaporation from interception for each 
 				   vegetation layer */
-  float **ESoil;		/* Transpiration for each vegetation layer 
+  float **ESoil;		        /* Transpiration for each vegetation layer 
 				   from each soil zone */
-  float EvapSoil;		/* Evaporation from the upper soil layer */
+  float EvapSoil;		        /* Evaporation from the upper soil layer */
 } EVAPPIX;
 
 typedef struct {
@@ -125,10 +125,10 @@ typedef struct {
   float Rh;			/* Relative humidity (%) */
   float Wind;			/* Wind (m/s) */
   float Sin;			/* Incoming shortwave (W/m^2) */
-  float SinBeam;		/* Incoming beam radiation (W/m^2) */
+  float SinBeam;		        /* Incoming beam radiation (W/m^2) */
   float SinDiffuse;		/* Incoming diffuse radiation (W/m^2) */
   float Lin;			/* Incoming longwave (W/m^2) */
-  float AirDens;		/* Air density on kg/m^3 */
+  float AirDens;		        /* Air density on kg/m^3 */
   float Lv;			/* Latent heat of vaporization (J/kg) */
   float Press;			/* Atmospheric pressure (Pa) */
   float Gamma;			/* Psychrometric constant (Pa/C) */
@@ -372,7 +372,7 @@ typedef struct {
   int Soil;			/* Soil type */
   float Depth;			/* Depth of total soil zone, including all root
 				   zone layers, and the saturated zone */
-  float *Moist;			/* Soil moisture content in layers */
+  float *Moist;			/* Soil moisture content in layers (0-1) */
   float *Perc;			/* Percolation from layers */
   float *Temp;			/* Temperature in each layer (C) */
   float TableDepth;		/* Depth of water table below ground surface 
@@ -381,9 +381,9 @@ typedef struct {
 				   datum (m), i.e. corrected for terrain
 				   elevation */
   float SatFlow;		        /* amount of saturated flow generated */
-  float IExcess;		        /* amount of surface runoff generated from
+  float IExcess;		        /* amount of surface runoff (m) generated from
 				   HOF and Return flow */
-  float Runoff;                  /* Surface water flux from the grid cell. */
+  float Runoff;                  /* Surface water flux (m) from the grid cell. */
   float ChannelInt;		/* amount of subsurface flow intercepted by
 				   the channel */
   float RoadInt;		        /* amount of water intercepted by the road */
@@ -547,19 +547,22 @@ typedef struct {
 } MET_MAP_PIX;
 
 typedef struct {
-  float TotalSediment;          /* Time step total sediment flux from the grid cell (m3/m3). */
-  float OldSedIn;               /* Sediment inflow to grid cell from previous time step (m3/m3). */
-  float OldSedOut;              /* Sediment outflow from grid cell from previous time step (m3/m3). */
-  float erosion;                /* Change in grid cell elevation due to erosion (m/timestep). */
+  float TotalSediment;          /* Time step total sediment flux from the 
+				   grid cell (m3/m3). */
+  float OldSedIn;               /* Sediment inflow to grid cell from previous time 
+				   step (m3/m3). */
+  float OldSedOut;              /* Sediment outflow from grid cell from previous time 
+				   step (m3/m3). */
+  float Erosion;                /* Change in grid cell elevation due to erosion (m/timestep). */
 } SEDPIX;
 
 typedef struct {
   char Desc[BUFSIZE + 1];	/* Soil type */
   float KIndex;                  /* Index of soil detachability via raindrop impact (1/J) */
   STATSTABLE Cohesion;		/* Soil cohesion (kPa)  */
-  STATSTABLE Friction;		/* Angle of internal friction */	
-  float SatDensity;	        /* Saturated density for each layer */
-  float d50;                     /* Median grainsize diameter for landslide material (m) */ 
+  STATSTABLE Friction;		/* Angle of internal friction  (degrees)*/	
+  float SatDensity;	        /* Saturated density for each layer (kg/m3) */
+  float d50;                     /* Median grainsize diameter for surface erosion (um) */ 
 } SEDTABLE;
 
 typedef struct node node;
