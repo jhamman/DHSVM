@@ -248,11 +248,10 @@ void ElevationSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap)
   
   for (x = 0; x < Map->NX; x++) {
     for (y = 0; y < Map->NY; y++) {
-      if (TopoMap[y][x].Mask) {
+      if (INBASIN(TopoMap[y][x].Mask)) {
 	
 	/* Count the number of cells in the basin.  Need this to allocate memory for
 	   the new, smaller Elev[] and Coords[][].  */
-	if (INBASIN(TopoMap[y][x].Mask)) 
 	  Map->NumCells++;
 	
 	for (n = 0; n < NDIRS; n++) {
@@ -370,7 +369,7 @@ void HeadSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap, SOILPIX ** SoilMap)
 
   for (x = 0; x < Map->NX; x++) {
     for (y = 0; y < Map->NY; y++) {
-      if (TopoMap[y][x].Mask) {
+      if (INBASIN(TopoMap[y][x].Mask)) {
 
 	float slope, aspect;
 
