@@ -107,7 +107,8 @@ int InitChannelSedInflow(Channel * Head)
 
 *****************************************************************************/
 void RouteChannelSediment(Channel * Head, TIMESTRUCT Time, 
-			  DUMPSTRUCT *Dump, AGGREGATED * Total)
+			  DUMPSTRUCT *Dump, AGGREGATED * Total,
+			  float *SedDiams)
 {
   Channel *Current = NULL;
   float DS,DT_sed,numinc;
@@ -115,7 +116,6 @@ void RouteChannelSediment(Channel * Head, TIMESTRUCT Time,
   float minDT_sed,TotalCapacityUp,TotalCapacityDown;
   float lateral_sed_inflow_rate;
   float TotalCapacity, CapacityUsed;
-  float SedDiams[NSEDSIZES];
   float Qup,Qdown;
   float phi=0.55, theta=0.55,term3,term4; /*space and time weighting factors*/
   int i,tstep;
@@ -123,8 +123,6 @@ void RouteChannelSediment(Channel * Head, TIMESTRUCT Time,
   int order_count;
 
   /* For each of the sediment diameters, calculate the mass balance */
-  DistributeSedimentDiams(SedDiams);  /* find diameter for each portion */
- 
   /* the next 5 lines are from channel_route_network - used to order streams */
   for (order = 1;; order += 1) {
     order_count = 0;

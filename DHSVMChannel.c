@@ -174,7 +174,7 @@ void
 RouteChannel(CHANNEL * ChannelData, TIMESTRUCT * Time, MAPSIZE * Map,
 	    TOPOPIX ** TopoMap, SOILPIX ** SoilMap, AGGREGATED * Total, 
 	     OPTIONSTRUCT *Options, ROADSTRUCT ** Network, 
-	     SOILTABLE * SType)
+	     SOILTABLE * SType, float *SedDiams)
 {
   int x, y;
   int flag;
@@ -182,7 +182,6 @@ RouteChannel(CHANNEL * ChannelData, TIMESTRUCT * Time, MAPSIZE * Map,
   float CulvertFlow;
 
   /* give any surface water to roads w/o sinks */
-  
   for (y = 0; y < Map->NY; y++) {
     for (x = 0; x < Map->NX; x++) {
       if (INBASIN(TopoMap[y][x].Mask)) {
@@ -200,7 +199,7 @@ RouteChannel(CHANNEL * ChannelData, TIMESTRUCT * Time, MAPSIZE * Map,
   }
   
   if(Options->RoadRouting){
-    RouteRoad(Map, Time, TopoMap, SoilMap, Network, SType, ChannelData); 
+    RouteRoad(Map, Time, TopoMap, SoilMap, Network, SType, ChannelData, SedDiams); 
   }
 
   /* route the road network and save results */

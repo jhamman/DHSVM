@@ -28,6 +28,7 @@
 #include "fileio.h"
 #include "getinit.h"
 #include "DHSVMChannel.h"
+#include "channel.h"
 
 /******************************************************************************/
 /*				GLOBAL VARIABLES                              */
@@ -58,6 +59,8 @@ int main(int argc, char **argv)
   float **SkyViewMap = NULL;
   float ***WindModel = NULL;
   int MaxStreamID, MaxRoadID;
+  float SedDiams[NSEDSIZES];
+// float SedDiams;
 
   int flag;
   int i;
@@ -266,7 +269,7 @@ int main(int argc, char **argv)
 
     ReadInitFile(Options.SedFile, &Input);
 
-    InitParameters(Input, &Options, &Map, &Time);
+    InitParameters(Input, &Options, &Map, &Time, SedDiams);
 
     InitSedimentTables(Time.NDaySteps, Input, &SedType, &SType, &VType, &Soil, &Veg);
 
@@ -410,20 +413,20 @@ int main(int argc, char **argv)
 
     if (Options.HasNetwork)
       RouteChannel(&ChannelData, &Time, &Map, TopoMap, SoilMap, &Total, 
-		   &Options, Network, SType);
+		   &Options, Network, SType, SedDiams);
 
     /* Sediment Routing in Channel and output to sediment files */
     if ((Options.HasNetwork) && (Options.Sediment)){
       SPrintDate(&(Time.Current), buffer);
       flag = IsEqualTime(&(Time.Current), &(Time.Start));
       if(Options.RoadRouting){
-	RouteChannelSediment(ChannelData.roads, Time, &Dump, &Total);
+	RouteChannelSediment(ChannelData.roads, Time, &Dump, &Total, SedDiams);
 	channel_save_sed_outflow_text(buffer, ChannelData.roads,
 				      ChannelData.sedroadout,
 				      ChannelData.sedroadflowout, flag);
 	RouteCulvertSediment(&ChannelData, &Map, TopoMap, SedMap, &Total);
       }
-      RouteChannelSediment(ChannelData.streams, Time, &Dump, &Total);
+      RouteChannelSediment(ChannelData.streams, Time, &Dump, &Total, SedDiams);
       channel_save_sed_outflow_text(buffer, ChannelData.streams,
 				    ChannelData.sedstreamout,
 				    ChannelData.sedstreamflowout, flag);

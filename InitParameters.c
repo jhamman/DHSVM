@@ -39,7 +39,7 @@
     LISTPTR Input          - Linked list with input strings
     OPTIONSTRUCT *Options   - Structure with different program options
     MAPSIZE *Map            - Coverage and resolution of model area
-
+4
   Returns      : void
 
   Modifies     : (see list of required above)
@@ -47,7 +47,7 @@
   Comments     :
 *****************************************************************************/
 void InitParameters(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
-		    TIMESTRUCT * Time)
+		    TIMESTRUCT * Time, float *SedDiams)
 {
   int i;			/* counter */
 
@@ -115,6 +115,8 @@ void InitParameters(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   
   if (!CopyFloat(&DEBRISd90, StrEnv[debrisd90].VarStr, 1))
     ReportError(StrEnv[debrisd90].KeyName, 51);
+
+  DistributeSedimentDiams(SedDiams);  /* find diameter for each portion */
 
   /* Determine surface erosion period */
   if (Options->SurfaceErosion == TRUE){

@@ -201,7 +201,7 @@ void InitNewStep(INPUTFILES *InFiles, MAPSIZE *Map, TIMESTRUCT *Time,
 		 float ***MM5Input, float ***WindModel, MAPSIZE *MM5Map);
 
 void InitParameters(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
-		    TIMESTRUCT * Time);
+		    TIMESTRUCT * Time, float *SedDiams);
 
 int InitPixDump(LISTPTR Input, MAPSIZE *Map, uchar **BasinMask, char *Path,
 		int NPix, PIXDUMP **Pix, OPTIONSTRUCT *Options);
@@ -346,7 +346,7 @@ void ResetValues(MAPSIZE *Map, SOILPIX **SoilMap);
 int Round(double x);
 
 void RouteChannelSediment(Channel * Head, TIMESTRUCT Time, 
-			  DUMPSTRUCT *Dump, AGGREGATED * Total);
+			  DUMPSTRUCT *Dump, AGGREGATED * Total, float *SedDiams);
 
 void RouteCulvertSediment(CHANNEL * ChannelData, MAPSIZE * Map,
 			  TOPOPIX ** TopoMap, SEDPIX ** SedMap, 
@@ -358,7 +358,7 @@ void RouteDebrisFlow(float *SedimentToChannel, int prevy,
 
 void RouteRoad(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap, 
 	       SOILPIX ** SoilMap, ROADSTRUCT ** Network, SOILTABLE * SType, 
-	       CHANNEL * ChannelData); 
+	       CHANNEL * ChannelData, float *SedDiams); 
 
 void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
 		     VEGTABLE *VType, VEGPIX **VegMap,

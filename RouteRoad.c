@@ -28,7 +28,7 @@
 *****************************************************************************/
 void RouteRoad(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap, 
 	       SOILPIX ** SoilMap, ROADSTRUCT ** Network, SOILTABLE * SType, 
-	       CHANNEL * ChannelData) 
+	       CHANNEL * ChannelData, float *SedDiams) 
 {
   const char *Routine = "RouteRoad";
   int i,x,y;                     /* Counters */
@@ -53,7 +53,6 @@ void RouteRoad(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
       ReportError((char *) Routine, 1);
   
   NextTime = *Time;
- 
   
   /* Holds the value of the next DHSVM time step. */ 
   IncreaseTime(&NextTime);
