@@ -142,6 +142,10 @@ void InitDump(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   if (Options->Sediment) {
     sprintf(Dump->AggregateSediment.FileName, "%sAggregatedSediment.Values", Dump->Path);
     OpenFile(&(Dump->AggregateSediment.FilePtr), Dump->AggregateSediment.FileName, "w", TRUE);
+
+    // Open file for recording mass balance for entire basin
+    sprintf(Dump->SedBalance.FileName, "%sMassSediment.Balance", Dump->Path);
+    OpenFile(&(Dump->SedBalance.FilePtr), Dump->SedBalance.FileName, "w", TRUE);
   }
 
   // Open file for recording mass balance for entire basin

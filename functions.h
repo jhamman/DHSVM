@@ -305,7 +305,7 @@ PIXMET MakeLocalMetData(int y, int x, MAPSIZE *Map, int DayStep,
 			unsigned char shadow, float SunMax,
 			float SineSolarAltitude);
 
-void MassBalance(DATE *Current, FILES *Out, AGGREGATED *Total,
+void MassBalance(DATE *Current, FILES *Out, FILES *SedOut, AGGREGATED *Total,
 		 WATERBALANCE *Mass);
 
 void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX, 

@@ -35,12 +35,14 @@
   The aggregated values are set to zero in the function RestAggregate,
   which is executed at the beginning of each time step.
 *****************************************************************************/
-void MassBalance(DATE *Current, FILES *Out, AGGREGATED *Total,
+void MassBalance(DATE *Current, FILES *Out, FILES *SedOut, AGGREGATED *Total,
 		 WATERBALANCE *Mass)
 {
   float NewWaterStorage;	/* water storage at the end of the time step */
   float Output;			/* total water flux leaving the basin;  */
   float MassError;		/* mass balance error m  */
+  float MWMMassError;
+  float SedInput, SedOutput, SedMassError;
 
   NewWaterStorage = Total->Soil.IExcess + Total->Road.IExcess + 
     Total->CanopyWater + Total->SoilWater +
@@ -92,5 +94,49 @@ void MassBalance(DATE *Current, FILES *Out, AGGREGATED *Total,
   Mass->CumCulvertSedToChannel += Total->CulvertSedToChannel;
   Mass->CumCulvertReturnSedFlow += Total->CulvertReturnSedFlow;
   Mass->CumSedimentOutflow += Total->SedimentOutflow;
+
+
+/* Calculate mass errors */
+  MWMMassError = Total->Fine.MassWasting -Total->Fine.SedimentToChannel  - 
+  Total->Fine.MassDeposition ;
+
+  SedInput = Total->DebrisInflow + 
+      (Total->SedimentOverlandInflow -Total->CulvertSedToChannel ) + 
+     Total->SedimentOverroadInflow ;
+
+  SedOutput = Total->SedimentOutflow  - 
+      (Total->CulvertSedToChannel + Total->CulvertReturnSedFlow) ; 
+    
+    SedMassError = (Total->ChannelSedimentStorage + 
+		    Total->ChannelSuspendedSediment - 
+		    Mass->LastChannelSedimentStorage) + 
+      SedOutput - SedInput;
+
+   
+
+  PrintDate(Current, SedOut->FilePtr);
+  
+  fprintf(SedOut->FilePtr, "%g %g %g %g %g %g %g %g %g %g %g %g %g %g\n", Total->Fine.MassWasting, Total->Fine.SedimentToChannel, Total->Fine.MassDeposition, MWMMassError, Total->Sediment.Erosion, Total->DebrisInflow, Total->SedimentOverlandInflow, Total->SedimentOverroadInflow, Total->SedimentOutflow, Total->CulvertReturnSedFlow, Total->CulvertSedToChannel,Mass->LastChannelSedimentStorage, Total->ChannelSedimentStorage+Total->ChannelSuspendedSediment,SedMassError);
+
+ Mass->LastChannelSedimentStorage=Total->ChannelSedimentStorage + Total->ChannelSuspendedSediment;
 } 
+
+    /*    1.  Total mass wasted (m3) */
+/*        2. Total mass wasted delivered to channel (m3) */
+/*        3. Total mass deposition (m3) */
+/*        4. Total mass wasting mass error (m3) */
+/*        5. Total road erosion (m3) */
+/*        6. Total road erosion delivered to road channels (m3)  not included yet   */
+/*        7. Total road erosion delivered to hillslope (m3)    not included yet   */                      
+/*        8. Total road erosion delivered to channels (m3)    not included yet   */                       
+/*        9. Total road erosion mass balance error (m3)      not included yet   */                        
+/*       10. Total debris inflow (kg) */
+/*       11. Total overland inflow (kg) */
+/*       12. Total overroad inflow (kg) */
+/*       13. Total sediment outflow (kg) */
+/*       14. Total culvert return sediment flow (kg) */
+/*       15. Total culvert sediment to channel (kg) */
+/*       16. Total amount of sediment stored in channels - initial (kg) */
+/*       17. Total amount of sediment stored in channels - final (kg) */
+/*       18. Total channel erosion mass balance error for the current time step (kg) */
 

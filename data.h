@@ -62,6 +62,9 @@ typedef struct {
 				   for entire basin */
   FILES Balance;		/* File with summed mass balance values
 				   for entire basin */
+
+  FILES SedBalance;		/* File with summed mass balance values
+				   for entire basin */
   FILES Stream;
   int NStates;			/* Number of model state dumps */
   DATE *DState;			/* Array with dates on which to dump state */
@@ -567,6 +570,7 @@ typedef struct {
   float CumCulvertToChannel;
   float CumRunoffToChannel;
   float StartChannelSedimentStorage;
+  float LastChannelSedimentStorage;
   float CumMassWasting;
   float CumSedimentToChannel;
   float CumMassDeposition;

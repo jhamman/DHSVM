@@ -458,7 +458,7 @@ int main(int argc, char **argv)
 	      RadMap, SnowMap, SoilMap, &Total, VType, Network, SedMap, FineMap,
 	      &ChannelData);
     
-    MassBalance(&(Time.Current), &(Dump.Balance), &Total, &Mass);
+    MassBalance(&(Time.Current), &(Dump.Balance), &(Dump.SedBalance), &Total, &Mass);
     
     ExecDump(&Map, &(Time.Current), &(Time.Start), &Options, &Dump, TopoMap,
 	     EvapMap, PrecipMap, RadMap, SnowMap, MetMap, VegMap, &Veg, SoilMap,
