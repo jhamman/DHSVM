@@ -237,7 +237,7 @@ void RouteRoad(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 		if (Network[y][x].OldSedOut[i] <  Network[y][x].OldSedIn[i])
 		  CH = 1.; /* upper limit, indicates deposition */
 		else
-		  CH = 0.02; /* .0025 - 0.35 */
+		  CH = Network[y][x].RoadClass->erodibility_coeff_overland;
 		
 		cg = CH * vs/h; 
 			

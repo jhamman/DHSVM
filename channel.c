@@ -49,6 +49,7 @@ static ChannelClass *alloc_channel_class(void)
   p->infiltration = 0.0;
   p->crown = CHAN_OUTSLOPED;
   p->erodibility_coeff = 0.0;
+  p->erodibility_coeff_overland = 0.0;
   p->d50_road = 0.0;
   p->friction_road = 0.0;
   p->next = (ChannelClass *) NULL;
@@ -89,14 +90,14 @@ static ChannelClass *find_channel_class(ChannelClass * list, ClassID id)
 ChannelClass *channel_read_classes(const char *file, int ChanType, int Sediment)
 {
   ChannelClass *head = NULL, *current = NULL;
-  static const int fields = 9;
+  static const int fields = 10;
   int done;
   int err = 0;
   static char *crown_words[4] = {
     "OUTSLOPED", "CROWNED", "INSLOPED", NULL
   };
 
-  static TableField class_fields[9] = {
+  static TableField class_fields[10] = {
     {"ID", TABLE_INTEGER, TRUE, FALSE, {0}, "", NULL},
     {"Channel Width", TABLE_REAL, TRUE, FALSE, {0.0}, "", NULL},
     {"Bank (stream) or Cut Height (road)", TABLE_REAL, TRUE, FALSE, {0.0}, "",
@@ -107,6 +108,7 @@ ChannelClass *channel_read_classes(const char *file, int ChanType, int Sediment)
      "", NULL},
     {"Road Crown Type", TABLE_WORD, FALSE, FALSE, {0}, "", crown_words},
     {"Road Erodibility Coefficient", TABLE_REAL, FALSE, FALSE, {0.0}, "", NULL},
+    {"Road Erodibility Overland Coefficient", TABLE_REAL, FALSE, FALSE, {0.0}, "", NULL},
     {"Road d50", TABLE_REAL, FALSE, FALSE, {0.0}, "", NULL},
     {"Road Friction Coefficient (Manning's n)", TABLE_REAL, FALSE, FALSE, {0.0}, 
      "", NULL}
@@ -122,6 +124,7 @@ ChannelClass *channel_read_classes(const char *file, int ChanType, int Sediment)
       class_fields[6].required = TRUE;
       class_fields[7].required = TRUE;
       class_fields[8].required = TRUE;
+      class_fields[9].required = TRUE;
     }
   }
 
@@ -218,9 +221,12 @@ ChannelClass *channel_read_classes(const char *file, int ChanType, int Sediment)
 	  current->erodibility_coeff = class_fields[i].value.real;
           break;
 	case 7:
-	  current->d50_road = class_fields[i].value.real;
+	  current->erodibility_coeff_overland = class_fields[i].value.real;
           break;
 	case 8:
+	  current->d50_road = class_fields[i].value.real;
+          break;
+	case 9:
 	  current->friction_road = class_fields[i].value.real;
           break;
 	default:

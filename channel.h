@@ -39,6 +39,8 @@ typedef struct _channel_class_rec_ {
   ChannelCrownType crown;	/* crown type - roads only */
   float erodibility_coeff;	/* erodibility coefficient - roads only
 				   Note: this is only used when SEDIMENT is set to TRUE. */
+  float erodibility_coeff_overland;	/* erodibility coefficient overland - roads only
+				   Note: this is only used when SEDIMENT is set to TRUE. */
   float d50_road;                /* mean diameter (mm) for the road segment - roads only
 				   Note: this is only used when SEDIMENT is set to TRUE. */
   float friction_road;           /* Manning's n for the road surface - roads only
