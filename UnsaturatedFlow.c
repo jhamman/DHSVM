@@ -126,7 +126,6 @@ void UnsaturatedFlow(int Dt, float DX, float DY, float Infiltration,
 				   in each layer (m) */
   float SoilWater;		/* amount of water in each soil layer (m) */
   int i;			/* counter */
-  float oldmoist;
 
   DeepLayerDepth = TotalDepth;
   for (i = 0; i < NSoilLayers; i++)
@@ -211,8 +210,10 @@ void UnsaturatedFlow(int Dt, float DX, float DY, float Infiltration,
   /* added 8/16/2000 by Pascal Storck */
   /* this following statement will force a trap of out of bounds 
      soil moisture in the lowest layer in the mass balance calculation */
-  if (Moist[NSoilLayers] < FCap[NSoilLayers - 1])
-    Moist[NSoilLayers] = FCap[NSoilLayers - 1];
+  if (Moist[NSoilLayers] < FCap[NSoilLayers - 1]) {
+    //    Moist[NSoilLayers] = FCap[NSoilLayers - 1];
+    // fprintf(stderr, "Warning: Deep layer soil moisture is less than field capacity.\n");
+  }
 
   /* Calculate the depth of the water table based on the soil moisture 
      profile and adjust the soil moisture profile, to assure that the soil 

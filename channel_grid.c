@@ -24,12 +24,16 @@
 #include "errorhandler.h"
 #include "settings.h"
 #include "data.h"
+#include "DHSVMChannel.h"
 
 /* -------------------------------------------------------------
-   local function prototypes
+   local function prototype
    ------------------------------------------------------------- */
 static ChannelMapRec *alloc_channel_map_record(void);
 static ChannelMapPtr **channel_grid_create_map(int cols, int rows);
+Channel *Find_First_Segment(ChannelMapPtr ** map, int col, int row, float SlopeAspect, char *Continue);
+Channel *Find_Next_Segment(ChannelMapPtr ** map, int col, int row, int CurrentID, int NextID, char *Continue, float *SedimentToChannel);
+char channel_grid_has_intersection(ChannelMapPtr ** map, int Currid, int Nextid,  int row, int col);
 
 /* -------------------------------------------------------------
    local module variables
@@ -37,6 +41,185 @@ static ChannelMapPtr **channel_grid_create_map(int cols, int rows);
 static int channel_grid_cols = 0;
 static int channel_grid_rows = 0;
 static char channel_grid_initialized = FALSE;
+
+/* -------------------------------------------------------------
+   RouteDebrisFlow
+   ------------------------------------------------------------- */
+void RouteDebrisFlow(float *SedimentToChannel, int y, int x, float SlopeAspect, 
+		     CHANNEL *ChannelData, MAPSIZE *Map)
+{
+  Channel *CurrentSeg;
+  char Continue, Match;
+  int SearchRadius, Flag;
+  int i, j, inti, intj;
+
+  /* Find pointer to segment where debris flow enters channel network.
+     If multiple segments exist in the current gridcell, the debris flow
+     enters the channel with aspect closest to the aspect of the debris flow. */
+
+  CurrentSeg = Find_First_Segment(ChannelData->stream_map, x, y, SlopeAspect, &Continue);
+
+  /* Debris flow hits head wall; all sediment is deposited in channel. */
+  if(Continue == FALSE) {
+    CurrentSeg->sediment += *SedimentToChannel;
+    *SedimentToChannel = 0.0;
+  }
+
+  //  fprintf(stdout, "Debris flow enters network at segment %d, row=%d, col=%d\n", CurrentSeg->id, y, x);
+  
+  /* Continue until basin mouth, or debris flow stops. */
+  while (CurrentSeg->outlet != NULL && Continue ) {
+
+    //   fprintf(stdout, "Next segment equals %d\n", CurrentSeg->outlet->id);
+
+    /* Find row and column of next intersection; first check current cell. */
+    Match = FALSE;
+    Match = channel_grid_has_intersection(ChannelData->stream_map, CurrentSeg->id, 
+    					  CurrentSeg->outlet->id, y, x);
+
+    if(Match==TRUE) {
+      inti = y;
+      intj = x;
+    }
+      
+    /* Find row and column of next intersection; search radially outward. */
+    SearchRadius = 1;
+    Flag = 0;
+    while(!Match) {
+      for(i=y-SearchRadius; i<= y+SearchRadius; i++) {
+	 for(j=x-SearchRadius; j<= x+SearchRadius; j++) {
+	   if(i>=0 && j>=0 && i< Map->NY && j<Map->NX) {
+	     if(i == y-SearchRadius || i == y+SearchRadius) {
+	       Match = channel_grid_has_intersection(ChannelData->stream_map, CurrentSeg->id, 
+						     CurrentSeg->outlet->id, i, j);
+	       //    fprintf(stdout, "Looking for intersection in row=%d, col=%d\n",i,j);
+	     }
+	     else if(j == x-SearchRadius || j ==  x+SearchRadius) {
+	       Match = channel_grid_has_intersection(ChannelData->stream_map, CurrentSeg->id, 
+						     CurrentSeg->outlet->id, i, j);
+	       //  fprintf(stdout, "Looking for intersection in row=%d, col=%d\n",i,j);
+	     }
+	   }
+	   if(Match == TRUE && Flag==0) {
+	     inti = i;
+	     intj = j;
+	     Flag = 1;
+	   }
+	 }
+      }
+      if(Flag==1)
+	Match = TRUE;
+      SearchRadius += 1;
+    }
+
+    //    fprintf(stdout, "Intersection found at row %d, col %d\n", inti, intj);
+  
+    /* Now have location of intersection, check channel aspect. */
+    CurrentSeg = Find_Next_Segment(ChannelData->stream_map, intj, inti, CurrentSeg->id, CurrentSeg->outlet->id, &Continue, SedimentToChannel);
+  }
+
+  //  fprintf(stdout, "Debris flow stopped, Segment = %d\n", CurrentSeg->id);
+}
+
+/* -------------------------------------------------------------
+   Find_Next_Segment
+   ------------------------------------------------------------- */
+
+Channel *Find_Next_Segment(ChannelMapPtr ** map, int col, int row, int CurrentID, int NextID, char *Continue, float *SedimentToChannel)
+{
+  ChannelMapPtr cell = map[col][row];
+  float test;
+  float CurrentAspect, NextAspect;
+  Channel *CurrPtr;
+  Channel *NextPtr;
+
+  while (cell != NULL) {
+    if(cell->channel->id == CurrentID) {
+      CurrentAspect = cell->aspect;
+      CurrPtr = cell->channel;
+      NextPtr = cell->channel->outlet;
+    }
+    if(cell->channel->id == NextID) {
+      NextAspect = cell->aspect;
+    }
+    cell = cell->next;
+  }
+
+  test = fabs(CurrentAspect - NextAspect);
+  if(test > PI) {
+    if(CurrentAspect < NextAspect)
+      test = fabs(CurrentAspect - (NextAspect - 2.*PI));
+    else
+      test = fabs(NextAspect - (CurrentAspect - 2.*PI));
+  }
+  if(test < 0. || test > PI) {
+    fprintf(stderr, "Problem in Find_Next_Segment\n");
+    exit(0);
+  }
+    
+  if(test <= 70. && NextPtr->slope > 0.061) {
+    *Continue = TRUE;
+    *SedimentToChannel += CurrPtr->sediment;
+    CurrPtr->sediment = 0.0;
+  }
+  else {
+    *Continue = FALSE;
+    *SedimentToChannel += CurrPtr->sediment;
+    CurrPtr->sediment = 0.;
+    if(test > 70.) { 
+      NextPtr->sediment += *SedimentToChannel/2.;
+      CurrPtr->sediment = *SedimentToChannel/2.;
+      *SedimentToChannel = 0.0;
+    }
+    else {
+      NextPtr->sediment += *SedimentToChannel;
+      *SedimentToChannel = 0.0;
+    }
+  }
+
+  return (NextPtr);
+}
+
+/* -------------------------------------------------------------
+   Find_First_Segment
+   ------------------------------------------------------------- */
+
+Channel *Find_First_Segment(ChannelMapPtr ** map, int col, int row, float SlopeAspect, char *Continue)
+{
+  ChannelMapPtr cell = map[col][row];
+  float test;
+  float DeltaAspect;
+  Channel *Ptr;
+  
+  DeltaAspect = 2.*PI;
+
+  while (cell != NULL) {
+    test = fabs(SlopeAspect - cell->aspect);
+
+    if(test > PI) {
+      if(SlopeAspect < cell->aspect)
+	test = fabs(SlopeAspect - (cell->aspect - 2.*PI));
+      else
+	test = fabs(cell->aspect - (SlopeAspect - 2.*PI));
+    }
+    if(test < 0. || test > PI) {
+      fprintf(stderr, "Problem in Find_First_Segment\n");
+      exit(0);
+    }
+    
+    if( test < DeltaAspect) {
+      Ptr = cell->channel;
+      DeltaAspect = test;
+    }
+    cell = cell->next;
+  }
+  if(DeltaAspect <= 70.)
+    *Continue = TRUE;
+  else
+    *Continue = FALSE;
+
+  return (Ptr);
+}
 
 /* -------------------------------------------------------------
    alloc_channel_map_record
@@ -332,6 +515,30 @@ int channel_grid_has_sink(ChannelMapPtr ** map, int col, int row)
     cell = cell->next;
   }
   return (test);
+}
+
+/* -------------------------------------------------------------
+   channel_grid_has_intersection
+   ------------------------------------------------------------- */
+char channel_grid_has_intersection(ChannelMapPtr ** map, int Currid, int Nextid,  int row, int col)
+{
+  ChannelMapPtr cell = map[col][row];
+  char Next = FALSE;
+  char Current = FALSE;
+  char Intersection = FALSE;
+
+  while (cell != NULL) {
+    if(cell->channel->id == Currid)
+      Current = TRUE;
+    if(cell->channel->id == Nextid)
+      Next = TRUE;
+    cell = cell->next;
+  }
+
+  if(Current && Next)
+    Intersection = TRUE;
+
+  return (Intersection);
 }
 
 /* -------------------------------------------------------------

@@ -28,6 +28,8 @@
 #ifndef MIN_GRAD
 #define MIN_GRAD .3		/* minimum slope for flow to channel */
 #endif
+
+
 /*****************************************************************************
   RouteSubSurface()
 
@@ -89,7 +91,9 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
 		     VEGTABLE *VType, VEGPIX **VegMap,
 		     ROADSTRUCT **Network, SOILTABLE *SType,
 		     SOILPIX **SoilMap, CHANNEL *ChannelData,
-		     TIMESTRUCT *Time, OPTIONSTRUCT *Options, DUMPSTRUCT *Dump)
+		     TIMESTRUCT *Time, OPTIONSTRUCT *Options, 
+		     char *DumpPath, SEDPIX **SedMap, FINEPIX ***FineMap,
+		     SEDTABLE *SedType, int MaxStreamID)
 {
   const char *Routine = "RouteSubSurface";
   int x;			/* counter */
@@ -104,15 +108,9 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
   float AvailableWater;
   int k;
 
-    /* variables for mass wasting dump. */
-  int dumpflag; 
-  int count;
-  void *Array;
-  char buffer[32];
-  char FileName[100];
+  /* variables for mass wasting trigger. */
+  int count, totalcount;
   float mgrid;
-
-  FILE *FilePtr;
 
   /* reset the saturated subsurface flow to zero */
   for (y = 0; y < Map->NY; y++) {
@@ -124,49 +122,6 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
       }
     }
   }
-
-
-  /**********************************************************************/
-  /* Hack code to output soil moisture maps for mass wasting algorithm. */
-  
-  if(Options->Sediment && Time->Current.Hour == 00) {
-
-    if (!(Array = calloc(Map->NY * Map->NX, sizeof(float))))
-      ReportError((char *) Routine, 1);
-    
-    count =0;
-    for (y = 0; y < Map->NY; y++) {
-      for (x = 0; x < Map->NX; x++) {
-	if (INBASIN(TopoMap[y][x].Mask)) {
-	  mgrid = (SoilMap[y][x].Depth - SoilMap[y][x].TableDepth)/SoilMap[y][x].Depth;
-	  ((float *)Array)[y*Map->NX + x] = mgrid;
-	  if(mgrid > .85) count += 1;
-	}
-	else ((float *)Array)[y*Map->NX + x] =-99;
-      }
-    }
-
-    if(count > 500) dumpflag = 1;
-    else dumpflag = 0;
-
-    if(dumpflag == 1) {
-      
-      SPrintDate(&(Time->Current), buffer);
-      
-      sprintf(FileName, "%sMap.%s.SatFrac.bin",Dump->Path, buffer);
-      
-      if (!(FilePtr = fopen(FileName, "wb")))
-	ReportError(FileName, 3);
-
-      fwrite(Array, sizeof(float), Map->NY*Map->NX, FilePtr);
-      fclose(FilePtr);
-      free(Array);
-    }
-  }
-
-  
-    /**********************************************************************/
-    /* End added code. */
 
   /* next sweep through all the grid cells, calculate the amount of
      flow in each direction, and divide the flow over the surrounding
@@ -310,4 +265,35 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
       }
     }
   }
+
+  /**********************************************************************/
+  /* Call the mass wasting algorithm; currently not very intelligent */
+  
+  if(Options->Sediment && Time->Current.Hour == 00) {
+  
+    count =0;
+    totalcount = 0;
+    for (y = 0; y < Map->NY; y++) {
+      for (x = 0; x < Map->NX; x++) {
+	if (INBASIN(TopoMap[y][x].Mask)) {
+	  mgrid = (SoilMap[y][x].Depth - SoilMap[y][x].TableDepth)/SoilMap[y][x].Depth;
+	  if(mgrid > MTHRESH) count += 1;
+	  totalcount +=1;
+	}
+      }
+    }
+    
+    /* If Greater than SATPERCENT of the pixels have a water table that is at least 85% of 
+       soil depth, call the mass wasting model. */
+
+    if((float)count/((float)totalcount) > SATPERCENT) 
+      {
+	MainMWM(SedMap, FineMap, VType, SedType, ChannelData, DumpPath, SoilMap, Time,
+	    Map, TopoMap, SType, VegMap, MaxStreamID);
+      }
+  }
+ 
+    /**********************************************************************/
+    /* End added code. */
+
 }

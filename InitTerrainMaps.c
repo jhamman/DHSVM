@@ -105,8 +105,8 @@ void InitTopoMap(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
       (*TopoMap)[y][x].Dem = Elev[i];
   free(Elev);
 
-  for (y = 0, i = 0; y < Map->NY; y++)
-    for (x = 0; x < Map->NX; x++, i++)
+  for (y = 0, i = 0; y < Map->NY; y++) 
+    for (x = 0; x < Map->NX; x++, i++) 
       (*TopoMap)[y][x].Mask = Mask[i];
   free(Mask);
 

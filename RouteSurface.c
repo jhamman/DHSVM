@@ -15,6 +15,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <math.h>
 #include <stdlib.h>
 #include "settings.h"
 #include "data.h"
@@ -22,6 +23,7 @@
 #include "DHSVMerror.h"
 #include "functions.h"
 #include "constants.h"
+
 
 /*****************************************************************************
   RouteSurface()
@@ -41,7 +43,9 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 		  SOILPIX ** SoilMap, OPTIONSTRUCT *Options,
 		  UNITHYDR ** UnitHydrograph,
 		  UNITHYDRINFO * HydrographInfo, float *Hydrograph,
-		  DUMPSTRUCT *Dump, VEGPIX ** VegMap, VEGTABLE * VType)
+		  DUMPSTRUCT *Dump, VEGPIX ** VegMap, VEGTABLE * VType, 
+		  SOILTABLE *SType, CHANNEL *ChannelData, SEDPIX **SedMap,
+		  PRECIPPIX **PrecipMap, SEDTABLE *SedType)
 {
   const char *Routine = "RouteSurface";
   int Lag;			/* Lag time for hydrograph */
@@ -49,101 +53,288 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
   float StreamFlow;
   int TravelTime;
   int WaveLength;
+  TIMESTRUCT NextTime;
+  TIMESTRUCT VariableTime;
 
   int i;
   int j;
   int x;
   int y;
   int n;
-  float **surface;
+  float **Runon;
 
-  int dumpflag; 
-  int count;
-  void *Array;
-  char buffer[32];
-  char FileName[100];
-  FILE *FilePtr;
+  /* Kinematic wave routing: */
+  double slope, alpha, beta;
+  double outflow;
+  int k;
+  float VariableDT;
+  float total_in, total_out;
+  float **SedIn, SedOut;
+  float DR, DS;
+  float h, term1, term2, term3;
+  float streampower, effectivepower;
+  float soliddischarge, TC, floweff;
+  float settling;
 
-  count = 0;
-
-  if (Options->HasNetwork) {
-    if ((surface = (float **) malloc(Map->NY * sizeof(float *))) == NULL) {
+  if (Options->Sediment) {
+    if ((SedIn = (float **) calloc(Map->NY, sizeof(float *))) == NULL) {
       ReportError((char *) Routine, 1);
     }
 
     for (y = 0; y < Map->NY; y++) {
-      if ((surface[y] = (float *) malloc(Map->NX * sizeof(float))) == NULL) {
+      if ((SedIn[y] = (float *) calloc(Map->NX, sizeof(float))) == NULL) {
 	ReportError((char *) Routine, 1);
       }
-      else {
+    }
+  }
+
+  if (Options->HasNetwork) {
+    if ((Runon = (float **) calloc(Map->NY, sizeof(float *))) == NULL) {
+      ReportError((char *) Routine, 1);
+    }
+
+    for (y = 0; y < Map->NY; y++) {
+      if ((Runon[y] = (float *) calloc(Map->NX, sizeof(float))) == NULL) {
+	ReportError((char *) Routine, 1);
+      }
+    }
+  
+    // IExcess in meters/time step
+    if(!Options->Routing) {
+ 
+      if(Options->Sediment) {
+	fprintf(stderr, "The sediment model must be run with kinematic wave routing.\n");
+	exit(0);
+      }
+
+      for (y = 0; y < Map->NY; y++) {
 	for (x = 0; x < Map->NX; x++) {
 	  if (INBASIN(TopoMap[y][x].Mask)) {
-	    surface[y][x] = SoilMap[y][x].Runoff;
-	    SoilMap[y][x].Runoff = 0.0;
-	    if(surface[y][x] > .01)
-	      count += 1;
+	    SoilMap[y][x].Runoff = SoilMap[y][x].IExcess;
+	    SoilMap[y][x].IExcess = 0.0;
+	  }
+	}
+      }
+  
+      for (y = 0; y < Map->NY; y++) {
+	for (x = 0; x < Map->NX; x++) {
+	  if (INBASIN(TopoMap[y][x].Mask)) {
+	    if (VType[VegMap[y][x].Veg - 1].ImpervFrac > 0.0) {
+	      SoilMap[TopoMap[y][x].drains_y][TopoMap[y][x].drains_x].IExcess +=
+		SoilMap[y][x].Runoff;
+	    }
+	    else {
+	      for (n = 0; n < NDIRS; n++) {
+		int xn = x + xneighbor[n];
+		int yn = y + yneighbor[n];
+		if (valid_cell(Map, xn, yn)) {
+		  SoilMap[yn][xn].IExcess +=
+		    SoilMap[y][x].Runoff * ((float) TopoMap[y][x].Dir[n] /
+						  (float) TopoMap[y][x].TotalDir);
+		}
+	      }
+	    }
 	  }
 	}
       }
     }
-    for (y = 0; y < Map->NY; y++) {
-      for (x = 0; x < Map->NX; x++) {
-	if (INBASIN(TopoMap[y][x].Mask)) {
-	  if (VType[VegMap[y][x].Veg - 1].ImpervFrac > 0.0) {
-	    SoilMap[TopoMap[y][x].drains_y][TopoMap[y][x].drains_x].Runoff +=
-	      surface[y][x];
+
+    /* Begin code for kinematic wave routing. */    
+    else { 
+
+      NextTime = *Time;
+      VariableTime = *Time;
+
+      /* Holds the value of the next DHSVM time step. */ 
+      IncreaseTime(&NextTime);
+
+ 
+      /* Use the Courant condition to find the maximum stable time step (in seconds). */
+      /* Must be an even increment of Dt. */
+
+      VariableDT = FindDT(SoilMap, Map, Time, TopoMap, SedType);
+      
+      //      fprintf(stderr, "VariableDT = %f\n", VariableDT);
+
+      for (k = 0; k < Map->NumCells; k++) {
+	y = Map->OrderedCells[k].y;
+	x = Map->OrderedCells[k].x;
+	  SoilMap[y][x].Runoff = 0.0;
+	  if(Options->Sediment)
+	    SedMap[y][x].TotalSediment = 0.0;
+      }
+
+      /* Must loop through surface routing multiple times within one DHSVM model time step. */
+
+      while (Before(&(VariableTime.Current), &(NextTime.Current))) {
+    
+	/* Loop thru all of the cells in descending order of elevation */
+	for (k = 0; k < Map->NumCells; k++) {
+	  y = Map->OrderedCells[k].y;
+	  x = Map->OrderedCells[k].x;
+	
+	  outflow = SoilMap[y][x].startRunoff;
+
+	  slope = TopoMap[y][x].Slope;
+	  beta = 3./5.;
+	  alpha = pow(SedType[SoilMap[y][x].Soil-1].Manning*pow(Map->DX,2/3)/sqrt(slope),beta);
+	  
+	  /* Calculate discharge from the grid cell using an explicit finite difference
+	     solution of the linear kinematic wave. */
+
+	  if (channel_grid_has_channel(ChannelData->stream_map, x, y) || channel_grid_has_channel(ChannelData->road_map, x, y)) 
+	    {
+	      outflow = 0.0;
+	    }
+	  else 
+	    {
+	      if(Runon[y][x] > 0.0001 || outflow > 0.0001) {
+
+		outflow = ((VariableDT/Map->DX)*Runon[y][x] + 
+		       alpha*beta*outflow * pow((outflow+Runon[y][x])/2.0, beta-1.) +
+		       SoilMap[y][x].IExcess*Map->DX*VariableDT/Time->Dt) / ((VariableDT/Map->DX) +
+									     alpha*beta*pow((outflow+
+											     Runon[y][x])/2.0, beta-1.));
+	      }
+	      else if(SoilMap[y][x].IExcess > 0.0)
+		outflow = SoilMap[y][x].IExcess*Map->DX*Map->DY/Time->Dt;
+	      else
+		outflow = 0.0;
+	    }
+	  
+	  if(outflow < 0.0) 
+	    outflow = 0.0;
+	  
+	  // Update surface water storage.  Make sure calculated outflow doesn't exceed available water.
+	  // Otherwise, update surface water storage.
+	  
+	  if(outflow > (SoilMap[y][x].IExcess*(Map->DX*Map->DY)/VariableDT + Runon[y][x])) {
+	    outflow = SoilMap[y][x].IExcess*(Map->DX*Map->DY)/VariableDT + (Runon[y][x]);
+	    SoilMap[y][x].IExcess = 0.0;
 	  }
-	  else {
+	  else
+	    SoilMap[y][x].IExcess += (Runon[y][x] - outflow)*VariableDT/(Map->DX*Map->DY);
+	  
+
+	  /*************************************************************/
+	  /* PERFORM HILLSLOPE SEDIMENT ROUTING.                       */
+	  /*************************************************************/
+	  
+	  if(Options->Sediment) {
+	  
+	    /* First find potential erosion due to rainfall Morgan et al. (1998). */   
+	    /* Kinetic energy of the precip is determined in MassEnergyBalance.c */
+
+	    h = SoilMap[y][x].IExcess; 
+	    DR = (SedType[SoilMap[y][x].Soil-1].KIndex/PARTDENSITY) * 
+	      PrecipMap[y][x].KineticEnergy*exp(-1.*SEDEXPONENT*h);
+
+	    /* Find transport capacity of the flow out of this grid cell. */
+	    
+	    streampower= WATER_DENSITY*G*1000.*(outflow/Map->DX)*slope; /* g/s3 */
+
+	    effectivepower = sqrt(streampower)/pow(h*100.,2./3.); /* g^1.5 * s^-4.5 * cm^-2/3 */
+
+	    soliddischarge = (0.000001977) * pow(effectivepower, 1.044) * pow(SedType[SoilMap[y][x].Soil-1].d50, 0.478);  /* g/cm*s */
+
+	    TC = soliddischarge / (10.* (outflow/Map->DX) * PARTDENSITY);
+
+	    /* Find erosion due to overland flow after Morgan et al. (1998). */
+	    
+	    floweff = 0.79*exp(-0.85*SedType[SoilMap[y][x].Soil-1].Cohesion.mean);
+
+	    DS = SedType[SoilMap[y][x].Soil-1].d50/1000.;
+	    settling = (8.0*VISCOSITY/DS) * (sqrt(1.+ (PARTDENSITY - 1000.)*G*DS*DS*DS/(72.*VISCOSITY*VISCOSITY)) - 
+					     1.0)/1000.;
+	    /* Calculate sediment mass balance. */
+ 
+	    term1 = (TIMEWEIGHT/Map->DX);
+	    term2 = alpha/(2.*VariableDT);
+	    term3 = (1.-TIMEWEIGHT/Map->DX);
+	
+	    SedOut = (SedIn[y][x]*(term1*Runon[y][x]-term2*pow(Runon[y][x], beta)) +
+	      SedMap[y][x].OldSedOut*(term2*pow(SoilMap[y][x].startRunoff, beta) -
+				      term3*SoilMap[y][x].startRunoff) +
+	      SedMap[y][x].OldSedIn*(term2*pow(SoilMap[y][x].startRunon, beta) + 
+				     term3*SoilMap[y][x].startRunon) +
+	      DR + floweff*Map->DY*settling*TC)/(term2*pow(outflow, beta) + term1*outflow*floweff*Map->DY*settling);
+
+	    if(SedOut >= TC)
+	      SedOut = (SedIn[y][x]*(term1*Runon[y][x]-term2*pow(Runon[y][x], beta)) +
+	      SedMap[y][x].OldSedOut*(term2*pow(SoilMap[y][x].startRunoff, beta) -
+				      term3*SoilMap[y][x].startRunoff) +
+	      SedMap[y][x].OldSedIn*(term2*pow(SoilMap[y][x].startRunon, beta) + 
+				     term3*SoilMap[y][x].startRunon) +
+	      DR + Map->DY*settling*TC)/(term2*pow(outflow, beta) + term1*outflow*Map->DY*settling);
+
+	      
+	    
+
+	    SedMap[y][x].OldSedOut = SedOut;
+	    SedMap[y][x].OldSedIn = SedIn[y][x];
+	    SedMap[y][x].TotalSediment += SedOut;
+	    SedMap[y][x].erosion = (SedIn[y][x]*Runon[y][x] - SedOut*outflow)*Time->Dt/(Map->DX*Map->DY);;
+	  }
+
+	  /* Save sub-timestep runoff for q(i)(t-1) and q(i-1)(t-1) of next time step. */
+	  SoilMap[y][x].startRunoff = outflow;
+	  SoilMap[y][x].startRunon = Runon[y][x];
+	  
+
+	  /* Calculate total runoff in m/dhsvm timestep. */
+	  SoilMap[y][x].Runoff += outflow*VariableDT/(Map->DX*Map->DY); 
+
+	
+	  /* Redistribute surface water to downslope pixels. */
+	  if(outflow > 0) {  
 	    for (n = 0; n < NDIRS; n++) {
 	      int xn = x + xneighbor[n];
 	      int yn = y + yneighbor[n];
+
+	      /* If a channel cell runoff does not go to downslope pixels. */
 	      if (valid_cell(Map, xn, yn)) {
-		SoilMap[yn][xn].Runoff +=
-		  surface[y][x] * ((float) TopoMap[y][x].Dir[n] /
-				   (float) TopoMap[y][x].TotalDir);
+		Runon[yn][xn] +=
+		  outflow * ((float) TopoMap[y][x].Dir[n] /
+			     (float) TopoMap[y][x].TotalDir);
+
+		if(Options->Sediment)
+		  SedIn[yn][xn] +=
+		    SedOut * ((float) TopoMap[y][x].Dir[n] /
+			     (float) TopoMap[y][x].TotalDir);
 	      }
- 	    }
+	    } /* end loop thru possible flow directions */
 	  }
-	}
-      }
-    }
+	  
+	  /* Initialize runon for next timestep. */
+	  Runon[y][x] = 0.0;
 
-    /*************************************************************/
-    /* Hack code added to dump surface runoff maps. */
-    if (Options->Sediment) {
-      dumpflag = 0;
-    
-      if(count > 97) dumpflag = 1;
-
-      if(dumpflag == 1) {
-
-	if (!(Array = calloc(Map->NY * Map->NX, sizeof(float))))
-	  ReportError((char *) Routine, 1);
-	for (y = 0; y < Map->NY; y++)
-	  for (x = 0; x < Map->NX; x++)
-	    ((float *)Array)[y*Map->NX + x] = surface[y][x];
-	SPrintDate(&(Time->Current), buffer);
+	  total_in += SoilMap[y][x].IExcess;
+	  total_out += SoilMap[y][x].Runoff;
+	  
+	} /* end loop thru ordered basin cells */
 	
-	sprintf(FileName, "%s/Map.%s.Runoff.bin",Dump->Path, buffer);
+        /* Increases time by VariableDT. */
+	IncreaseVariableTime(&VariableTime, VariableDT, &NextTime);
 	
-	if (!(FilePtr = fopen(FileName, "wb")))
-	  ReportError(FileName, 3);
+	/*************************************************************/
 
-	fwrite(Array, sizeof(float), Map->NY*Map->NX, FilePtr);
-	fclose(FilePtr);
-	free(Array);
+      } /* End of internal time step loop. */
+
+    }/* End of code added for kinematic wave routing. */
+
+    if(Options->Sediment) {
+      for (y = 0; y < Map->NY; y++) {
+	free(SedIn[y]);
       }
+      free(SedIn);
     }
-
-     /*************************************************************/
-    /* End added code. */
-
 
     for (y = 0; y < Map->NY; y++) {
-      free(surface[y]);
+      free(Runon[y]);
     }
-    free(surface);
+    free(Runon);
   }
+
   /* MAKE SURE THIS WORKS WITH A TIMESTEP IN SECONDS */
   else {			/* No network, so use unit hydrograph 
 				   method */
@@ -183,3 +374,55 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
     fprintf(Dump->Stream.FilePtr, " %g\n", StreamFlow);
   }
 }
+
+
+/*****************************************************************************
+  FindDT()
+  Find the variable time step that will satisfy the courant condition for stability 
+  in overland flow routing.
+*****************************************************************************/
+
+float FindDT(SOILPIX **SoilMap, MAPSIZE *Map, TIMESTRUCT *Time, 
+	     TOPOPIX **TopoMap, SEDTABLE *SedType)
+{
+  int x, y;
+  float slope, beta, alpha;
+  float Ck;
+  float DT, minDT;
+  float numinc;
+  float maxRunoff;
+
+  maxRunoff = -99.;
+  minDT = 36000.;
+
+  for (y = 0; y < Map->NY; y++) {
+    for (x = 0; x < Map->NX; x++) {
+
+      slope = TopoMap[y][x].Slope;
+      beta = 3./5.;
+      alpha = pow(SedType[SoilMap[y][x].Soil-1].Manning*pow(Map->DX,2/3)/sqrt(slope),beta);
+
+      /* Calculate flow velocity from discharge  using manning's equation. */
+      Ck = 1./(alpha*beta*pow(SoilMap[y][x].Runoff, beta -1.));
+
+      if(SoilMap[y][x].Runoff > maxRunoff) {
+	maxRunoff = SoilMap[y][x].Runoff;
+      }
+
+      if(Map->DX/Ck < minDT)
+	minDT = Map->DX/Ck;
+
+    }
+  }
+
+  /* Find the time step that divides evenly into Time->DT */
+  
+  numinc = (float) ceil((double)Time->Dt/minDT);
+  DT = Time->Dt/numinc;
+	
+  if(DT > Time->Dt)
+    DT = (float) Time->Dt;
+
+  return DT;
+}
+

@@ -67,7 +67,9 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
     {"OPTIONS", "GRADIENT", "", ""},
     {"OPTIONS", "FLOW ROUTING", "", ""},
     {"OPTIONS", "SENSIBLE HEAT FLUX", "", ""},
+    {"OPTIONS", "OVERLAND ROUTING", "", ""},
     {"OPTIONS", "SEDIMENT", "", ""},
+    {"OPTIONS", "SEDIMENT INPUT FILE", "", ""},
     {"OPTIONS", "INTERPOLATION", "", ""},
     {"OPTIONS", "MM5", "", ""},
     {"OPTIONS", "QPF", "", ""},
@@ -198,13 +200,45 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   else
     ReportError(StrEnv[sensible_heat_flux].KeyName, 51);
 
-  /* Determine whether sediment model variables should be output */
+  /* Determine overland flow routing method to use */
+  if (strncmp(StrEnv[routing].VarStr, "KINEMATIC", 4) == 0)
+    Options->Routing = TRUE;
+  else if (strncmp(StrEnv[routing].VarStr, "CONVENTIONAL", 5) == 0)
+    Options->Routing = FALSE;
+  else
+    ReportError(StrEnv[routing].KeyName, 51);
+
+    /* Determine whether sediment model should be run */
   if (strncmp(StrEnv[sediment].VarStr, "TRUE", 4) == 0)
     Options->Sediment = TRUE;
   else if (strncmp(StrEnv[sediment].VarStr, "FALSE", 5) == 0)
     Options->Sediment = FALSE;
   else
     ReportError(StrEnv[sediment].KeyName, 51);
+
+  /* Check for compatible options. */
+  if(Options->Sediment == TRUE) {
+    if(!Options->Routing) {
+      fprintf(stderr, "WARNING: Sediment model cannot be run with conventional overland flow routing.\n");
+      fprintf(stderr, "Overland Routing being reset to Kinematic.\n");
+      Options->Routing = TRUE;
+    }
+  }
+
+  if(Options->Routing == TRUE) {
+    if(!Options->Sediment) {
+      fprintf(stderr, "WARNING: Kinematic wave routing cannot be run without the sediment\n");
+      fprintf(stderr, "model because manning's n is not being read.  This should be fixed..\n");
+      fprintf(stderr, "Sediment being reset to TRUE.\n");
+      Options->Sediment = TRUE;
+    }
+  }
+
+  if(Options->Sediment == TRUE) {
+    if (IsEmptyStr(StrEnv[sed_input_file].VarStr))
+      ReportError(StrEnv[sed_input_file].KeyName, 51);
+    strcpy(Options->SedFile, StrEnv[sed_input_file].VarStr);
+  }
 
   /* Determine whether the mm5 interface should be used */
   if (strncmp(StrEnv[mm5].VarStr, "TRUE", 4) == 0)

@@ -462,6 +462,7 @@ void InitModelState(DATE * Start, MAPSIZE * Map, OPTIONSTRUCT * Options,
     for (x = 0; x < Map->NX; x++) {
       if (INBASIN(TopoMap[y][x].Mask)) {
 	SoilMap[y][x].Runoff = ((float *) Array)[y * Map->NX + x];
+	SoilMap[y][x].startRunoff = 0.0;
       }
     }
   }

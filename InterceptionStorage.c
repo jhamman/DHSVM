@@ -26,13 +26,18 @@
   InterceptionStorage()
 *****************************************************************************/
 void InterceptionStorage(int NMax, int NAct, float *MaxInt, float *Fract,
-			 float *Int, float *Precip)
+			 float *Int, float *Precip, float *KE, float *Height, 
+			 unsigned char Understory, float Dt)
 {
   float Available;		/* Available storage */
   float Intercepted;		/* Amount of water intercepted during this 
 				   timestep */
   int i;			/* counter */
+  float OriginalPrecip;
 
+  OriginalPrecip = *Precip;
+
+  
   /* The precipitation is multiplied by the fractional coverage, since if the 
      vegetation covers only 10% of the grid cell, only 10% can be intercepted as a 
      maximum */
@@ -44,6 +49,23 @@ void InterceptionStorage(int NMax, int NAct, float *MaxInt, float *Fract,
       Intercepted = Available;
     *Precip -= Intercepted;
     Int[i] += Intercepted;
+  }
+
+  /* Find kinetic energy of rainfall for use by the sediment model. */
+  if(Understory) {
+    
+    /* Since the understory is assumed to cover the entire grid cell, all 
+       KE is associated with leaf drainage, eq. 23, Morgan et al. (1998) */
+    
+    if(Height[1] > .14)
+      *KE = *Precip * 1000. * (15.8*sqrt(Height[1]) - 5.87); 
+    else
+      *KE = 0.0;
+  }
+  else {
+    /* If no understory, part of the rainfall reaches the ground as direct throughfall. */
+    *KE = 1000.*(OriginalPrecip*(8.95+8.44*log10(OriginalPrecip*1000./Dt))*(1-Fract[0]) +
+      *Precip * (15.8*sqrt(Height[0])-5.87));
   }
 
   /* WORK IN PROGESS */

@@ -69,6 +69,7 @@ struct _channel_rec_ {
   float outflow;		/* cubic meters */
   float storage;		/* cubic meters */
   float last_lateral_inflow;	/* cubic meters */
+  float sediment;               /* cubic meters */
 
   struct _channel_rec_ *outlet;	/* NULL if does not drain to another segment */
 
@@ -87,7 +88,7 @@ void channel_free_classes(ChannelClass * head);
 
 				/* Channel */
 
-Channel *channel_read_network(const char *file, ChannelClass * class_list);
+Channel *channel_read_network(const char *file, ChannelClass * class_list, int *MaxID);
 void channel_routing_parameters(Channel * net, int deltat);
 Channel *channel_find_segment(Channel * net, SegmentID id);
 int channel_step_initialize_network(Channel * net);
@@ -102,5 +103,7 @@ void channel_free_network(Channel * net);
 
 void channel_init(void);
 void channel_done(void);
+void initialize_sediment_array(Channel * head, float *InitialSegmentSediment);
+void update_sediment_array(Channel * head, float *InitialSegmentSediment);
 
 #endif

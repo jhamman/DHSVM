@@ -31,5 +31,6 @@ extern int yneighbor[NDIRS];
 void ElevationSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap);
 void HeadSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap, SOILPIX ** SoilMap);
 int valid_cell(MAPSIZE * Map, int x, int y);
+int valid_cell_fine(MAPSIZE *Map, int x, int y);
 
 #endif

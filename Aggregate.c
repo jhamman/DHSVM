@@ -141,7 +141,7 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
 	Total->Soil.Qe += SoilMap[y][x].Qe;
 	Total->Soil.Qg += SoilMap[y][x].Qg;
 	Total->Soil.Qst += SoilMap[y][x].Qst;
-	Total->Runoff += SoilMap[y][x].Runoff;
+	Total->Runoff += SoilMap[y][x].IExcess;
 	Total->ChannelInt += SoilMap[y][x].ChannelInt;
 	SoilMap[y][x].ChannelInt = 0.0;
 	Total->RoadInt += SoilMap[y][x].RoadInt;

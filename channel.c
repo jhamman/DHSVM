@@ -265,6 +265,29 @@ Channel *channel_find_segment(Channel * head, SegmentID id)
 }
 
 /* -------------------------------------------------------------
+   initialize_sediment_array
+   ------------------------------------------------------------- */
+void initialize_sediment_array(Channel * head, float *InitialSegmentSediment)
+{
+  for (; head != NULL; head = head->next) {
+    InitialSegmentSediment[head->id] += head->sediment;
+  }
+
+}
+
+/* -------------------------------------------------------------
+   update_sediment_array
+   ------------------------------------------------------------- */
+void update_sediment_array(Channel * head, float *InitialSegmentSediment)
+{
+  for (; head != NULL; head = head->next) {
+    head->sediment = InitialSegmentSediment[head->id];
+  }
+
+}
+
+
+/* -------------------------------------------------------------
    channel_routing_parameters
    ------------------------------------------------------------- */
 void channel_routing_parameters(Channel * network, int deltat)
@@ -323,7 +346,7 @@ void channel_routing_parameters(Channel * network, int deltat)
 /* -------------------------------------------------------------
    channel_read_network
    ------------------------------------------------------------- */
-Channel *channel_read_network(const char *file, ChannelClass * class_list)
+Channel *channel_read_network(const char *file, ChannelClass * class_list, int *MaxID)
 {
   Channel *head = NULL, *current = NULL;
   int err = 0;
@@ -353,6 +376,7 @@ Channel *channel_read_network(const char *file, ChannelClass * class_list)
     return NULL;
   }
 
+  *MaxID = 0;
   done = FALSE;
   while (!done) {
     int i;
@@ -382,6 +406,7 @@ Channel *channel_read_network(const char *file, ChannelClass * class_list)
 	switch (i) {
 	case 0:
 	  current->id = chan_fields[i].value.integer;
+	  if(current->id > *MaxID) *MaxID = current->id;
 	  if (current->id <= 0) {
 	    error_handler(ERRHDL_ERROR,
 			  "%s: segment %d: channel id invalid",

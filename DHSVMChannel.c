@@ -28,7 +28,7 @@
    -------------------------------------------------------------------------- */
 void
 InitChannel(LISTPTR Input, MAPSIZE * Map, int deltat, CHANNEL * channel,
-	    SOILPIX ** SoilMap)
+	    SOILPIX ** SoilMap, int *MaxStreamID, int *MaxRoadID)
 {
   int i;
   STRINIENTRY StrEnv[] = {
@@ -71,7 +71,7 @@ InitChannel(LISTPTR Input, MAPSIZE * Map, int deltat, CHANNEL * channel,
     }
     if ((channel->streams =
 	 channel_read_network(StrEnv[stream_network].VarStr,
-			      channel->stream_class)) == NULL) {
+			      channel->stream_class, MaxStreamID)) == NULL) {
       ReportError(StrEnv[stream_network].VarStr, 5);
     }
     if ((channel->stream_map =
@@ -94,7 +94,7 @@ InitChannel(LISTPTR Input, MAPSIZE * Map, int deltat, CHANNEL * channel,
     }
     if ((channel->roads =
 	 channel_read_network(StrEnv[road_network].VarStr,
-			      channel->road_class)) == NULL) {
+			      channel->road_class, MaxRoadID)) == NULL) {
       ReportError(StrEnv[road_network].VarStr, 5);
     }
     if ((channel->road_map =
@@ -163,17 +163,16 @@ RouteChannel(CHANNEL * ChannelData, TIMESTRUCT * Time, MAPSIZE * Map,
     for (x = 0; x < Map->NX; x++) {
       if (INBASIN(TopoMap[y][x].Mask)) {
 	if (channel_grid_has_channel(ChannelData->road_map, x, y) && !channel_grid_has_sink(ChannelData->road_map, x, y)) {	/* road w/o sink */
-	  SoilMap[y][x].RoadInt += SoilMap[y][x].Runoff;
+	  SoilMap[y][x].RoadInt += SoilMap[y][x].IExcess;
 	  channel_grid_inc_inflow(ChannelData->road_map, x, y,
-				  SoilMap[y][x].Runoff * Map->DX * Map->DY);
-	  SoilMap[y][x].Runoff = 0.0f;
+				  SoilMap[y][x].IExcess * Map->DX * Map->DY);
+	  SoilMap[y][x].IExcess = 0.0f;
 	}
       }
     }
   }
 
-  /* route the road network and save
-     results */
+   /* route the road network and save results */
 
   SPrintDate(&(Time->Current), buffer);
   flag = IsEqualTime(&(Time->Current), &(Time->Start));
@@ -195,15 +194,16 @@ RouteChannel(CHANNEL * ChannelData, TIMESTRUCT * Time, MAPSIZE * Map,
 
 	if (channel_grid_has_channel(ChannelData->stream_map, x, y)) {
 	  channel_grid_inc_inflow(ChannelData->stream_map, x, y,
-				  (SoilMap[y][x].Runoff +
+				  (SoilMap[y][x].IExcess + 
 				   CulvertFlow) * Map->DX * Map->DY);
-	  SoilMap[y][x].ChannelInt += SoilMap[y][x].Runoff;
+	  SoilMap[y][x].ChannelInt += SoilMap[y][x].IExcess;
+		  
 	  Total->CulvertToChannel += CulvertFlow;
-	  Total->RunoffToChannel += SoilMap[y][x].Runoff;
-	  SoilMap[y][x].Runoff = 0.0f;
+	  Total->RunoffToChannel += SoilMap[y][x].IExcess;
+	  SoilMap[y][x].IExcess = 0.0f;
 	}
 	else {
-	  SoilMap[y][x].Runoff += CulvertFlow;
+	  SoilMap[y][x].IExcess += CulvertFlow;
 	  Total->CulvertReturnFlow += CulvertFlow;
 	}
       }

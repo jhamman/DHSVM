@@ -138,6 +138,12 @@ typedef struct {
 } PIXMET;
 
 typedef struct {
+  float Rank;
+  int   x;
+  int   y;
+} ITEM;
+
+typedef struct {
   char System[BUFSIZE + 1];	/* Coordinate system */
   double Xorig;			/* X coordinate of Northwest corner */
   double Yorig;			/* Y coordinate of Northwest corner */
@@ -150,6 +156,11 @@ typedef struct {
   float DXY;			/* Pixel spacing in diagonal */
   int OffsetX;			/* Offset in x-direction compared to basemap */
   int OffsetY;			/* Offset in y-direction compared to basemap */
+  int NumCells;                 /* Number of cells within the basin */
+  int NYfine;
+  int NXfine;
+  float DMASS;			/* Pixel spacing for mass wasting algorithm */
+  ITEM *OrderedCells;           /* Structure array to hold the ranked elevations;  NumCells in size */
 } MAPSIZE;
 
 typedef struct {
@@ -215,6 +226,8 @@ typedef struct {
 				   should be calculated, TRUE or FALSE */
   int Sediment;                 /* Specifies whether sediment variables should be output,
 				   TRUE or FALSE. */
+  int Routing;                  /* Overland flow routing indicator, either CONVENTIONAL
+				   or KINEMATIC. */
   int FlowGradient;		/* Specifies whether the flow gradient is based
 				   on the terrain elevation (TOPOGRAPHY) or the 
 				   water table elevation (WATERTABLE).  The 
@@ -233,6 +246,7 @@ typedef struct {
   int Outside;			/* if TRUE then all listed met stats are used */
   int Rhoverride;		/* if TRUE then RH=100% if Precip>0 */
   int Shading;			/* if TRUE then terrain shading for solar is on */
+  char SedFile[BUFSIZE+1];	/* Filename for sediment input file  */
   char PrismDataPath[BUFSIZE + 1];
   char PrismDataExt[BUFSIZE + 1];
   char ShadingDataPath[BUFSIZE + 1];
@@ -245,6 +259,8 @@ typedef struct {
   float Precip;			/* Total amount of precipitation at pixel (m) */
   float RainFall;		/* Amount of rainfall (m) */
   float SnowFall;		/* Amount of snowfall (m) */
+  float KineticEnergy;          /* Rainfall energy at the ground surface, used for
+				   the sediment model (J/m2*mm). */
   float *IntRain;		/* Rain interception by each vegetation layer
 				   (m) */
   float *IntSnow;		/* Snow interception by each vegetation layer
@@ -351,8 +367,9 @@ typedef struct {
 				   datum (m), i.e. corrected for terrain
 				   elevation */
   float SatFlow;		/* amount of saturated flow generated */
-  float Runoff;			/* amount of surface runoff generated from
+  float IExcess;		/* amount of surface runoff generated from
 				   HOF and Return flow */
+  float Runoff;                 /* Surface water flux from the grid cell. */
   float ChannelInt;		/* amount of subsurface flow intercepted by
 				   the channel */
   float RoadInt;		/* amount of water intercepted by the road */
@@ -365,7 +382,9 @@ typedef struct {
   float Qst;			/* Ground heat storage */
   float Ra;			/* Soil surface aerodynamic resistance (s/m) */
   float SurfaceWater;		/* used in the impervious calculations (m) */
-
+  float startRunoff;            /* Surface water flux from the previus (sub) time step. */
+  float startRunon;             /* Surface water flux from the previus (sub) time step. */
+                                /* Used for kinematic wave routing. */
 } SOILPIX;
 
 typedef struct {
@@ -397,6 +416,16 @@ typedef struct {
   float Freeze;			/* albedo when surface temperature below 0 C */
   float Thaw;			/* albedo when surface temperature above 0 C */
 } SNOWTABLE;
+
+typedef struct {
+  char Distribution[BUFSIZE+1];	/* Distribution type */
+  float mean;
+  float stdev;
+  float min;
+  float max;
+  float mode;
+} STATSTABLE;
+
 
 typedef struct {
   float Dem;			/* Elevations */
@@ -470,6 +499,8 @@ typedef struct {
 				   the top of the trunk space */
   float U[2];			/* Wind speed profile (m/s) */
   float USnow;			/* wind speed 2, above snow surface (m/s) */
+  STATSTABLE RootCoh;           /* Used for the mass wasting model. */
+  STATSTABLE VegSurcharge;      /* Used for the mass wasting model. */
 } VEGTABLE;
 
 typedef struct {
@@ -511,4 +542,39 @@ typedef struct {
   float humidity;
 } MET_MAP_PIX;
 
+typedef struct {
+  float TotalSediment;          /* Time step total sediment flux from the grid cell (m3/m3). */
+  float OldSedIn;               /* Sediment inflow to grid cell from previous time step (m3/m3). */
+  float OldSedOut;              /* Sediment outflow from grid cell from previous time step (m3/m3). */
+  float erosion;                /* Change in grid cell elevation due to erosion (m/timestep). */
+} SEDPIX;
+
+typedef struct {
+  char Desc[BUFSIZE + 1];	/* Soil type */
+  float Manning;                /* Manning's roughness of the soil surface. */
+  float KIndex;                 /* Index of soil detachability via raindrop impact (g/J). */
+  STATSTABLE Cohesion;		/* Soil cohesion (kPa) . */
+  STATSTABLE Friction;		/* Angle of internal friction. */	
+  float SatDensity;	        /* Saturated density for each layer */
+  float d50;
+} SEDTABLE;
+
+typedef struct node node;
+struct node {
+  node *next;
+  int x;
+  int y;
+};
+
+typedef struct {
+  float Dem; 
+  float Slope;
+  float bedrock;
+  float sediment;
+  float SatThickness;            /* Water table thickness (m) */
+  float DeltaDepth;
+  float probability;             /* Pixel failure probability. */
+} FINEPIX; 
+
 #endif
+

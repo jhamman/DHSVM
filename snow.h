@@ -30,7 +30,8 @@ void SnowInterception(int y, int x, int Dt, float F, float LAI,
 		      float Lv, PIXRAD * LocalRad, float Press, float Tair,
 		      float Vpd, float Wind, float *RainFall, float *SnowFall,
 		      float *IntRain, float *IntSnow, float *TempIntStorage,
-		      float *VaporMassFlux, float *Tcanopy, float *MeltEnergy);
+		      float *VaporMassFlux, float *Tcanopy, float *MeltEnergy, 
+		      float *KineticEnergy, float *Height, unsigned char UnderStory);
 
 float SnowMelt(int y, int x, int Dt, float Z, float Displacement, float Z0,
 	       float BaseRa, float AirDens, float EactAir, float Lv,

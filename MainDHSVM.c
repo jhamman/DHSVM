@@ -57,6 +57,7 @@ int main(int argc, char **argv)
   unsigned char ***ShadowMap = NULL;
   float **SkyViewMap = NULL;
   float ***WindModel = NULL;
+  int MaxStreamID, MaxRoadID;
 
   int i;
   int j;
@@ -75,7 +76,7 @@ int main(int argc, char **argv)
   AGGREGATED Total = {		/* Total or average value of a 
 				   variable over the entire basin */
     {0.0, NULL, NULL, NULL, NULL, 0.0},	/* EVAPPIX */
-    {0.0, 0.0, 0.0, NULL, NULL, 0.0},	/* PRECIPPIX */
+    {0.0, 0.0, 0.0, 0.0, NULL, NULL, 0.0},	/* PRECIPPIX */
     {{0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, 0.0, 0.0, 0.0},	/* PIXRAD */
     {0.0, 0.0},		/* RADCLASSPIX */
     {0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0,
@@ -101,6 +102,7 @@ int main(int argc, char **argv)
 				   options to follow */
   PIXMET LocalMet;		/* Meteorological conditions for current pixel
 				 */
+  FINEPIX **FineMap = NULL;
   PRECIPPIX **PrecipMap = NULL;
   RADARPIX **RadarMap = NULL;
   RADCLASSPIX **RadMap = NULL;
@@ -110,7 +112,9 @@ int main(int argc, char **argv)
   MET_MAP_PIX **MetMap = NULL;
   SNOWTABLE *SnowAlbedo = NULL;
   SOILPIX **SoilMap = NULL;
+  SEDPIX **SedMap = NULL;
   SOILTABLE *SType = NULL;
+  SEDTABLE *SedType = NULL;
   SOLARGEOMETRY SolarGeo;	/* Geometry of Sun-Earth system (needed for
 				   INLINE radiation calculations */
   TIMESTRUCT Time;
@@ -151,13 +155,14 @@ int main(int argc, char **argv)
   InitFileIO(Options.FileFormat);
   InitTables(Time.NDaySteps, Input, &Options, &SType, &Soil, &VType, &Veg,
 	     &SnowAlbedo);
+
   InitTerrainMaps(Input, &Options, &Map, &Soil, &TopoMap, &SoilMap, &VegMap);
 
   CheckOut(Options.CanopyRadAtt, Veg, Soil, VType, SType, &Map, TopoMap, 
 	   VegMap, SoilMap);
 
   if (Options.HasNetwork)
-    InitChannel(Input, &Map, Time.Dt, &ChannelData, SoilMap);
+    InitChannel(Input, &Map, Time.Dt, &ChannelData, SoilMap, &MaxStreamID, &MaxRoadID);
   else if (Options.Extent != POINT)
     InitUnitHydrograph(Input, &Map, TopoMap, &UnitHydrograph,
 		       &Hydrograph, &HydrographInfo);
@@ -234,6 +239,37 @@ int main(int argc, char **argv)
 
   /* Done with initialization, delete the list with input strings */
   DeleteList(Input);
+
+  /*****************************************************************************
+  Sediment Initialization Procedures 
+  *****************************************************************************/
+  if(Options.Sediment) {
+
+    printf("\nRunning sediment model version 0.0\n");
+    printf("\nSTARTING INITIALIZATION PROCEDURES\n\n");
+
+    ReadInitFile(Options.SedFile, &Input);
+
+    InitParameters(Input, &Options, &Map);
+
+    InitSedimentTables(Time.NDaySteps, Input, &SedType, &VType, &Soil, &Veg);
+
+    InitFineMaps(Input, &Options, &Map, &Soil, &TopoMap, &SoilMap, 
+		  &FineMap);
+
+    InitChannelSediment(ChannelData.streams);
+
+    /* Allocate memory for the sediment grid */
+    if (!(SedMap = (SEDPIX **) calloc(Map.NY, sizeof(SEDPIX *))))
+      ReportError("MainDHSVM", 1);
+    for (y = 0; y < Map.NY; y++) {
+      if (!((SedMap)[y] = (SEDPIX *) calloc(Map.NX, sizeof(SEDPIX))))
+	ReportError("MainDHSVM", 1);
+    }
+
+    /* Done with initialization, delete the list with input strings */
+    DeleteList(Input);
+  }
 
   /* setup for mass balance calculations */
   Aggregate(&Map, &Options, TopoMap, &Soil, &Veg, VegMap, EvapMap, PrecipMap,
@@ -328,15 +364,22 @@ int main(int argc, char **argv)
 #ifndef SNOW_ONLY
 
     RouteSubSurface(Time.Dt, &Map, TopoMap, VType, VegMap, Network,
-		    SType, SoilMap, &ChannelData, &Time, &Options, &Dump);
+		    SType, SoilMap, &ChannelData, &Time, &Options, Dump.Path,
+		    SedMap, &FineMap, SedType, MaxStreamID);
 
     if (Options.HasNetwork)
       RouteChannel(&ChannelData, &Time, &Map, TopoMap, SoilMap, &Total);
 
+    if(Options.Sediment) {
+      // RouteChannelSediment(ChannelData.streams, ChannelData.roads, Time, &Dump);
+    //   OutputChannelSediment(ChannelData.streams, Time, &Dump);
+    }
+
     if (Options.Extent == BASIN)
       RouteSurface(&Map, &Time, TopoMap, SoilMap, &Options,
 		   UnitHydrograph, &HydrographInfo, Hydrograph,
-		   &Dump, VegMap, VType);
+		   &Dump, VegMap, VType, SType, &ChannelData, SedMap,
+		   PrecipMap, SedType);
 
 #endif
 

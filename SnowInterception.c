@@ -85,7 +85,9 @@ void SnowInterception(int y, int x, int Dt, float F, float LAI,
 		      float Lv, PIXRAD * LocalRad, float Press, float Tair,
 		      float Vpd, float Wind, float *RainFall, float *SnowFall,
 		      float *IntRain, float *IntSnow, float *TempIntStorage,
-		      float *VaporMassFlux, float *Tcanopy, float *MeltEnergy)
+		      float *VaporMassFlux, float *Tcanopy, float *MeltEnergy,
+		      float *KineticEnergy, float *Height, 
+		      unsigned char Understory)
 {
   float AdvectedEnergy;		/* Energy advected by the rain (W/m2) */
   float DeltaSnowInt;		/* Change in the physical swe of snow
@@ -125,9 +127,11 @@ void SnowInterception(int y, int x, int Dt, float F, float LAI,
   float intrainfrac;		/* fraction of intercepted water which is 
 				   liquid */
   float intsnowfrac;		/*fraction of intercepted water which is solid */
+  float OriginalRainfall;
 
   /* Initialize Drip, H2O balance, and mass release variables. */
 
+  OriginalRainfall = *RainFall;
   InitialWaterInt = *IntSnow + *IntRain;
 
   *IntSnow /= F;
@@ -389,4 +393,22 @@ void SnowInterception(int y, int x, int Dt, float F, float LAI,
 
   *RainFall = RainThroughFall + Drip;
   *SnowFall = SnowThroughFall + ReleasedMass;
+
+   /* Find kinetic energy of rainfall for use by the sediment model. */
+  if(Understory) {
+    
+    /* Since the understory is assumed to cover the entire grid cell, all 
+       KE is associated with leaf drainage, eq. 23, Morgan et al. (1998) */
+    
+    if(Height[1] > .14)
+      *KineticEnergy = *RainFall*1000.*(15.8*sqrt(Height[1]) - 5.87); 
+    else
+      *KineticEnergy = 0.0;
+  }
+  else {
+    /* If no understory, part of the rainfall reaches the ground as direct throughfall. */
+    *KineticEnergy = 1000.*(OriginalRainfall*(8.95+8.44*log10(OriginalRainfall*1000./Dt))*(1-F) +
+      Drip * (15.8*sqrt(Height[0])-5.87));
+  }
+
 }

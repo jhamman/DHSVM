@@ -30,3 +30,8 @@ float TEMPLAPSE;		/* Temperature lapse rate in C/m */
 float Z0_GROUND;		/* Roughness length for bare soil (m) */
 float Z0_SNOW;			/* Roughness length for snow (m) */
 float Zref;			/* Reference height (m) */
+float MASSITER;                    /* Maximum number of iterations for mass wasting*/
+float DEBRISd50;
+float DEBRISd90;
+float CHANNELd50;
+float CHANNELd90;

@@ -100,8 +100,8 @@ typedef unsigned int unint;
 
 enum KEYS {
 /* Options *//* list order must match order in InitConstants.c */
-  format = 0, extent, gradient, flow_routing, sensible_heat_flux, sediment,
-  interpolation, mm5, qpf, prism, canopy_radatt, shading, snotel, outside, 
+  format = 0, extent, gradient, flow_routing, sensible_heat_flux, routing, sediment,
+  sed_input_file, interpolation, mm5, qpf, prism, canopy_radatt, shading, snotel, outside, 
   rhoverride, precipitation_source, wind_source, temp_lapse, precip_lapse, 
   cressman_radius, cressman_stations, prism_data_path, prism_data_ext, 
   shading_data_path, shading_data_ext, skyview_data_path, 
@@ -115,7 +115,7 @@ enum KEYS {
   ground_roughness, snow_roughness, rain_threshold, snow_threshold,
   snow_water_capacity, reference_height, rain_lai_multiplier,
   snow_lai_multiplier, min_intercepted_snow, outside_basin,
-  temp_lapse_rate, precip_lapse_rate,
+  temp_lapse_rate, precip_lapse_rate, 
   /* Station information */
   station_name = 0, station_north, station_east, station_elev, station_file,
   /* RADAR information */
@@ -135,14 +135,16 @@ enum KEYS {
   number_of_layers, porosity, pore_size, bubbling_pressure, field_capacity,
   wilting_point, bulk_density, vertical_ks, solids_thermal, thermal_capacity,
   /* Vegetation information */
-  veg_description =
-  0, overstory, understory, fraction, hemifraction, trunk_space,
+  veg_description = 0, overstory, understory, fraction, hemifraction, trunk_space,
   aerodynamic_att, radiation_att, clumping_factor, leaf_angle_a, leaf_angle_b,
   scat, snow_int_cap, mass_drip_ratio, snow_int_eff, imperv_frac, height, 
   max_resistance, min_resistance, moisture_threshold, vpd, rpc,  
   number_of_root_zones, root_zone_depth, overstory_fraction,
   understory_fraction, overstory_monlai, understory_monlai, overstory_monalb,
-  understory_monalb,
+  understory_monalb, 
+  /* Sediment vegetation information */
+  root_cohesion = 0, rc_min, rc_max, rc_mean, rc_dev, rc_mode, veg_surcharge,
+  vs_min, vs_max, vs_mean, vs_dev, vs_mode,
   /* terrain information */
   demfile = 0, maskfile,
   soiltype_file = 0, soildepth_file,
@@ -162,7 +164,13 @@ enum KEYS {
   image_variable = 0, image_layer, image_start, image_end, image_interval,
   image_upper, image_lower,
   /* graphics information */
-  graphics_variable = 0
+  graphics_variable = 0,
+  /* Parameters */
+  mass_spacing = 0, max_iterations, channeld50, channeld90, debrisd50, debrisd90,
+  /* Sediment information */
+  sed_description = 0, sat_density, manning, kindex, dfifty, cohesion, 
+  coh_min, coh_max, coh_mean, coh_dev, coh_mode, friction_angle, fa_min, fa_max, fa_mean, 
+  fa_dev, fa_mode
 };
 
 #endif

@@ -53,12 +53,17 @@
 
 #define MMTOM          0.001	/* convert from mm to meter */
 
+#define MTHRESH 0.85            /* The 'critical' value of M for triggering the mass
+				   wasting algorithm. */
 #undef PI
 #define PI             3.14159265358979323846
 
 #define RADPHOUR       0.2617994	/* radians per hour: Earth's Rotation 
 					   (2 PI rad/day) * (1 day/24 h) */
 #define RADPDEG     (PI/180.0)	/* radians per degree */
+
+#define SATPERCENT 0.2          /* Fraction of pixels which must exceed 
+				   MTHRESH in order to call the mass wasting algorithm. */
 
 #define SOLARCON    1360.	/* Solar constant (W/m^2) */
 
@@ -73,6 +78,16 @@
 
 #define Z0_MULTIPLIER  0.13	/* Multiplier for vegetation height to get
 				   roughness length (m) */
+
+#define PARTDENSITY 2685 /* Particle density in kg/m3 */
+
+#define SEDEXPONENT 2.0 /* Exponent for exponential decrease in rainfall detachment 
+			   of soil particles with depth of overland flow, should be 
+			   between 0.9 and 3.1 */
+
+#define TIMEWEIGHT 0.65
+
+#define VISCOSITY 1.0 /* kinematic viscosity of water in mm/s */
 
 /**************** extern constants - see globals.c ****************/
 
@@ -98,5 +113,9 @@ extern int NWINDMAPS;		/* Number of wind maps in case the wind source
 extern float Z0_GROUND;		/* Roughness length for bare soil (m) */
 extern float Z0_SNOW;		/* Roughness length for snow (m) */
 extern float Zref;		/* Reference height (m) */
-
+extern float MASSITER;           /* Maximum number of iterations. */
+extern float DEBRISd50;
+extern float DEBRISd90;
+extern float CHANNELd50;
+extern float CHANNELd90;
 #endif

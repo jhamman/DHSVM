@@ -132,7 +132,8 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
 		     &(LocalPrecip->IntRain[0]), &(LocalPrecip->IntSnow[0]),
 		     &(LocalPrecip->TempIntStorage),
 		     &(LocalSnow->CanopyVaporMassFlux), &(LocalVeg->Tcanopy),
-		     &MeltEnergy);
+		     &MeltEnergy, &(LocalPrecip->KineticEnergy), VType->Height, VType->UnderStory);
+
     MoistureFlux -= LocalSnow->CanopyVaporMassFlux;
 
     /* Because we now have a new estimate of the canopy temperature we can
@@ -152,9 +153,19 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
     LocalPrecip->TempIntStorage = 0.0;
     InterceptionStorage(VType->NVegLayers, NVegLActual, VType->MaxInt,
 			VType->Fract, LocalPrecip->IntRain,
-			&(LocalPrecip->RainFall));
+			&(LocalPrecip->RainFall), &(LocalPrecip->KineticEnergy), 
+			VType->Height, VType->UnderStory, Dt);
+  }
+  else {
+    /* If no vegetation, kinetic energy is all due to direct precipitation. */
+    if(LocalPrecip->RainFall > 0.0)
+      LocalPrecip->KineticEnergy = LocalPrecip->RainFall*1000.*(8.95+ 8.44*log10(LocalPrecip->RainFall*1000./Dt));
   }
 
+  /* If snow on the ground, assume no overland flow erosion. */
+  if(LocalSnow->HasSnow)
+    LocalPrecip->KineticEnergy = 0.0;
+						    
   /* if snow is present, simulate the snow pack dynamics */
 
   if (LocalSnow->HasSnow || LocalPrecip->SnowFall > 0.0) {
@@ -293,13 +304,15 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
 #ifndef NO_SOIL
 
   LocalSoil->SurfaceWater = 0.0;
-  SurfaceWater = LocalPrecip->RainFall + LocalSoil->Runoff + LocalSnow->Outflow;
+  SurfaceWater = LocalPrecip->RainFall + LocalSoil->IExcess + LocalSnow->Outflow;
 
   MaxInfiltration = (1 - VType->ImpervFrac) * LocalNetwork->PercArea[0] * 
     SType->MaxInfiltrationRate * Dt; 
 
   Infiltration = (1 - VType->ImpervFrac) * LocalNetwork->PercArea[0] * 
     SurfaceWater; 
+
+  
 
   if (Infiltration > MaxInfiltration) {
     Infiltration = MaxInfiltration;
@@ -315,12 +328,13 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
     RoadbedInfiltration = MaxRoadbedInfiltration;
   }
 
-  LocalSoil->Runoff = SurfaceWater - Infiltration - RoadbedInfiltration;
+  LocalSoil->IExcess = SurfaceWater - Infiltration - RoadbedInfiltration;
 
-  LocalSoil->SurfaceWater = LocalSoil->Runoff;
+  LocalSoil->SurfaceWater = LocalSoil->IExcess;
 
   /* Calculate unsaturated soil water movement, and adjust soil water 
      table depth */
+
 
   UnsaturatedFlow(Dt, DX, DY, Infiltration, RoadbedInfiltration,
 		  LocalSoil->SatFlow, SType->NLayers,
@@ -329,7 +343,7 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
 		  LocalSoil->Perc, LocalNetwork->PercArea,
 		  LocalNetwork->Adjust, LocalNetwork->CutBankZone,
 		  LocalNetwork->BankHeight, &(LocalSoil->TableDepth),
-		  &(LocalSoil->Runoff), LocalSoil->Moist);
+		  &(LocalSoil->IExcess), LocalSoil->Moist);
 
   if (HeatFluxOption == TRUE) {
     if (LocalSnow->HasSnow == TRUE) {

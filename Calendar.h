@@ -61,6 +61,7 @@ uchar Before(DATE * Day1, DATE * Day2);
 void CopyDate(DATE * Copy, DATE * Original);
 int DayOfYear(int Year, int Month, int Day);
 void IncreaseTime(TIMESTRUCT * Time);
+void IncreaseVariableTime(TIMESTRUCT *Time, float VariableDT, TIMESTRUCT *NextTime);
 int InitTime(TIMESTRUCT * Time, DATE * Start, DATE * End, DATE * StartRadar,
 	     DATE * StartMM5, int Dt);
 uchar IsEqualTime(DATE * Day1, DATE * Day2);

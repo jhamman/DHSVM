@@ -1,6 +1,6 @@
 /*
  * SUMMARY:      SlopeAspect.c - Calculate slope and aspect of each pixel
- * USAGE:        Part of DHSVM
+ * USAGE:        Part of DHSVM/MWM
  *
  * AUTHOR:       William A Perkins
  * ORG:          Battelle Memorial Institute Pacific Northwest Laboratory
@@ -28,6 +28,7 @@
 #include "data.h"
 #include "functions.h"
 #include "slopeaspect.h"
+#include "DHSVMerror.h"
 
 /* These indices are so neighbors can be looked up quickly */
 
@@ -46,6 +47,14 @@ int yneighbor[NDIRS] = {
 #endif
 };
 
+float temp_aspect[NDIRS] = {
+#if  NDIRS == 4
+  180., 270., 0., 90.
+#elif NDIRS == 8
+ 135., 180., 225., 270., 315., 0., 45., 90.
+#endif
+};
+
 /* -------------------------------------------------------------
    valid_cell
    Checks to see if grid indices, x and y, are within the grid 
@@ -55,6 +64,18 @@ int valid_cell(MAPSIZE * Map, int x, int y)
 {
   return (x >= 0 && y >= 0 && x < Map->NX && y < Map->NY);
 }
+
+/******************************************************************************/
+/*   valid_cell                                                               */
+/*   Checks to see if grid indices, x and y, are within the grid              */
+/*   defined by the specified Map                                             */ 
+/******************************************************************************/
+
+int valid_cell_fine(MAPSIZE *Map, int x, int y) 
+{
+  return (x >= 0 && y >= 0 && x < Map->NXfine && y < Map->NYfine);
+}
+
 
 /* -------------------------------------------------------------
    slope_aspect
@@ -194,9 +215,11 @@ static void flow_fractions(float dx, float dy, float slope, float aspect,
    ------------------------------------------------------------- */
 void ElevationSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap)
 {
+  const char *Routine = "ElevationSlopeAspect";
   int x;
   int y;
   int n;
+  int k;
   float neighbor_elev[NDIRS];
 
   /* fill neighbor array */
@@ -205,6 +228,11 @@ void ElevationSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap)
     for (y = 0; y < Map->NY; y++) {
       if (TopoMap[y][x].Mask) {
 
+	
+	/* Count the number of cells in the basin.  Need this to allocate memory for
+	   the new, smaller Elev[] and Coords[][].  */
+	if (INBASIN(TopoMap[y][x].Mask)) Map->NumCells++;
+    
 	for (n = 0; n < NDIRS; n++) {
 	  int xn = x + xneighbor[n];
 	  int yn = y + yneighbor[n];
@@ -231,7 +259,77 @@ void ElevationSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap)
       }
     }
   }
+
+  /* Create a structure to hold elevations of only those cells
+     within the basin and the y,x of those cells.*/
+
+  if (!(Map->OrderedCells = (ITEM *) calloc(Map->NumCells, sizeof(ITEM))))
+    ReportError((char *) Routine, 1);
+  
+  k = 0;
+  for (y = 0; y < Map->NY; y++) {
+    for (x = 0; x < Map->NX; x++) {
+      /* Save the elevation, y, and x in the ITEM structure. */
+      if (INBASIN(TopoMap[y][x].Mask)) {
+        Map->OrderedCells[k].Rank = TopoMap[y][x].Dem;
+        Map->OrderedCells[k].y = y;
+        Map->OrderedCells[k].x = x;
+        k++;
+      }
+    }
+  }
+
+  /* Sort Elev in descending order-- Elev.x and Elev.y hold indices. */
+  
+  quick(Map->OrderedCells, Map->NumCells);
+
+  /* End of modifications to create ordered cell coordinates.  SRW 10/02, LCB 03/03 */
+
   return;
+}
+
+/* -------------------------------------------------------------
+   QuickSort
+   ------------------------------------------------------------- */
+
+/**********************************************************************
+        this subroutine starts the quick sort
+**********************************************************************/
+
+void quick(ITEM *OrderedCells, int count)
+{
+  qs(OrderedCells,0,count-1);
+}
+
+void qs(ITEM *item, int left, int right)
+/**********************************************************************
+        this is the quick sort subroutine - it returns the values in
+        an array from high to low.
+**********************************************************************/
+{
+  register int i,j;
+  ITEM x,y;
+
+  i=left;
+  j=right;
+  x=item[(left+right)/2];
+
+  do {
+    while(item[i].Rank<x.Rank && i<right) i++;
+    while(x.Rank<item[j].Rank && j>left) j--;
+
+    if (i<=j) {
+      y=item[i];
+      item[i]=item[j];
+      item[j]=y;
+      i++;
+      j--;
+    }
+  } while (i<=j);
+
+  if(left<j) qs(item,left,j);
+  if(i<right) qs(item,i,right);
+
 }
 
 /* -------------------------------------------------------------
@@ -277,4 +375,76 @@ void HeadSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap, SOILPIX ** SoilMap)
     }
   }
   return;
+}
+
+/******************************************************************************/
+/*			     ElevationSlope                                     */
+/* Part of MWM, should probably be merged w/ ElevationSlopeAspect function. */
+/******************************************************************************/
+
+float ElevationSlope(MAPSIZE *Map, FINEPIX ***FineMap, int y, int x, int *nexty, 
+		     int *nextx, int prevy, int prevx, float *Aspect) 
+{
+  int n;
+  float neighbor_elev[NDIRS];
+  float Slope;
+  float temp_slope[8];
+  double length_diagonal;
+  float dx, dy, celev;
+
+  /* fill neighbor array */
+  
+  for (n = 0; n < NDIRS; n++) {
+    int xn = x + xneighbor[n];
+    int yn = y + yneighbor[n];
+          
+    if (valid_cell_fine(Map, xn, yn)) {
+      neighbor_elev[n] = (*FineMap)[yn][xn].bedrock + (*FineMap)[yn][xn].sediment;
+    } else {
+      neighbor_elev[n] = OUTSIDEBASIN;
+    }
+  }
+        
+  dx = Map->DMASS;
+  dy = Map->DMASS;
+  celev = (*FineMap)[y][x].bedrock + (*FineMap)[y][x].sediment;
+
+  length_diagonal = sqrt((pow(dx, 2)) + (pow(dy, 2))); 
+
+  for (n = 0; n < NDIRS; n++) {
+    if (neighbor_elev[n] == OUTSIDEBASIN) 
+      neighbor_elev[n] = celev;
+    if(n==0 || n==2 || n==4 || n==6)
+      temp_slope[n] = (atan((celev - neighbor_elev[n]) / length_diagonal)) * DEGPRAD;
+    else if(n==1 || n==5)
+      temp_slope[n] = (atan((celev - neighbor_elev[n]) / dy)) * DEGPRAD;
+    else
+      temp_slope[n] = (atan((celev - neighbor_elev[n]) / dx)) * DEGPRAD;
+  }
+    
+  Slope = -999.;
+  *Aspect = -99.;
+
+  for (n = 0; n < NDIRS; n++){
+    if (temp_slope[n] >= 0.) {
+      if(temp_slope[n] > Slope) {
+	if((y + yneighbor[n]) == prevy && (x + xneighbor[n]) == prevx) {
+	  /* Not allowed to back track!. */
+	}
+	else {
+	  Slope = temp_slope[n];
+	  *Aspect = temp_aspect[n] * PI / 180.0;
+	  *nexty = y + yneighbor[n];
+	  *nextx = x + xneighbor[n];
+	}
+      }
+    }
+  }
+
+  //  if(Slope == -999.) {
+  //    fprintf(stderr, "Sink encountered, all routes from here go up!\n");
+  //    fprintf(stderr, "Fill the dem and try again.\n");
+  //  }
+
+  return Slope;
 }
