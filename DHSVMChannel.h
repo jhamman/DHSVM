@@ -46,7 +46,8 @@ void InitChannelDump(CHANNEL *channel, char *DumpPath);
 void InitSedimentDump(CHANNEL *channel, char *DumpPath);
 double ChannelCulvertFlow(int y, int x, CHANNEL *ChannelData);
 void RouteChannel(CHANNEL *ChannelData, TIMESTRUCT *Time, MAPSIZE *Map,
-		  TOPOPIX **TopoMap, SOILPIX **SoilMapi, AGGREGATED *Total);
+		  TOPOPIX **TopoMap, SOILPIX **SoilMap, AGGREGATED *Total, 
+		  OPTIONSTRUCT *Options);
 void ChannelCut(int y, int x, CHANNEL *ChannelData, ROADSTRUCT *Network);
 uchar ChannelFraction(TOPOPIX *topo, ChannelMapRec *rds);
 

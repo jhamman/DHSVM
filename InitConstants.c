@@ -70,6 +70,7 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
     {"OPTIONS", "OVERLAND ROUTING", "", ""},
     {"OPTIONS", "SEDIMENT", "", ""},
     {"OPTIONS", "SEDIMENT INPUT FILE", "", ""},
+    {"OPTIONS", "ROAD ROUTING", "", ""},
     {"OPTIONS", "INTERPOLATION", "", ""},
     {"OPTIONS", "MM5", "", ""},
     {"OPTIONS", "QPF", "", ""},
@@ -201,9 +202,9 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
     ReportError(StrEnv[sensible_heat_flux].KeyName, 51);
 
   /* Determine overland flow routing method to use */
-  if (strncmp(StrEnv[routing].VarStr, "KINEMATIC", 4) == 0)
+  if (strncmp(StrEnv[routing].VarStr, "KINEMATIC", 9) == 0)
     Options->Routing = TRUE;
-  else if (strncmp(StrEnv[routing].VarStr, "CONVENTIONAL", 5) == 0)
+  else if (strncmp(StrEnv[routing].VarStr, "CONVENTIONAL", 12) == 0)
     Options->Routing = FALSE;
   else
     ReportError(StrEnv[routing].KeyName, 51);
@@ -216,6 +217,20 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   else
     ReportError(StrEnv[sediment].KeyName, 51);
 
+  if(Options->Sediment == TRUE) {
+    if (IsEmptyStr(StrEnv[sed_input_file].VarStr))
+      ReportError(StrEnv[sed_input_file].KeyName, 51);
+    strcpy(Options->SedFile, StrEnv[sed_input_file].VarStr);
+  }
+
+  /* Determine road flow routing method to use */
+  if (strncmp(StrEnv[road_routing].VarStr, "KINEMATIC", 9) == 0)
+    Options->RoadRouting = TRUE;
+  else if (strncmp(StrEnv[road_routing].VarStr, "CONVENTIONAL", 12) == 0)
+    Options->RoadRouting = FALSE;
+  else
+    ReportError(StrEnv[road_routing].KeyName, 51);
+
   /* Check for compatible options. */
   if(Options->Sediment == TRUE) {
     if(!Options->Routing) {
@@ -223,12 +238,6 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
       fprintf(stderr, "Overland Routing being reset to Kinematic.\n");
       Options->Routing = TRUE;
     }
-  }
-
-  if(Options->Sediment == TRUE) {
-    if (IsEmptyStr(StrEnv[sed_input_file].VarStr))
-      ReportError(StrEnv[sed_input_file].KeyName, 51);
-    strcpy(Options->SedFile, StrEnv[sed_input_file].VarStr);
   }
 
   /* Determine whether the mm5 interface should be used */

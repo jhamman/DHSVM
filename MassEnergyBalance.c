@@ -38,14 +38,14 @@
 *****************************************************************************/
 void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX, 
 		       float DY, int Dt, int HeatFluxOption, 
-		       int CanopyRadAttOption, int MaxVegLayers, 
-		       PIXMET *LocalMet, ROADSTRUCT *LocalNetwork, 
-		       PRECIPPIX *LocalPrecip, VEGTABLE *VType, 
-		       VEGPIX *LocalVeg, SOILTABLE *SType,
+		       int CanopyRadAttOption, int RoadRouteOption,
+		       int MaxVegLayers, PIXMET *LocalMet,
+		       ROADSTRUCT *LocalNetwork, PRECIPPIX *LocalPrecip,
+		       VEGTABLE *VType, VEGPIX *LocalVeg, SOILTABLE *SType,
 		       SOILPIX *LocalSoil, SNOWPIX *LocalSnow,
 		       EVAPPIX *LocalEvap, PIXRAD *TotalRad)
 {
-  PIXRAD LocalRad;		/* Radiation balance components (W/m^2) */
+ PIXRAD LocalRad;		/* Radiation balance components (W/m^2) */
   float SurfaceWater;		/* Pixel average depth of water before
 				   infiltration is calculated (m) */
   float Infiltration;		/* Infiltration into the top soil layer (m)
@@ -343,7 +343,7 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
 		  LocalSoil->Perc, LocalNetwork->PercArea,
 		  LocalNetwork->Adjust, LocalNetwork->CutBankZone,
 		  LocalNetwork->BankHeight, &(LocalSoil->TableDepth),
-		  &(LocalSoil->IExcess), LocalSoil->Moist);
+		  &(LocalSoil->IExcess), LocalSoil->Moist, RoadRouteOption);
 
   if (HeatFluxOption == TRUE) {
     if (LocalSnow->HasSnow == TRUE) {

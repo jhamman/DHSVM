@@ -238,6 +238,8 @@ typedef struct {
 				   TRUE or FALSE. */
   int Routing;                  /* Overland flow routing indicator, either CONVENTIONAL
 				   or KINEMATIC. */
+  int RoadRouting;              /* Road flow routing indicator, either CONVENTIONAL
+				   or KINEMATIC. */
   int FlowGradient;		/* Specifies whether the flow gradient is based
 				   on the terrain elevation (TOPOGRAPHY) or the 
 				   water table elevation (WATERTABLE).  The 

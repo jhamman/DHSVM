@@ -365,15 +365,14 @@ int main(int argc, char **argv)
 	    else
 	      SoilMap[y][x].Temp[i] = LocalMet.Tair;
 	  }
-
 	  
-  	  MassEnergyBalance(y, x, SolarGeo.SineSolarAltitude, Map.DX, Map.DY, 
+	  MassEnergyBalance(y, x, SolarGeo.SineSolarAltitude, Map.DX, Map.DY, 
 			    Time.Dt, Options.HeatFlux, Options.CanopyRadAtt, 
-			    Veg.MaxLayers, &LocalMet, &(Network[y][x]), 
-			    &(PrecipMap[y][x]), &(VType[VegMap[y][x].Veg-1]),
-			    &(VegMap[y][x]), &(SType[SoilMap[y][x].Soil-1]),
-			    &(SoilMap[y][x]), &(SnowMap[y][x]), 
-			    &(EvapMap[y][x]), &(Total.Rad));
+			    Options.RoadRouting, Veg.MaxLayers, &LocalMet, 
+			    &(Network[y][x]), &(PrecipMap[y][x]), 
+			    &(VType[VegMap[y][x].Veg-1]), &(VegMap[y][x]),
+			    &(SType[SoilMap[y][x].Soil-1]), &(SoilMap[y][x]), 
+			    &(SnowMap[y][x]), &(EvapMap[y][x]), &(Total.Rad));
 	}
       }
     }
@@ -388,7 +387,7 @@ int main(int argc, char **argv)
 		    SedMap, &FineMap, SedType, MaxStreamID, SnowMap);
 
     if (Options.HasNetwork)
-      RouteChannel(&ChannelData, &Time, &Map, TopoMap, SoilMap, &Total);
+      RouteChannel(&ChannelData, &Time, &Map, TopoMap, SoilMap, &Total, &Options);
 
     /* Sediment Routing in Channel and output to sediment files */
     if(Options.Sediment) {

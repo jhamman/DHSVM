@@ -67,7 +67,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
   double slope, alpha, beta;
   double outflow;
   int k;
-  int particle_size ;
+  int part_size;   /* sediment particle size */
   float VariableDT;
   float total_in, total_out;
   float **SedIn, SedOut;
@@ -331,12 +331,15 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 		  
 		  /* If grid cell has a channel, sediment is intercepted by the channel */
 		  if (channel_grid_has_channel(ChannelData->stream_map, xn, yn)) {
+		   
 		    /* Assume that all the sediments belong to the smallest  
 		    category of sediment particle sizes (first size, index 0) */
-		    ChannelData->stream_map[xn][yn]->channel->sediment.overlandinflow[0] += SedOut * ((float) TopoMap[y][x].Dir[n] /(float) TopoMap[y][x].TotalDir); 
+		    /* COD why is this [xn][yn] instead of [yn][xn] */
+		    ChannelData->stream_map[xn][yn]->channel->sediment.overlandinflow[0] += 
+		      SedOut * ((float) TopoMap[y][x].Dir[n] /(float) TopoMap[y][x].TotalDir); 
 		   
-		    for (particle_size=1; particle_size<NSEDSIZES; particle_size++){
-		      ChannelData->stream_map[xn][yn]->channel->sediment.overlandinflow[particle_size] = 0.0;				
+		    for (part_size=1; part_size<NSEDSIZES; part_size++){
+		      ChannelData->stream_map[xn][yn]->channel->sediment.overlandinflow[part_size] = 0.0;				
 		    }
 		  }
 		  else 

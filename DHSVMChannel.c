@@ -142,6 +142,13 @@ void InitSedimentDump(CHANNEL * channel, char *DumpPath)
     sprintf(buffer, "%sSedimentflow.Only", DumpPath);
     OpenFile(&(channel->sedimentflowout), buffer, "w", TRUE);
   }
+  if (channel->roads != NULL) {
+    sprintf(buffer, "%sRoadSediment.Flow", DumpPath);
+    OpenFile(&(channel->roadout), buffer, "w", TRUE);
+    sprintf(buffer, "%sRoadSedimentflow.Only", DumpPath);
+    OpenFile(&(channel->roadflowout), buffer, "w", TRUE);
+
+  }
 }
 
 /* -------------------------------------------------------------
@@ -164,7 +171,8 @@ double ChannelCulvertFlow(int y, int x, CHANNEL * ChannelData)
    ------------------------------------------------------------- */
 void
 RouteChannel(CHANNEL * ChannelData, TIMESTRUCT * Time, MAPSIZE * Map,
-	     TOPOPIX ** TopoMap, SOILPIX ** SoilMap, AGGREGATED * Total)
+	    TOPOPIX ** TopoMap, SOILPIX ** SoilMap, AGGREGATED * Total, 
+	     OPTIONSTRUCT *Options)
 {
   int x, y;
   int flag;
@@ -173,19 +181,24 @@ RouteChannel(CHANNEL * ChannelData, TIMESTRUCT * Time, MAPSIZE * Map,
 
   /* give any surface water to roads w/o sinks */
 
-  for (y = 0; y < Map->NY; y++) {
-    for (x = 0; x < Map->NX; x++) {
-      if (INBASIN(TopoMap[y][x].Mask)) {
-	if (channel_grid_has_channel(ChannelData->road_map, x, y) && !channel_grid_has_sink(ChannelData->road_map, x, y)) {	/* road w/o sink */
-	  SoilMap[y][x].RoadInt += SoilMap[y][x].IExcess;
-	  channel_grid_inc_inflow(ChannelData->road_map, x, y,
-				  SoilMap[y][x].IExcess * Map->DX * Map->DY);
-	  SoilMap[y][x].IExcess = 0.0f;
+  if(!Options->RoadRouting){
+    for (y = 0; y < Map->NY; y++) {
+      for (x = 0; x < Map->NX; x++) {
+	if (INBASIN(TopoMap[y][x].Mask)) {
+	  if (channel_grid_has_channel(ChannelData->road_map, x, y) && !channel_grid_has_sink(ChannelData->road_map, x, y)) {	/* road w/o sink */
+	    SoilMap[y][x].RoadInt += SoilMap[y][x].IExcess;
+	    channel_grid_inc_inflow(ChannelData->road_map, x, y,
+				    SoilMap[y][x].IExcess * Map->DX * Map->DY);
+	    SoilMap[y][x].IExcess = 0.0f;
+	  }
 	}
       }
     }
   }
 
+  if(Options->RoadRouting){
+    fprintf(stderr, "DHSVBMChannel: Not set up for Kinematic Road Routing.\n");    exit(0); 
+  }
    /* route the road network and save results */
 
   SPrintDate(&(Time->Current), buffer);

@@ -299,10 +299,10 @@ void MassBalance(DATE *Current, FILES *Out, AGGREGATED *Total,
 
 void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX, 
 		       float DY, int Dt, int HeatFluxOption, 
-		       int CanopyRadAttOption, int MaxVegLayers, 
-		       PIXMET *LocalMet, ROADSTRUCT *LocalNetwork, 
-		       PRECIPPIX *LocalPrecip, VEGTABLE *VType, 
-		       VEGPIX *LocalVeg, SOILTABLE *SType,
+		       int CanopyRadAttOption, int RoadRouteOption,
+		       int MaxVegLayers,  PIXMET *LocalMet,
+		       ROADSTRUCT *LocalNetwork, PRECIPPIX *LocalPrecip,
+		       VEGTABLE *VType, VEGPIX *LocalVeg, SOILTABLE *SType,
 		       SOILPIX *LocalSoil, SNOWPIX *LocalSnow,
 		       EVAPPIX *LocalEvap, PIXRAD *TotalRad);
 

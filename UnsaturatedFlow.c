@@ -111,7 +111,7 @@ void UnsaturatedFlow(int Dt, float DX, float DY, float Infiltration,
 		     float *PoreDist, float *Porosity, float *FCap, 
 		     float *Perc, float *PercArea, float *Adjust, 
 		     int CutBankZone, float BankHeight, float *TableDepth, 
-		     float *Runoff, float *Moist)
+		     float *Runoff, float *Moist, int RoadRouteOption)
 {
   float DeepDrainage;		/* amount of drainage from the lowest root 
 				   zone to the layer below it (m) */
@@ -134,8 +134,15 @@ void UnsaturatedFlow(int Dt, float DX, float DY, float Infiltration,
   /* first take care of infiltration through the roadbed, then through the
      remaining surface */
   if (*TableDepth <= BankHeight) { /* watertable above road surface */
-    *Runoff += RoadbedInfiltration;
+    if (RoadRouteOption == FALSE)
+      *Runoff += RoadbedInfiltration;
+    else {
+      fprintf(stderr, "UnsaturatedFlow: Not set up for Kinematic Road Routing.\n");
+      exit(0);
+      /*  Road.IExcess += RoadbedInfiltration; */
+    }
   }
+
   else {
     if (CutBankZone == NSoilLayers) {
       Moist[NSoilLayers] += RoadbedInfiltration / 
@@ -212,7 +219,7 @@ void UnsaturatedFlow(int Dt, float DX, float DY, float Infiltration,
      soil moisture in the lowest layer in the mass balance calculation */
   if (Moist[NSoilLayers] < FCap[NSoilLayers - 1]) {
     //    Moist[NSoilLayers] = FCap[NSoilLayers - 1];
-    // fprintf(stderr, "Warning: Deep layer soil moisture is less than field capacity.\n");
+    fprintf(stderr, "Warning: Deep layer soil moisture is less than field capacity.\n");
   }
 
   /* Calculate the depth of the water table based on the soil moisture 

@@ -104,7 +104,7 @@ typedef unsigned int unint;
 enum KEYS {
 /* Options *//* list order must match order in InitConstants.c */
   format = 0, extent, gradient, flow_routing, sensible_heat_flux, routing, sediment,
-  sed_input_file, interpolation, mm5, qpf, prism, canopy_radatt, shading, snotel, outside, 
+  sed_input_file, road_routing, interpolation, mm5, qpf, prism, canopy_radatt, shading, snotel, outside, 
   rhoverride, precipitation_source, wind_source, temp_lapse, precip_lapse, 
   cressman_radius, cressman_stations, prism_data_path, prism_data_ext, 
   shading_data_path, shading_data_ext, skyview_data_path, 
