@@ -25,6 +25,7 @@
 #include "settings.h"
 #include "data.h"
 #include "DHSVMChannel.h"
+#include "constants.h"
 
 /* -------------------------------------------------------------
    local function prototype
@@ -641,6 +642,65 @@ double channel_grid_outflow(ChannelMapPtr ** map, int col, int row)
     cell = cell->next;
   }
   return mass;
+}
+
+/* -------------------------------------------------------------
+   channel_grid_flowlength
+   returns the flowlength along a road surface in a channel
+   if there is more than one road in a grid cell, the road
+   with the greatest surface area is used to calculate the 
+   flowlength.
+   This can result in a flolen that is greater than the length
+   of the road in the cell. 
+   ------------------------------------------------------------- */
+double channel_grid_flowlength(ChannelMapPtr ** map, int col, int row, float floslope)
+{
+  ChannelMapPtr cell = map[col][row];
+  double flolen = 0.0;
+  double area;
+  double maxarea = 0.0;
+
+  while (cell != NULL) {
+    area = cell->length * cell->cut_width;
+    if(area > maxarea){
+      flolen = cell->cut_width * (floslope/ROADCROWN)*sqrt(1+pow(ROADCROWN,2));
+      maxarea = area;
+    }
+    if(flolen < cell->cut_width)
+      flolen = cell->cut_width;
+    /* If crowned, only one half goes to ditch. */ 
+    if (cell->channel->class->crown == CHAN_CROWNED) 
+      flolen *= 0.5;
+    
+    cell = cell->next;
+  }
+  return flolen;
+}
+
+/* -------------------------------------------------------------
+   channel_grid_flowslope
+   returns the flowlength along a road surface in a channel
+   if there is more than one road in a grid cell, the road
+   with the greatest surface area is used to calculate the 
+   flowsleop
+   ------------------------------------------------------------- */
+
+double channel_grid_flowslope(ChannelMapPtr ** map, int col, int row)
+{
+  ChannelMapPtr cell = map[col][row];
+  float floslope = 0.0;
+  double area;
+  double maxarea = 0.0;
+
+  while (cell != NULL) {
+    area = cell->length * cell->cut_width;
+    if(area > maxarea){
+      floslope = sqrt(pow(ROADCROWN, 2) + pow((cell->channel->slope),2));
+      maxarea = area;
+    }
+    cell = cell->next;
+  }
+  return floslope;
 }
 
 /* -------------------------------------------------------------

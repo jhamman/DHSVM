@@ -42,7 +42,8 @@ void MassBalance(DATE *Current, FILES *Out, AGGREGATED *Total,
   float Output;			/* total water flux leaving the basin;  */
   float MassError;		/* mass balance error m  */
 
-  NewWaterStorage = Total->Soil.IExcess + Total->CanopyWater + Total->SoilWater +
+  NewWaterStorage = Total->Soil.IExcess + Total->Road.IExcess + 
+    Total->CanopyWater + Total->SoilWater +
     Total->Snow.Swq + Total->Soil.SatFlow;
 
   Output = Total->ChannelInt + Total->RoadInt + Total->Evap.ETot;

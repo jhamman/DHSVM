@@ -72,6 +72,9 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
  PIXRAD LocalRad;		/* Radiation balance components (W/m^2) */
   float SurfaceWater;		/* Pixel average depth of water before
 				   infiltration is calculated (m) */
+  float RoadWater;               /* Average depth of water on the road surface 
+				    (normalized by grid cell area) before
+				    infiltration is calculated (m) */
   float Infiltration;		/* Infiltration into the top soil layer (m) */
   float Infiltrability;          /* Dynamic infiltration capacity (m/s)*/
   float B;                       /* Capillary drive and soil saturation deficit
@@ -111,7 +114,8 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
   float beta[4]={1.6896,1.5545,1.4242,1.2821};       /* empirical coefficient
 				for rainfall momentum after Wicks and Bathurst (1996) */ 
   float RainfallIntensity;       /* Rainfall intensity (mm/h) */
-  float MS_Rainfall;             /* Momentum squared for rain throughfall ((kg* m/s)^2 /(m^2 * s)) */
+  float MS_Rainfall;             /* Momentum squared for rain throughfall 
+				    ((kg* m/s)^2 /(m^2 * s)) */
   int MS_Index;                  /* Index for determining alpha and beta cooresponding to
 				  RainfallIntensity*/
   int i;
@@ -411,8 +415,21 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
 
 #ifndef NO_SOIL
 
+  if (RoadRouteOption == FALSE)
   SurfaceWater = LocalPrecip->RainFall + LocalSoil->IExcess + 
     LocalSnow->Outflow;
+
+ /* Since (1-PercArea) can represent a channel or road
+     RoadWater and Network.IExcess can have a value when 
+     there are no roads. There is a check for roads in 
+     RouteRoad so this does not cause a problem there. */
+  else {
+    SurfaceWater = LocalNetwork->PercArea[0] * 
+      (LocalPrecip->RainFall + LocalSnow->Outflow) + LocalSoil->IExcess;
+    RoadWater = (1 - LocalNetwork->PercArea[0])  * 
+      (LocalPrecip->RainFall + LocalSnow->Outflow)
+      + LocalNetwork->IExcess; 
+  }
 
   MaxInfiltration = 0.;
 
@@ -426,7 +443,8 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
     Infiltration = 0.0;
 
     if (SurfaceWater > 0.) {
-      /* Infiltration is a function of the smount of water infiltrated since the storm started */
+      /* Infiltration is a function of the amount of water infiltrated since 
+	 the storm started */
       if (LocalPrecip->PrecipStart){
 	LocalSoil->MoistInit = LocalSoil->Moist[0];
 	LocalSoil->InfiltAcc = 0.0;
@@ -444,9 +462,9 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
       else 
 	Infiltrability = SurfaceWater/Dt ; 
         
-     
       MaxInfiltration = Infiltrability * LocalNetwork->PercArea[0] *
                                         (1 - VType->ImpervFrac) *  Dt;
+      
       LocalPrecip->PrecipStart = FALSE; 
     }/* end  if (SurfaceWater > 0.) */
     else 
@@ -454,25 +472,34 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
   	
   } /* end Dynamic MaxInfiltration calculation */ 
   
-  
-  Infiltration = (1 - VType->ImpervFrac) * LocalNetwork->PercArea[0] * 
+  if (RoadRouteOption == FALSE)
+    Infiltration = (1 - VType->ImpervFrac) * LocalNetwork->PercArea[0] * 
     SurfaceWater; 
-  
-  if (Infiltration > MaxInfiltration) {
-    Infiltration = MaxInfiltration;
-  }
+  else
+    Infiltration = (1 - VType->ImpervFrac) * SurfaceWater;
 
+  
+  if (Infiltration > MaxInfiltration) 
+    Infiltration = MaxInfiltration;
+  
   MaxRoadbedInfiltration = (1 - LocalNetwork->PercArea[0]) * 
     LocalNetwork->MaxInfiltrationRate * Dt; 
 
-  RoadbedInfiltration = (1 - LocalNetwork->PercArea[0]) * 
+  if (RoadRouteOption == FALSE)
+    RoadbedInfiltration = (1 - LocalNetwork->PercArea[0]) * 
     SurfaceWater; 
+  else
+    RoadbedInfiltration = RoadWater;
 
-  if (RoadbedInfiltration > MaxRoadbedInfiltration) {
+  if (RoadbedInfiltration > MaxRoadbedInfiltration) 
     RoadbedInfiltration = MaxRoadbedInfiltration;
+  
+  if (RoadRouteOption == FALSE)
+    LocalSoil->IExcess = SurfaceWater - Infiltration - RoadbedInfiltration;
+  else {
+    LocalSoil->IExcess = SurfaceWater - Infiltration;
+    LocalNetwork->IExcess = RoadWater - RoadbedInfiltration; 
   }
-
-  LocalSoil->IExcess = SurfaceWater - Infiltration - RoadbedInfiltration;
 
   /* Calculate unsaturated soil water movement, and adjust soil water 
      table depth */
@@ -486,12 +513,12 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
 		  LocalNetwork->Adjust, LocalNetwork->CutBankZone,
 		  LocalNetwork->BankHeight, &(LocalSoil->TableDepth),
 		  &(LocalSoil->IExcess), LocalSoil->Moist, RoadRouteOption,
-		  InfiltOption);
+		  InfiltOption, &(LocalNetwork->IExcess));
   
   /* Infiltration is updated in UnsaturatedFlow and accumulated 
      below */
   if ((InfiltOption == DYNAMIC) && (SurfaceWater > 0.)) 
-    LocalSoil->InfiltAcc += Infiltration;
+    LocalSoil->InfiltAcc += Infiltration; 
   
   if (HeatFluxOption == TRUE) {
     if (LocalSnow->HasSnow == TRUE) {

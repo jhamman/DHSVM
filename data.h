@@ -326,6 +326,16 @@ typedef struct {
   float MaxInfiltrationRate;	/* Area weighted infiltration rate through the
 				   road bed */
   uchar fraction;		/* flow fraction intercepted by road channel */
+  float IExcess;                 /* Infiltration excess generated on road surface (m)*/
+  float FlowLength;              /* Representative surface water flow length across 
+				     the road surface (m) */
+  float FlowSlope;               /* Representative road surface slope along the flow
+				    path (m/m) */
+  float *h;                      /* Infiltration excess on road grid cell (m)*/
+  float *startRunoff;            /* Surface water flux from the previus (sub) time 
+				    step. Used for kinematic wave routing.*/
+  float *startRunon;             /* Surface water flux from the previus (sub) time 
+				    step. Used for kinematic wave routing.*/
 } ROADSTRUCT;
 
 typedef struct {
@@ -604,6 +614,7 @@ typedef struct {
   PRECIPPIX Precip;
   PIXRAD Rad;
   RADCLASSPIX RadClass;
+  ROADSTRUCT Road;
   SNOWPIX Snow;
   SOILPIX Soil;
   SEDPIX Sediment;

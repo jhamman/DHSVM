@@ -56,8 +56,9 @@ void StoreModelState(char *Path, DATE * Current, MAPSIZE * Map,
 		     PRECIPPIX ** PrecipMap, SNOWPIX ** SnowMap,
 		     MET_MAP_PIX ** MetMap, RADCLASSPIX ** RadMap,
 		     VEGPIX ** VegMap, LAYER * Veg, SOILPIX ** SoilMap,
-		     LAYER * Soil, UNITHYDRINFO * HydrographInfo,
-		     float *Hydrograph)
+		     LAYER * Soil, ROADSTRUCT ** Network, 
+		     UNITHYDRINFO * HydrographInfo, float *Hydrograph,
+		     CHANNEL * ChannelData)
 {
   const char *Routine = "StoreModelState";
   char Str[NAMESIZE + 1];
@@ -71,6 +72,8 @@ void StoreModelState(char *Path, DATE * Current, MAPSIZE * Map,
   int NVeg;			/* Number of veg layers for current pixel */
   MAPDUMP DMap;			/* Dump Info */
   void *Array;
+  float RoadIExcess = 0.0;
+  float roadlength, roadwidth;
 
   /* print a message to stdout that state is being stored */
 
@@ -475,8 +478,17 @@ void StoreModelState(char *Path, DATE * Current, MAPSIZE * Map,
 
   for (y = 0; y < Map->NY; y++) {
     for (x = 0; x < Map->NX; x++) {
-      if (INBASIN(TopoMap[y][x].Mask))
-	((float *) Array)[y * Map->NX + x] = SoilMap[y][x].IExcess;
+      if (INBASIN(TopoMap[y][x].Mask)){
+	RoadIExcess = 0.0; 
+	if (channel_grid_has_channel(ChannelData->road_map, x, y)) {
+	  roadlength = channel_grid_cell_length(ChannelData->road_map, x, y);
+	  roadwidth = channel_grid_cell_width(ChannelData->road_map, x, y);
+	  for (i = 0; i < CELLFACTOR; i++)
+ 	    RoadIExcess += (Network[y][x].h[i] * roadlength * roadwidth)/
+	      ((float)CELLFACTOR * (Map->DX*Map->DY));
+	} 
+	((float *) Array)[y * Map->NX + x] = SoilMap[y][x].IExcess + RoadIExcess;
+      }
       else
 	((float *) Array)[y * Map->NX + x] = NA;
     }

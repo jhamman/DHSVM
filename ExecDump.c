@@ -33,9 +33,9 @@ void ExecDump(MAPSIZE * Map, DATE * Current, DATE * Start, OPTIONSTRUCT * Option
 	      DUMPSTRUCT * Dump, TOPOPIX ** TopoMap, EVAPPIX ** EvapMap,
 	      PRECIPPIX ** PrecipMap, RADCLASSPIX ** RadMap, SNOWPIX ** SnowMap,
 	      MET_MAP_PIX ** MetMap, VEGPIX ** VegMap, LAYER * Veg, SOILPIX ** SoilMap,
-	      SEDPIX ** SedMap, CHANNEL * ChannelData, FINEPIX ** FineMap,
-	      LAYER * Soil, AGGREGATED * Total, UNITHYDRINFO * HydrographInfo,
-	      float *Hydrograph)
+	      SEDPIX ** SedMap, ROADSTRUCT ** Network, CHANNEL * ChannelData, 
+	      FINEPIX ** FineMap, LAYER * Soil, AGGREGATED * Total, 
+	      UNITHYDRINFO * HydrographInfo, float *Hydrograph)
 {
   int i;			/* counter */
   int j;			/* counter */
@@ -64,7 +64,7 @@ void ExecDump(MAPSIZE * Map, DATE * Current, DATE * Start, OPTIONSTRUCT * Option
     if (Dump->NStates < 0) {
       StoreModelState(Dump->Path, Current, Map, Options, TopoMap, PrecipMap,
 		      SnowMap, MetMap, RadMap, VegMap, Veg, SoilMap, Soil,
-		      HydrographInfo, Hydrograph);
+		      Network, HydrographInfo, Hydrograph, ChannelData);
       if (Options->HasNetwork)
 	StoreChannelState(Dump->Path, Current, ChannelData->streams);
     }
@@ -73,7 +73,8 @@ void ExecDump(MAPSIZE * Map, DATE * Current, DATE * Start, OPTIONSTRUCT * Option
 	if (IsEqualTime(Current, &(Dump->DState[i]))) {
 	  StoreModelState(Dump->Path, Current, Map, Options, TopoMap,
 			  PrecipMap, SnowMap, MetMap, RadMap, VegMap, Veg,
-			  SoilMap, Soil, HydrographInfo, Hydrograph);
+			  SoilMap, Soil, Network, HydrographInfo, Hydrograph,
+			  ChannelData);
 	  if (Options->HasNetwork)
 	    StoreChannelState(Dump->Path, Current, ChannelData->streams);
 	}

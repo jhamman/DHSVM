@@ -172,7 +172,8 @@ double ChannelCulvertFlow(int y, int x, CHANNEL * ChannelData)
 void
 RouteChannel(CHANNEL * ChannelData, TIMESTRUCT * Time, MAPSIZE * Map,
 	    TOPOPIX ** TopoMap, SOILPIX ** SoilMap, AGGREGATED * Total, 
-	     OPTIONSTRUCT *Options)
+	     OPTIONSTRUCT *Options, ROADSTRUCT ** Network, 
+	     SOILTABLE * SType)
 {
   int x, y;
   int flag;
@@ -181,25 +182,23 @@ RouteChannel(CHANNEL * ChannelData, TIMESTRUCT * Time, MAPSIZE * Map,
 
   /* give any surface water to roads w/o sinks */
 
-  if(!Options->RoadRouting){
-    for (y = 0; y < Map->NY; y++) {
-      for (x = 0; x < Map->NX; x++) {
-	if (INBASIN(TopoMap[y][x].Mask)) {
-	  if (channel_grid_has_channel(ChannelData->road_map, x, y) && !channel_grid_has_sink(ChannelData->road_map, x, y)) {	/* road w/o sink */
-	    SoilMap[y][x].RoadInt += SoilMap[y][x].IExcess;
+  for (y = 0; y < Map->NY; y++) {
+    for (x = 0; x < Map->NX; x++) {
+      if (INBASIN(TopoMap[y][x].Mask)) {
+	if (channel_grid_has_channel(ChannelData->road_map, x, y) && !channel_grid_has_sink(ChannelData->road_map, x, y)) {	/* road w/o sink */
+	  SoilMap[y][x].RoadInt += SoilMap[y][x].IExcess;
 	    channel_grid_inc_inflow(ChannelData->road_map, x, y,
 				    SoilMap[y][x].IExcess * Map->DX * Map->DY);
-	    SoilMap[y][x].IExcessSed = SoilMap[y][x].IExcess;
-	    SoilMap[y][x].IExcess = 0.0f;
-	  }
+	  SoilMap[y][x].IExcessSed = SoilMap[y][x].IExcess;
+	  SoilMap[y][x].IExcess = 0.0f;
 	}
       }
     }
   }
-
+  
   if(Options->RoadRouting){
-    fprintf(stderr, "DHSVBMChannel: Not set up for Kinematic Road Routing.\n");    exit(0); 
-  }
+    RouteRoad(Map, Time, TopoMap, SoilMap, Network, SType, ChannelData); 
+   }
    /* route the road network and save results */
 
   SPrintDate(&(Time->Current), buffer);
@@ -223,13 +222,18 @@ RouteChannel(CHANNEL * ChannelData, TIMESTRUCT * Time, MAPSIZE * Map,
 	if (channel_grid_has_channel(ChannelData->stream_map, x, y)) {
 	  channel_grid_inc_inflow(ChannelData->stream_map, x, y,
 				  (SoilMap[y][x].IExcess + 
+				   Network[y][x].IExcess +
 				   CulvertFlow) * Map->DX * Map->DY);
 	  SoilMap[y][x].ChannelInt += SoilMap[y][x].IExcess;
-		  
+	  SoilMap[y][x].ChannelInt += Network[y][x].IExcess;
+
 	  Total->CulvertToChannel += CulvertFlow;
 	  Total->RunoffToChannel += SoilMap[y][x].IExcess;
+	  Total->RunoffToChannel += Network[y][x].IExcess;
+
 	  SoilMap[y][x].IExcessSed = SoilMap[y][x].IExcess;
 	  SoilMap[y][x].IExcess = 0.0f;
+	  Network[y][x].IExcess = 0.;
 	}
 	else {
 	  SoilMap[y][x].IExcess += CulvertFlow;

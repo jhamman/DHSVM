@@ -17,6 +17,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include "settings.h"
 #include "data.h"
 #include "DHSVMerror.h"
@@ -55,6 +56,7 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
   int jj;			/* FineMap counter */
   int xx;			/* x-coordinate on FineMap grid */
   int yy;			/* y-coordinate on FineMap grid */
+  float roadwidth, roadlength;
 
   NPixels = 0;
   for (y = 0; y < Map->NY; y++) {
@@ -147,7 +149,14 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
 	Total->Soil.Qg += SoilMap[y][x].Qg;
 	Total->Soil.Qst += SoilMap[y][x].Qst;
 	Total->Soil.IExcess += SoilMap[y][x].IExcess;
-        if (Options->Infiltration == DYNAMIC)
+	if (channel_grid_has_channel(ChannelData->road_map, x, y)) {
+	  roadlength = channel_grid_cell_length(ChannelData->road_map, x, y);
+	  roadwidth = channel_grid_cell_width(ChannelData->road_map, x, y);
+	  for (i = 0; i < CELLFACTOR; i++)
+	    Total->Road.IExcess += (Network[y][x].h[i] * roadlength * roadwidth)/
+				    ((float)CELLFACTOR * (Map->DX*Map->DY));
+	}
+	if (Options->Infiltration == DYNAMIC)
 	  Total->Soil.InfiltAcc += SoilMap[y][x].InfiltAcc;
 	Total->Runoff += SoilMap[y][x].Runoff;
 	Total->ChannelInt += SoilMap[y][x].ChannelInt;
@@ -246,6 +255,7 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
   Total->Soil.Qg /= NPixels;
   Total->Soil.Qst /= NPixels;
   Total->Soil.IExcess /= NPixels;
+  Total->Road.IExcess /= NPixels;
   if (Options->Infiltration == DYNAMIC)
     Total->Soil.InfiltAcc /= NPixels;
   Total->SoilWater /= NPixels;

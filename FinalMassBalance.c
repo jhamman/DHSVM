@@ -41,7 +41,8 @@ void FinalMassBalance(FILES * Out, AGGREGATED * Total, WATERBALANCE * Mass)
   float MassError;		/* mass balance error m  */
   float Input;
 
-  NewWaterStorage = Total->Soil.IExcess + Total->CanopyWater + Total->SoilWater +
+  NewWaterStorage = Total->Soil.IExcess + Total->Road.IExcess + 
+    Total->CanopyWater + Total->SoilWater +
     Total->Snow.Swq + Total->Soil.SatFlow;
 
   Output = Mass->CumChannelInt + ( Mass->CumRoadInt  -
@@ -76,7 +77,8 @@ void FinalMassBalance(FILES * Out, AGGREGATED * Total, WATERBALANCE * Mass)
   fprintf(stderr, " End of Run Storage (mm): %f\n", NewWaterStorage * 1000.);
   fprintf(stderr, " \tFinal SWQ (mm): %f\n", Total->Snow.Swq * 1000.);
   fprintf(stderr, " \tFinal Soil Moisture (mm): %f\n", (Total->SoilWater + Total->Soil.SatFlow) * 1000.);
-  fprintf(stderr, " \tFinal Surface (mm): %f\n", (Total->Soil.IExcess + Total->CanopyWater) * 1000.);
+  fprintf(stderr, " \tFinal Surface (mm): %f\n", (Total->Soil.IExcess + Total->Road.IExcess + 
+						  Total->CanopyWater) * 1000.);
 
   fprintf(stderr, " \nOther:\n");
   fprintf(stderr, " RoadInt (mm): %f\n", Mass->CumRoadInt * 1000.);

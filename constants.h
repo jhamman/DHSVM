@@ -16,6 +16,9 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
+#define CELLFACTOR 3           /* For discretization of forest roads
+				     for kinematic wave routing */
+
 #define CH_ICE     (2100.0e3)	/* Volumetric heat capacity (J/(m3*C) of ice 
 				   (0C) */
 
@@ -57,19 +60,38 @@
 
 #define MTHRESH 0.85            /* The 'critical' value of M for triggering the mass
 				   wasting algorithm. */
+
+#define PARTDENSITY 2685         /* Particle density in kg/m3 */
+
 #undef PI
 #define PI             3.14159265358979323846
 
 #define RADPHOUR       0.2617994	/* radians per hour: Earth's Rotation 
 					   (2 PI rad/day) * (1 day/24 h) */
+
 #define RADPDEG     (PI/180.0)	/* radians per degree */
+
+#define ROADCROWN 0.02            /* This is the road crown, whether insloped, outsloped 
+				     or crowned, slope. This value was selected based 
+				     on the Road Preconstruction Handbook */
 
 #define SATPERCENT 0.2          /* Fraction of pixels which must exceed 
 				   MTHRESH in order to call the mass wasting algorithm. */
 
-#define SOLARCON    1360.	/* Solar constant (W/m^2) */
+#define SEDEXPONENT 2.0          /* Exponent for exponential decrease in rainfall detachment 
+				    of soil particles with depth of overland flow, should 
+				    be between 0.9 and 3.1 */
+
+#define SETTLECRIT 0.004         /*JSL critical streampower threshold for sediment transport 
+				   in m/s from KINEROS2 Documentation */
+
+#define SOLARCON    1360.	        /* Solar constant (W/m^2) */
 
 #define STEFAN    (5.6696e-8)	/* Stefan-Boltzmann constant (W/(M^2*C^4) */
+
+#define TIMEWEIGHT 0.65          /* For kinematic wave surface routing */   
+
+#define VISCOSITY 1.0            /* kinematic viscosity of water in mm2/s */
 
 #define VISFRACT       0.5	/* part of shortwave that is in the visible 
 				   range of the spectrum */
@@ -80,17 +102,6 @@
 
 #define Z0_MULTIPLIER  0.13	/* Multiplier for vegetation height to get
 				   roughness length (m) */
-
-#define PARTDENSITY 2685 /* Particle density in kg/m3 */
-
-#define SEDEXPONENT 2.0 /* Exponent for exponential decrease in rainfall detachment 
-			   of soil particles with depth of overland flow, should be 
-			   between 0.9 and 3.1 */
-
-#define TIMEWEIGHT 0.65
-
-#define VISCOSITY 1.0 /* kinematic viscosity of water in mm2/s */
-#define SETTLECRIT 0.004 /*JSL critical streampower threshold for sediment transport in m/s from KINEROS2 Documentation */
 
 /**************** extern constants - see globals.c ****************/
 

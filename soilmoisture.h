@@ -41,7 +41,7 @@ void UnsaturatedFlow(int Dt, float DX, float DY, float Infiltration,
 		     float *Perc, float *PercArea, float *Adjust, 
 		     int CutBankZone, float BankHeight, float *TableDepth, 
 		     float *Runoff, float *Moist, int RoadRouteOption,
-		     int InfiltOption);
+		     int InfiltOption, float *RoadIExcess);
 
 float WaterTableDepth(int NRootLayers, float TotalDepth, float *RootDepth,
 		      float *Porosity, float *FCap, float *Adjust,

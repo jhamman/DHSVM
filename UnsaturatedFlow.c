@@ -112,7 +112,7 @@ void UnsaturatedFlow(int Dt, float DX, float DY, float Infiltration,
 		     float *Perc, float *PercArea, float *Adjust, 
 		     int CutBankZone, float BankHeight, float *TableDepth, 
 		     float *Runoff, float *Moist, int RoadRouteOption,
-		     int InfiltOption)
+		     int InfiltOption, float *RoadIExcess)
 {
   float DeepDrainage;		/* amount of drainage from the lowest root 
 				   zone to the layer below it (m) */
@@ -132,16 +132,13 @@ void UnsaturatedFlow(int Dt, float DX, float DY, float Infiltration,
   for (i = 0; i < NSoilLayers; i++)
     DeepLayerDepth -= RootDepth[i];
 
-  /* first take care of infiltration through the roadbed, then through the
+  /* first take care of infiltration through the roadbed/channel, then through the
      remaining surface */
-  if (*TableDepth <= BankHeight) { /* watertable above road surface */
-    if (RoadRouteOption == FALSE)
-      *Runoff += RoadbedInfiltration;
-    else {
-      fprintf(stderr, "UnsaturatedFlow: Not set up for Kinematic Road Routing.\n");
-      exit(0);
-      /*  Road.IExcess += RoadbedInfiltration; */
-    }
+  /* this assumes RoadbedInfiltration = 0 for Roads. If the code is modified or
+     the road class allows for road infiltration this code (here and after
+     WaterTableDepth is called) should be changed. */
+  if (*TableDepth <= BankHeight) { /* watertable above road/channel surface */
+    *Runoff += RoadbedInfiltration;
   }
   
   else {
@@ -221,7 +218,12 @@ void UnsaturatedFlow(int Dt, float DX, float DY, float Infiltration,
      soil moisture in the lowest layer in the mass balance calculation */
   if (Moist[NSoilLayers] < FCap[NSoilLayers - 1]) {
     /*    Moist[NSoilLayers] = FCap[NSoilLayers - 1]; */
-    fprintf(stderr, "Warning: Deep layer soil moisture is less than field capacity.\n");
+    fprintf(stderr, 
+	    "Warning: Deep layer soil moisture is less than field capacity.\n");
+
+    if (Moist[NSoilLayers] < 0. )
+      fprintf(stderr, 
+	    "Warning: Deep layer soil moisture is negative.\n");
   }
   
   /* Calculate the depth of the water table based on the soil moisture 

@@ -33,10 +33,10 @@
 
   Comments     : 
 *****************************************************************************/
-void InitNetwork(int HasNetwork, char *ImperviousFilePath, int NY, int NX, 
-		 float DX, float DY, TOPOPIX **TopoMap, SOILPIX **SoilMap, 
-		 VEGPIX **VegMap, VEGTABLE *VType, ROADSTRUCT ***Network, 
-		 CHANNEL *ChannelData, LAYER Veg)
+void InitNetwork(int NY, int NX, float DX, float DY, TOPOPIX **TopoMap, 
+		 SOILPIX **SoilMap, VEGPIX **VegMap, VEGTABLE *VType, 
+		 ROADSTRUCT ***Network, CHANNEL *ChannelData, 
+		 LAYER Veg, OPTIONSTRUCT *Options)
 {
   const char *Routine = "InitNetwork";
   int i;			/* counter */
@@ -69,13 +69,30 @@ void InitNetwork(int HasNetwork, char *ImperviousFilePath, int NY, int NX,
 	      (float *) calloc((VType[VegMap[y][x].Veg - 1].NSoilLayers + 1),
 			       sizeof(float))))
 	  ReportError((char *) Routine, 1);
+	if (!((*Network)[y][x].h = 
+	      (float *) calloc(CELLFACTOR, sizeof(float))))
+	  ReportError((char *) Routine, 1);
+	if (!((*Network)[y][x].startRunoff =
+	      (float *) calloc(CELLFACTOR, sizeof(float))))
+	  ReportError((char *) Routine, 1);
+	if (!((*Network)[y][x].startRunon =
+	      (float *) calloc(CELLFACTOR, sizeof(float))))
+	  ReportError((char *) Routine, 1);
       }
     }
   }
 
+  if ((ChannelData->roads) == NULL) {
+    if(Options->RoadRouting){
+      fprintf(stderr, 
+	      "InitNetwork: Cannot route the road network without the network files!\n");
+      Options->RoadRouting = FALSE;
+    }
+  }
+  
   /* If a road/channel Network is imposed on the area, read the Network
      information, and calculate the storage adjustment factors */
-  if (HasNetwork) {
+  if (Options->HasNetwork) {
     for (y = 0; y < NY; y++) {
       for (x = 0; x < NX; x++) {
 	if (INBASIN(TopoMap[y][x].Mask)) {
@@ -93,6 +110,11 @@ void InitNetwork(int HasNetwork, char *ImperviousFilePath, int NY, int NX,
 	      ChannelFraction(&(TopoMap[y][x]), ChannelData->road_map[x][y]);
 	    (*Network)[y][x].MaxInfiltrationRate = 
 	      MaxRoadInfiltration(ChannelData->road_map, x, y);
+	    (*Network)[y][x].FlowSlope = 
+	      channel_grid_flowslope(ChannelData->road_map, x, y);
+	    (*Network)[y][x].FlowLength = 
+	      channel_grid_flowlength(ChannelData->road_map, x, y,(*Network)[y][x].FlowSlope);
+
 	  }
 	  else {
 	    (*Network)[y][x].MaxInfiltrationRate = DHSVM_HUGE;
@@ -126,7 +148,7 @@ void InitNetwork(int HasNetwork, char *ImperviousFilePath, int NY, int NX,
       doimpervious = 1;
 
   if (doimpervious) {
-    if (!(inputfile = fopen(ImperviousFilePath, "rt"))) {
+    if (!(inputfile = fopen(Options->ImperviousFilePath, "rt"))) {
       fprintf(stderr, 
 	      "User has specified a percentage impervious area \n");
       fprintf(stderr, 
@@ -141,7 +163,7 @@ void InitNetwork(int HasNetwork, char *ImperviousFilePath, int NY, int NX,
 	      "This file was not found: see InitNetwork.c \n");
       fprintf(stderr, 
 	      "The code find_nearest_channel.c will make the file\n");
-      ReportError(ImperviousFilePath, 3);
+      ReportError(Options->ImperviousFilePath, 3);
     }
     for (y = 0; y < NY; y++) {
       for (x = 0; x < NX; x++) {
@@ -152,10 +174,10 @@ void InitNetwork(int HasNetwork, char *ImperviousFilePath, int NY, int NX,
 	    TopoMap[y][x].drains_y = miny;
 	  }
 	  else {
-	    ReportError(ImperviousFilePath, 63);
+	    ReportError(Options->ImperviousFilePath, 63);
 	  }
 	  if (sx != x || sy != y) {
-	    ReportError(ImperviousFilePath, 64);
+	    ReportError(Options->ImperviousFilePath, 64);
 	  }
 	}
       }

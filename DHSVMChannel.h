@@ -45,9 +45,10 @@ void InitChannel(LISTPTR Input, MAPSIZE *Map, int deltat, CHANNEL *channel,
 void InitChannelDump(CHANNEL *channel, char *DumpPath);
 void InitSedimentDump(CHANNEL *channel, char *DumpPath);
 double ChannelCulvertFlow(int y, int x, CHANNEL *ChannelData);
-void RouteChannel(CHANNEL *ChannelData, TIMESTRUCT *Time, MAPSIZE *Map,
-		  TOPOPIX **TopoMap, SOILPIX **SoilMap, AGGREGATED *Total, 
-		  OPTIONSTRUCT *Options);
+void RouteChannel(CHANNEL * ChannelData, TIMESTRUCT * Time, MAPSIZE * Map,
+		  TOPOPIX ** TopoMap, SOILPIX ** SoilMap, AGGREGATED * Total, 
+		  OPTIONSTRUCT *Options, ROADSTRUCT ** Network, 
+		  SOILTABLE * SType);
 void ChannelCut(int y, int x, CHANNEL *ChannelData, ROADSTRUCT *Network);
 uchar ChannelFraction(TOPOPIX *topo, ChannelMapRec *rds);
 

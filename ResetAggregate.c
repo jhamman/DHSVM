@@ -103,6 +103,7 @@ void ResetAggregate(LAYER * Soil, LAYER * Veg, AGGREGATED * Total,
   Total->Soil.Qg = 0.0;
   Total->Soil.Qst = 0.0;
   Total->Soil.IExcess = 0.0;
+  Total->Road.IExcess = 0.0;
   if (Options->Infiltration == DYNAMIC)
     Total->Soil.InfiltAcc = 0.0;
   Total->SoilWater = 0.0;

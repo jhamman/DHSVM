@@ -225,8 +225,11 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
     ReportError(StrEnv[routing].KeyName, 51);
   
   /* Determine road flow routing method to use */
-  if (strncmp(StrEnv[road_routing].VarStr, "KINEMATIC", 9) == 0)
+  if (strncmp(StrEnv[road_routing].VarStr, "KINEMATIC", 9) == 0){
     Options->RoadRouting = TRUE;
+    fprintf(stderr, 
+	    "MODEL IN DEVELOPMENT: Road routing included, but not road erosion.\n");
+  }
   else if (strncmp(StrEnv[road_routing].VarStr, "CONVENTIONAL", 12) == 0)
     Options->RoadRouting = FALSE;
   else
@@ -235,9 +238,33 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   /* Check for compatible options. */
   if(Options->Sediment == TRUE) {
     if(!Options->Routing) {
-      fprintf(stderr, "WARNING: Sediment model cannot be run with conventional overland flow routing.\n");
-      fprintf(stderr, "Overland Routing being reset to Kinematic.\n");
+      fprintf(stderr, 
+	      "WARNING: Sediment model cannot be run with conventional overland\n");
+      fprintf(stderr, 
+	      "flow routing.  Overland Routing being reset to KINEMATIC.\n\n");
       Options->Routing = TRUE;
+    }
+    /* RoadRouting can only be performd if there are roads. 
+       This check is made in InitNetwork.c */
+    if(!Options->RoadRouting) {
+      fprintf(stderr, 
+	      "WARNING: Sediment model (forest roads component) cannot be run\n");
+      fprintf(stderr, 
+	      "with conventional road flow routing. To run this component, set\n");
+      fprintf(stderr, 
+	      "Road Routing to KINEMATIC. This model run will continue without\n");
+      fprintf(stderr, 
+	      "forest road erosion. \n\n");
+    }  
+  }
+
+  if(Options->Sediment == FALSE){
+    if(Options->RoadRouting){
+      fprintf(stderr, 
+	      "WARNING: Kinematic road routing is for use in the sediment\n");
+      fprintf(stderr, 
+	      "model. Road Routing being reset to CONVENTIONAL.\n\n");
+      Options->RoadRouting = FALSE;
     }
   }
  

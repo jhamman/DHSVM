@@ -81,6 +81,7 @@ int main(int argc, char **argv)
     {0.0, 0.0, 0.0, 0.0, NULL, NULL, 0.0},	/* PRECIPPIX */
     {{0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, 0.0, 0.0, 0.0},	/* PIXRAD */
     {0.0, 0.0},		/* RADCLASSPIX */
+    {0.0},		/* ROADSTRUCT*/
     {0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0,
      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},	/* SNOWPIX */
     {0, 0.0, NULL, NULL, NULL, 0.0, 0.0, 0.0, 0.0,
@@ -172,9 +173,9 @@ int main(int argc, char **argv)
   else if (Options.Extent != POINT)
     InitUnitHydrograph(Input, &Map, TopoMap, &UnitHydrograph,
 		       &Hydrograph, &HydrographInfo);
-  InitNetwork(Options.HasNetwork, Options.ImperviousFilePath, Map.NY, Map.NX, 
-	      Map.DX, Map.DY, TopoMap, SoilMap, VegMap, VType, &Network, 
-	      &ChannelData, Veg);
+ 
+  InitNetwork(Map.NY, Map.NX, Map.DX, Map.DY, TopoMap, SoilMap, 
+	      VegMap, VType, &Network, &ChannelData, Veg, &Options);
 
   InitMetSources(Input, &Options, &Map, Soil.MaxLayers, &Time,
 		 &InFiles, &NStats, &Stat, &Radar, &MM5Map);
@@ -390,7 +391,8 @@ int main(int argc, char **argv)
 		    SedMap, &FineMap, SedType, MaxStreamID, SnowMap);
 
     if (Options.HasNetwork)
-      RouteChannel(&ChannelData, &Time, &Map, TopoMap, SoilMap, &Total, &Options);
+      RouteChannel(&ChannelData, &Time, &Map, TopoMap, SoilMap, &Total, 
+		   &Options, Network, SType);
 
     /* Sediment Routing in Channel and output to sediment files */
     if(Options.Sediment) {
@@ -426,7 +428,7 @@ int main(int argc, char **argv)
     
     ExecDump(&Map, &(Time.Current), &(Time.Start), &Options, &Dump, TopoMap,
 	     EvapMap, PrecipMap, RadMap, SnowMap, MetMap, VegMap, &Veg, SoilMap,
-	     SedMap, &ChannelData, FineMap, &Soil, &Total, &HydrographInfo,
+	     SedMap, Network, &ChannelData, FineMap, &Soil, &Total, &HydrographInfo,
 	     Hydrograph);
     
     IncreaseTime(&Time);
@@ -435,7 +437,7 @@ int main(int argc, char **argv)
 
   ExecDump(&Map, &(Time.Current), &(Time.Start), &Options, &Dump, TopoMap,
 	   EvapMap, PrecipMap, RadMap, SnowMap, MetMap, VegMap, &Veg, SoilMap,
-	   SedMap, &ChannelData, FineMap, &Soil, &Total, &HydrographInfo,
+	   SedMap, Network, &ChannelData, FineMap, &Soil, &Total, &HydrographInfo,
 	   Hydrograph);
 
   FinalMassBalance(&(Dump.Balance), &Total, &Mass);

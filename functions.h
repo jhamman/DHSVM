@@ -82,13 +82,13 @@ void DumpPix(DATE *Current, int first, FILES *OutFile, FILES *OutFileSediment,
 	     SOILPIX *Soil, SEDPIX *SedMap, float SedimentOverlandInflow,
 	     FINEPIX *FineMap, int NSoil, int NVeg, OPTIONSTRUCT *Options); 
 
-void ExecDump(MAPSIZE *Map, DATE *Current, DATE *Start,
-	      OPTIONSTRUCT *Options, DUMPSTRUCT *Dump, TOPOPIX **TopoMap,
-	      EVAPPIX **EvapMap, PRECIPPIX **PrecipMap,
-	      RADCLASSPIX **RadMap, SNOWPIX **SnowMap, MET_MAP_PIX **MetMap,
-	      VEGPIX **VegMap, LAYER *Veg, SOILPIX **SoilMap, SEDPIX ** SedMap,
-	      CHANNEL *ChannelData, FINEPIX **FineMap, LAYER *Soil, AGGREGATED *Total,
-	      UNITHYDRINFO *HydrographInfo, float *Hydrograph);
+void ExecDump(MAPSIZE * Map, DATE * Current, DATE * Start, OPTIONSTRUCT * Options,
+	      DUMPSTRUCT * Dump, TOPOPIX ** TopoMap, EVAPPIX ** EvapMap,
+	      PRECIPPIX ** PrecipMap, RADCLASSPIX ** RadMap, SNOWPIX ** SnowMap,
+	      MET_MAP_PIX ** MetMap, VEGPIX ** VegMap, LAYER * Veg, SOILPIX ** SoilMap,
+	      SEDPIX ** SedMap, ROADSTRUCT ** Network, CHANNEL * ChannelData, 
+	      FINEPIX ** FineMap, LAYER * Soil, AGGREGATED * Total, 
+	      UNITHYDRINFO * HydrographInfo, float *Hydrograph);
 
 unsigned char fequal(float a, float b);
 
@@ -96,6 +96,9 @@ void FinalMassBalance(FILES *Out, AGGREGATED *Total, WATERBALANCE *Mass);
 
 float FindDT(SOILPIX **SoilMap, MAPSIZE *Map, TIMESTRUCT *Time, 
 	     TOPOPIX **TopoMap, SOILTABLE *SType); 
+
+float FindDTRoad(ROADSTRUCT **Network, TIMESTRUCT *Time, int y, int x, 
+		 float dx, float beta, float alpha);
 
 void GenerateScales(MAPSIZE *Map, int NumberType, void **XScale,
 		    void **YScale);
@@ -174,10 +177,10 @@ void InitModelState(DATE *Start, MAPSIZE *Map, OPTIONSTRUCT *Options,
 		    ROADSTRUCT **Network, UNITHYDRINFO *HydrographInfo,
 		    float *Hydrograph);
 
-void InitNetwork(int HasNetwork, char *ImperviousFilePath, int NY, int NX, 
-		 float DX, float DY, TOPOPIX **TopoMap, SOILPIX **SoilMap, 
-		 VEGPIX **VegMap, VEGTABLE *VType, ROADSTRUCT ***Network, 
-		 CHANNEL *ChannelData, LAYER Veg);
+void InitNetwork(int NY, int NX, float DX, float DY, TOPOPIX **TopoMap, 
+		 SOILPIX **SoilMap, VEGPIX **VegMap, VEGTABLE *VType, 
+		 ROADSTRUCT ***Network, CHANNEL *ChannelData, 
+		 LAYER Veg, OPTIONSTRUCT *Options);
 
 void InitNewDay(int DayOfYear, SOLARGEOMETRY *SolarGeo);
 
@@ -342,6 +345,10 @@ void RouteDebrisFlow(float *SedimentToChannel, int prevy,
 		     int prevx, float SlopeAspect, CHANNEL *ChannelData, 
 		     MAPSIZE *Map);
 
+void RouteRoad(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap, 
+	       SOILPIX ** SoilMap, ROADSTRUCT ** Network, SOILTABLE * SType, 
+	       CHANNEL * ChannelData); 
+
 void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
 		     VEGTABLE *VType, VEGPIX **VegMap,
 		     ROADSTRUCT **Network, SOILTABLE *SType,
@@ -374,13 +381,14 @@ void SkipLines(FILES *InFile, int NLines);
 
 void StoreChannelState(char *Path, DATE *Current, Channel *Head);
 
-void StoreModelState(char *Path, DATE *Current, MAPSIZE *Map,
-		     OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
-		     PRECIPPIX **PrecipMap, SNOWPIX **SnowMap,
-		     MET_MAP_PIX **MetMap, RADCLASSPIX **RadMap,
-		     VEGPIX **VegMap, LAYER *Veg, SOILPIX **SoilMap,
-		     LAYER *Soil, UNITHYDRINFO *HydrographInfo,
-		     float *Hydrograph);
+void StoreModelState(char *Path, DATE * Current, MAPSIZE * Map,
+		     OPTIONSTRUCT * Options, TOPOPIX ** TopoMap,
+		     PRECIPPIX ** PrecipMap, SNOWPIX ** SnowMap,
+		     MET_MAP_PIX ** MetMap, RADCLASSPIX ** RadMap,
+		     VEGPIX ** VegMap, LAYER * Veg, SOILPIX ** SoilMap,
+		     LAYER * Soil, ROADSTRUCT ** Network, 
+		     UNITHYDRINFO * HydrographInfo, float *Hydrograph,
+		     CHANNEL * ChannelData);
 
 float viscosity(float Tair, float Rh);
 
