@@ -108,11 +108,44 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
   float Transmissivity;
   float AvailableWater;
   int k;
+  float **SubFlowGrad;	        /* Magnitude of subsurface flow gradient
+				   slope * width */
+  unsigned char ***SubDir;         /* Fraction of flux moving in each direction*/ 
+  unsigned int **SubTotalDir;	/* Sum of Dir array */
 
   /* variables for mass wasting trigger. */
   int count, totalcount;
   float mgrid;
 
+  /*****************************************************************************
+   Allocate memory 
+  ****************************************************************************/
+  
+  if (!(SubFlowGrad = (float **)calloc(Map->NY, sizeof(float *))))
+    ReportError((char *) Routine, 1);
+  for(i=0; i<Map->NY; i++) {
+    if (!(SubFlowGrad[i] = (float *)calloc(Map->NX, sizeof(float))))
+      ReportError((char *) Routine, 1);
+  }
+  
+  if (!((SubDir) = (unsigned char ***) calloc(Map->NY, sizeof(unsigned char **))))
+    ReportError((char *) Routine, 1);
+  for(i=0; i<Map->NY; i++) {
+    if (!((SubDir)[i] = (unsigned char **) calloc(Map->NX, sizeof(unsigned char*))))
+	ReportError((char *) Routine, 1);
+    for(j=0; j<Map->NX; j++) {
+      if (!(SubDir[i][j] = (unsigned char *)calloc(NDIRS, sizeof(unsigned char ))))
+    ReportError((char *) Routine, 1);
+    }
+  }
+
+  if (!(SubTotalDir = (unsigned int **)calloc(Map->NY, sizeof(unsigned int *))))
+    ReportError((char *) Routine, 1);
+  for(i=0; i<Map->NY; i++) {
+    if (!(SubTotalDir[i] = (unsigned int *)calloc(Map->NX, sizeof(unsigned int))))
+      ReportError((char *) Routine, 1);
+  }
+  
   /* reset the saturated subsurface flow to zero */
   for (y = 0; y < Map->NY; y++) {
     for (x = 0; x < Map->NX; x++) {
@@ -124,6 +157,9 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
     }
   }
 
+  if (Options->FlowGradient == WATERTABLE)
+    HeadSlopeAspect(Map, TopoMap, SoilMap, SubFlowGrad, SubDir, SubTotalDir);
+
   /* next sweep through all the grid cells, calculate the amount of
      flow in each direction, and divide the flow over the surrounding
      pixels */
@@ -131,6 +167,14 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
   for (y = 0; y < Map->NY; y++) {
     for (x = 0; x < Map->NX; x++) {
       if (INBASIN(TopoMap[y][x].Mask)) {
+	
+	if (Options->FlowGradient == TOPOGRAPHY){
+	  SubTotalDir[y][x] = TopoMap[y][x].TotalDir;
+	  SubFlowGrad[y][x] = TopoMap[y][x].FlowGrad;
+	  for (k = 0; k < NDIRS; k++) 
+	    SubDir[y][x][k] = TopoMap[y][x].Dir[k];
+	}
+
 	BankHeight = (Network[y][x].BankHeight > SoilMap[y][x].Depth) ?
 	  SoilMap[y][x].Depth : Network[y][x].BankHeight;
 	Adjust = Network[y][x].Adjust;
@@ -139,9 +183,12 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
 
 	if (!channel_grid_has_channel(ChannelData->stream_map, x, y)) {
 	  for (k = 0; k < NDIRS; k++) {
-	    fract_used += (float) TopoMap[y][x].Dir[k];
+	    fract_used += (float) SubDir[y][x][k];
+/* 	    fract_used += (float) TopoMap[y][x].Dir[k]; */
 	  }
-	  fract_used /= 255.0f;
+/* 	  fract_used /= 255.0f; */
+/* 	  fract_used /= (float) TopoMap[y][x].TotalDir; */
+	  fract_used /= (float) SubTotalDir[y][x];
 
 	  /* only bother calculating subsurface flow if water table is above bedrock */
 	  if (SoilMap[y][x].TableDepth < SoilMap[y][x].Depth) {
@@ -155,8 +202,10 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
 				 SType[SoilMap[y][x].Soil - 1].KsLatExp);
 
 	    OutFlow =
-	      (Transmissivity * fract_used * TopoMap[y][x].FlowGrad * Dt) /
+	      (Transmissivity * fract_used * SubFlowGrad[y][x] * Dt) /
 	      (Map->DX * Map->DY);
+/* 	      (Transmissivity * fract_used * TopoMap[y][x].FlowGrad * Dt) / */
+/* 	      (Map->DX * Map->DY); */
 
 	    /* check whether enough water is available for redistribution */
 
@@ -179,14 +228,19 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
 
 	  if (SoilMap[y][x].TableDepth < BankHeight &&
 	      channel_grid_has_channel(ChannelData->road_map, x, y)) {
-	    fract_used = ((float) Network[y][x].fraction / 255.0f);
+/* 	    fract_used = ((float) Network[y][x].fraction / 255.0f); */
+/* 	    fract_used = ((float) Network[y][x].fraction / (float)TopoMap[y][x].TotalDir); */
+	    fract_used = ((float) Network[y][x].fraction / (float)SubTotalDir[y][x]);
 	    Transmissivity =
 	      CalcTransmissivity(BankHeight, SoilMap[y][x].TableDepth,
 				 SType[SoilMap[y][x].Soil - 1].KsLat,
 				 SType[SoilMap[y][x].Soil - 1].KsLatExp);
 	    water_out_road = (Transmissivity * fract_used *
-			      TopoMap[y][x].FlowGrad * Dt) / (Map->DX *
+			      SubFlowGrad[y][x] * Dt) / (Map->DX *
 							      Map->DY);
+/*                               (Transmissivity * fract_used * */
+/* 			      TopoMap[y][x].FlowGrad * Dt) / (Map->DX * */
+/* 							      Map->DY); */
 
 	    AvailableWater =
 	      CalcAvailableWater(VType[VegMap[y][x].Veg - 1].NSoilLayers,
@@ -211,13 +265,16 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
 
 	  /* Assign the water to appropriate surrounding pixels */
 
-	  OutFlow /= 255.0f;
+/* 	  OutFlow /= 255.0f; */
+/* 	  OutFlow /= (float) TopoMap[y][x].TotalDir; */
+	  OutFlow /= (float) SubTotalDir[y][x];
 
 	  for (k = 0; k < NDIRS; k++) {
 	    int nx = xneighbor[k] + x;
 	    int ny = yneighbor[k] + y;
 	    if (valid_cell(Map, nx, ny)) {
-	      SoilMap[ny][nx].SatFlow += OutFlow * TopoMap[y][x].Dir[k];
+	      SoilMap[ny][nx].SatFlow += OutFlow * SubDir[y][x][k];
+/* 	      SoilMap[ny][nx].SatFlow += OutFlow * TopoMap[y][x].Dir[k]; */
 	    }
 	  }
 
@@ -307,4 +364,15 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
   /**********************************************************************/
     /* End added code. */
 
+  for(i=0; i<Map->NY; i++) { 
+    free(SubTotalDir[i]);
+    free(SubFlowGrad[i]);
+    for(j=0; j<Map->NX; j++)
+      free(SubDir[i][j]);
+  }
+  free(SubDir);
+  free(SubTotalDir);
+  free(SubFlowGrad);
+
 }
+

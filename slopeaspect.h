@@ -29,7 +29,8 @@ extern int yneighbor[NDIRS];
    available functions
    ------------------------------------------------------------- */
 void ElevationSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap);
-void HeadSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap, SOILPIX ** SoilMap);
+void HeadSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap, SOILPIX ** SoilMap,
+		     float **FlowGrad, unsigned char ***Dir, unsigned int **TotalDir);
 int valid_cell(MAPSIZE * Map, int x, int y);
 int valid_cell_fine(MAPSIZE *Map, int x, int y);
 float ElevationSlope(MAPSIZE *Map, FINEPIX ***FineMap, int y, int x, int *nexty, 

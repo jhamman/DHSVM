@@ -275,12 +275,32 @@ void ElevationSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap)
 		       TopoMap[y][x].Aspect,
 		       neighbor_elev, &(TopoMap[y][x].FlowGrad),
 		       TopoMap[y][x].Dir, &(TopoMap[y][x].TotalDir));
-	
+
+	/* Checks that upslope neighbors Dir = 0. 
+	   Accounts for sinks and basin outlet by letting second
+	   or only neighbor with a direction keep its direction. 
+	   This could be modified, for a sink, so that the neighbor 
+	   closest in elevation gets the water.*/
+	for (n = 0; n < NDIRS; n++) {
+	  int xn = x + xneighbor[n];
+	  int yn = y + yneighbor[n];
+	  
+	  if ((TopoMap[y][x].Dir[n] > 0) && 
+	      (TopoMap[yn][xn].Dem > TopoMap[y][x].Dem)) {
+	    (TopoMap[y][x].TotalDir) -= TopoMap[y][x].Dir[n]; 
+	    if (TopoMap[y][x].TotalDir == 0) {
+	      fprintf(stderr, 
+		      "WARNING: There may be a sink in the DEM in y(%d) x(%d).\n",
+		      y,x);
+	      (TopoMap[y][x].TotalDir)+= TopoMap[y][x].Dir[n];
+	    }
+	    else TopoMap[y][x].Dir[n] = 0;
+	  }
+	}
       } // end if (INBASIN(TopoMap[y][x].Mask)) {
-      
     }
   } // end of for loops
-  
+ 
   /* Create a structure to hold elevations of only those cells
      within the basin and the y,x of those cells.*/
  
@@ -357,7 +377,8 @@ void qs(ITEM *item, int left, int right)
    HeadSlopeAspect
    This computes slope and aspect using the water table elevation. 
    ------------------------------------------------------------- */
-void HeadSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap, SOILPIX ** SoilMap)
+void HeadSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap, SOILPIX ** SoilMap,
+		     float **FlowGrad, unsigned char ***Dir, unsigned int **TotalDir)
 {
   int x;
   int y;
@@ -390,8 +411,8 @@ void HeadSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap, SOILPIX ** SoilMap)
 	slope_aspect(Map->DX, Map->DY, SoilMap[y][x].WaterLevel, neighbor_elev,
 		     &slope, &aspect);
 	flow_fractions(Map->DX, Map->DY, slope, aspect, neighbor_elev,
-		       &(TopoMap[y][x].FlowGrad), TopoMap[y][x].Dir,
-		       &(TopoMap[y][x].TotalDir));
+		       &(FlowGrad[y][x]), Dir[y][x], &(TotalDir[y][x])); 
+	/* these were changed from TopoMap */
       }
     }
   }
