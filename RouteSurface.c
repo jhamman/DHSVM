@@ -57,8 +57,6 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
   TIMESTRUCT NextTime;
   TIMESTRUCT VariableTime;
   
-  FILE *fo;             /*    Output file pointer */
-
   int i, j, x, y, n, k;         /* Counters */
   float **Runon;                /* (m3/s) */
 
@@ -80,13 +78,9 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
   float TC;                    /* Transport capacity (m3/m3) */
 
   float settling;              /* Settling velocity (m/s) */
-  float Fw;                      /* Water depth correction factor */
+  float Fw;                    /* Water depth correction factor */
 
 
- if((fo = fopen("sedout.dat","a")) == NULL) {
-    printf("Cannot open/read output file\n");  
-    exit(0);  }  
-  
   if (Options->Sediment) {
     if ((SedIn = (float **) calloc(Map->NY, sizeof(float *))) == NULL) {
       ReportError((char *) Routine, 1);
@@ -114,7 +108,8 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
     if(!Options->Routing) {
       
       if(Options->Sediment) {
-	fprintf(stderr, "The sediment model must be run with kinematic wave routing.\n");
+	fprintf(stderr, 
+		"The sediment model must be run with kinematic wave routing.\n");
 	exit(0);
       }
       
@@ -205,7 +200,6 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	  beta = 3./5.;
 	  alpha = pow(SType[SoilMap[y][x].Soil-1].Manning*pow(Map->DX,2./3.)/sqrt(slope),beta);
 
-
 	  /* Calculate discharge (m3/s) from the grid cell using an explicit 
 	     finite difference solution of the linear kinematic wave. */
 	  
@@ -239,8 +233,9 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	   /*Make sure calculated outflow doesn't exceed available water, 
 	     and update surface water storage */
 	  
-	  if(outflow > (SoilMap[y][x].IExcess*(Map->DX*Map->DY)/VariableDT + Runon[y][x])) {
-	    outflow = SoilMap[y][x].IExcess*(Map->DX*Map->DY)/VariableDT + (Runon[y][x]);
+	  if(outflow > (SoilMap[y][x].IExcess*(Map->DX*Map->DY)/Time->Dt + Runon[y][x])) {
+	    outflow = SoilMap[y][x].IExcess*(Map->DX*Map->DY)/Time->Dt + 
+	      (Runon[y][x]);
 	    SoilMap[y][x].IExcess = 0.0;
 	  }
 	  else
@@ -255,7 +250,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 
 	    DS = SedType[SoilMap[y][x].Soil-1].d50/1000000.;
 
-            /* calculate unit streampower =u*S in m/s  */
+            /* calculate unit streampower =u*S (m/s)  */
 
 	    streampower= (outflow/Map->DX/h)*slope;
 
@@ -270,7 +265,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	      
 	      /* First find potential erosion due to rainfall Morgan et al. (1998). 
 		 Momentum squared of the precip is determined in MassEnergyBalance.c
-		 Converting from kg/m2*s to m3/s*m */
+		 Converting from (kg/m2*s) to (m3/s*m) */
 
 	      if (h <= PrecipMap[y][x].Dm)
 		Fw = 1.;
@@ -282,12 +277,12 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	      if (VType->OverStory == TRUE) 
 		/* Then (1-VType->Fract[1]) is the fraction of understory */
 		DR = SedType->KIndex * Fw * (1-VType->Fract[1]) *
-		  PrecipMap[y][x].MomentSq; /* ((kg/m^2*s) */
+		  PrecipMap[y][x].MomentSq; /* (kg/m^2*s) */
 	      else
 		/* There is no Overstory, then (1-VType->Fract[0]) is the 
 		   fraction of understory */
 		DR = SedType->KIndex * Fw * (1-VType->Fract[0]) *
-		  PrecipMap[y][x].MomentSq; /* ((kg/m^2*s) */
+		  PrecipMap[y][x].MomentSq; /* (kg/m^2*s) */
 	      
 	      /* converting units to m3 m-1 s-1*/
 	      DR = DR/PARTDENSITY * Map->DX;
@@ -319,9 +314,10 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
  
 	      SedMap[y][x].OldSedOut = SedOut;
 	      SedMap[y][x].OldSedIn = SedIn[y][x];
-	      SedMap[y][x].SedFluxOut += (SedOut*Runon[y][x]*VariableDT);  /* total sediment in cu. meters */
+	      SedMap[y][x].SedFluxOut += (SedOut*Runon[y][x]*
+					  VariableDT);  /* total sediment (m3) */
 	      SedMap[y][x].Erosion += (SedIn[y][x]*Runon[y][x] - SedOut*outflow)*
-		VariableDT/(Map->DX*Map->DY)*1000.;  /* total depth of erosion in mm */
+		VariableDT/(Map->DX*Map->DY)*1000.;  /* total depth of erosion (mm) */
 	      
 	    } /* end if outflow > 0. */
 	    else {
@@ -446,14 +442,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
     PrintDate(&(Time->Current), Dump->Stream.FilePtr);
     fprintf(Dump->Stream.FilePtr, " %g\n", StreamFlow);
   }
-
-  fclose(fo);
-
 }
-
-
- 
-
 
 /*****************************************************************************
   FindDT()
@@ -465,7 +454,8 @@ float FindDT(SOILPIX **SoilMap, MAPSIZE *Map, TIMESTRUCT *Time,
 	     TOPOPIX **TopoMap, SOILTABLE *SType)
 {
   int x, y;
-/* JSL: slope is manning's slope; alpha is channel parameter including wetted perimeter, manning's n, and manning's slope.  Beta is 3/5 */
+/* JSL: slope is manning's slope; alpha is channel parameter including wetted perimeter, 
+   manning's n, and manning's slope.  Beta is 3/5 */
   float slope, beta, alpha;
   float Ck;
   float DT, minDT;
