@@ -74,15 +74,13 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
   float **SedIn, SedOut;       /* (m3/m3) */  
   float DR;                    /* Potential erosion due to leaf drip */ 
   float DS;                    /* Median particle diameter (m) */
-  float Cd;                      /* Drag coefficient */
-  float vs, vs_last;             /* Settling velocity (m/s)*/
-  float Rn;                      /* Particle Reynolds number */
+  float Cd;                    /* Drag coefficient */
+  float vs, vs_last;           /* Settling velocity (m/s)*/
+  float Rn;                    /* Particle Reynolds number */
   float h;                     /* Water depth (m) */
   float term1, term2, term3;
   float streampower;           /* Unit streampower from KINEROS (M/s) */
   float TC;                    /* Transport capacity (m3/m3) */
-
-  float settling;             /*  Settling velocity (m/s) */
   float Fw;                    /* Water depth correction factor */
   int sedbin;                  /* Particle bin that erosion is added to */
 

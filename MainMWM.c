@@ -148,27 +148,31 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 	TableDepth = SoilMap[i][j].TableDepth;
 	
 	/* Do not want to distribute ponded water  */
-	if (TableDepth < 0)
-	  TableDepth = 0;
+	if (TableDepth < 0.)
+	  TableDepth = 0.;
 	
 	for(ii=0; ii< Map->DY/Map->DMASS; ii++) {
 	  for(jj=0; jj< Map->DX/Map->DMASS; jj++) {
 	    y = (int) i*Map->DY/Map->DMASS + ii;
 	    x = (int) j*Map->DX/Map->DMASS + jj;
 	    
-	    FineMapTableDepth = TableDepth + 
-	      ((TopoIndexAve[i][j]-(*FineMap[y][x]).TopoIndex)/ 
-	       SType[SoilMap[i][j].Soil - 1].KsLatExp);
-	    	    
-	    if (FineMapTableDepth < 0) {
-	      (*FineMap[y][x]).SatThickness = (*FineMap[y][x]).sediment; 
-	    }
-	    else if (FineMapTableDepth > (*FineMap[y][x]).sediment)
-	      (*FineMap[y][x]).SatThickness = 0; 
-	    
-	    else 
-	      (*FineMap[y][x]).SatThickness = (*FineMap[y][x]).sediment -
-		FineMapTableDepth;
+	    if (SoilMap[i][j].Depth > SoilMap[i][j].TableDepth){
+
+	      FineMapTableDepth = TableDepth + 
+		((TopoIndexAve[i][j]-(*FineMap[y][x]).TopoIndex)/ 
+		 SType[SoilMap[i][j].Soil - 1].KsLatExp);
+	      
+	      if (FineMapTableDepth < 0.) {
+		(*FineMap[y][x]).SatThickness = (*FineMap[y][x]).sediment; 
+	      }
+	      else if (FineMapTableDepth > (*FineMap[y][x]).sediment)
+		(*FineMap[y][x]).SatThickness = 0.; 
+	      
+	      else 
+		(*FineMap[y][x]).SatThickness = (*FineMap[y][x]).sediment -
+		  FineMapTableDepth;
+	    }	    
+	    else (*FineMap[y][x]).SatThickness = 0.; 
 	    
 	    FineMapSatThickness += (*FineMap[y][x]).SatThickness;
 	    
@@ -179,7 +183,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 	      Redistribute[i][j] = (Map->DY * Map->DX *
 				    (SoilMap[i][j].Depth - TableDepth)) - 
 		(FineMapSatThickness*Map->DMASS*Map->DMASS); 
-	      FineMapSatThickness = 0;
+	      FineMapSatThickness = 0.;
 	    }
 	  }
 	}
@@ -242,7 +246,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 	      if ((*FineMap[y][x]).SatThickness > (*FineMap[y][x]).sediment)
 		(*FineMap[y][x]).SatThickness = (*FineMap[y][x]).sediment; 
 	      
-	      else if ((*FineMap[y][x]).SatThickness < 0)
+	      else if ((*FineMap[y][x]).SatThickness < 0.)
 		(*FineMap[y][x]).SatThickness = 0.;
 	    }
 	  }
