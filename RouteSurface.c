@@ -348,32 +348,34 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	      int yn = y + yneighbor[n];
 	      
 	      /* If a channel cell runoff does not go to downslope pixels. */
-	      /* if (valid_cell(Map, xn, yn)) {*/
-	      if (INBASIN(TopoMap[yn][xn].Mask)) {
-		Runon[yn][xn] += outflow * ((float) TopoMap[y][x].Dir[n] /
-					    (float) TopoMap[y][x].TotalDir);
-	
-		/* No need to distribute sediment if there isn't any*/
-		if((Options->Sediment)&&(SedOut > 0.)) {	
+	      if (valid_cell(Map, xn, yn)) {
+		
+		if (INBASIN(TopoMap[yn][xn].Mask)) {
+		  Runon[yn][xn] += outflow * ((float) TopoMap[y][x].Dir[n] /
+					      (float) TopoMap[y][x].TotalDir);
 		  
-		  /* If grid cell has a channel, sediment is intercepted by the channel */
-		  if (channel_grid_has_channel(ChannelData->stream_map, xn, yn)) {
-		   
-		    /* Assume that all the sediments belong to the smallest  
-		    category of sediment particle sizes (first size, index 0) */
-                    /* Note that stream_map and road_map are indexed by [x][y],
-                    unlike the other "map"-type variables. */
-		    ChannelData->stream_map[xn][yn]->channel->sediment.overlandinflow[0] += 
-		      SedOut * ((float) TopoMap[y][x].Dir[n] /(float) TopoMap[y][x].TotalDir); 
-		   
-		    for (i = 1; i < NSEDSIZES; i++){
-		      ChannelData->stream_map[xn][yn]->channel->sediment.overlandinflow[i] = 0.0;				
+		  /* No need to distribute sediment if there isn't any*/
+		  if((Options->Sediment)&&(SedOut > 0.)) {	
+		    
+		    /* If grid cell has a channel, sediment is intercepted by the channel */
+		    if (channel_grid_has_channel(ChannelData->stream_map, xn, yn)) {
+		      
+		      /* Assume that all the sediments belong to the smallest  
+			 category of sediment particle sizes (first size, index 0) */
+		      /* Note that stream_map and road_map are indexed by [x][y],
+			 unlike the other "map"-type variables. */
+		      ChannelData->stream_map[xn][yn]->channel->sediment.overlandinflow[0] += 
+			SedOut * ((float) TopoMap[y][x].Dir[n] /(float) TopoMap[y][x].TotalDir); 
+		      
+		      for (i = 1; i < NSEDSIZES; i++){
+			ChannelData->stream_map[xn][yn]->channel->sediment.overlandinflow[i] = 0.0;				
+		      }
 		    }
+		    else 
+		      SedIn[yn][xn] += SedOut * ((float) TopoMap[y][x].Dir[n] /
+						 (float) TopoMap[y][x].TotalDir);
+		    
 		  }
-		  else 
-		    SedIn[yn][xn] += SedOut * ((float) TopoMap[y][x].Dir[n] /
-					       (float) TopoMap[y][x].TotalDir);
-		  
 		}
 	      }
 	    } /* end loop thru possible flow directions */
@@ -477,21 +479,24 @@ float FindDT(SOILPIX **SoilMap, MAPSIZE *Map, TIMESTRUCT *Time,
   for (y = 0; y < Map->NY; y++) {
     for (x = 0; x < Map->NX; x++) {
       if (INBASIN(TopoMap[y][x].Mask)) {
-	slope = TopoMap[y][x].Slope;
-	
-	if (slope <= 0) slope = 0.0001;
-	beta = 3./5.;
-	alpha = pow(SType[SoilMap[y][x].Soil-1].Manning*pow(Map->DX,2./3.)/sqrt(slope),beta);
-	
-	/* Calculate flow velocity from discharge  using manning's equation. */
-	Ck = 1./(alpha*beta*pow(SoilMap[y][x].Runoff, beta -1.));
-	
-	if(SoilMap[y][x].Runoff > maxRunoff) {
-	  maxRunoff = SoilMap[y][x].Runoff;
+	if (SoilMap[y][x].Runoff >0.0){
+	  
+	  slope = TopoMap[y][x].Slope;
+	  if (slope <= 0) slope = 0.0001;
+	  
+	  beta = 3./5.;
+	  alpha = pow(SType[SoilMap[y][x].Soil-1].Manning*pow(Map->DX,2./3.)/sqrt(slope),beta);
+	  
+	  /* Calculate flow velocity from discharge  using manning's equation. */
+	  Ck = 1./(alpha*beta*pow(SoilMap[y][x].Runoff, beta -1.));
+	  
+	  if(SoilMap[y][x].Runoff > maxRunoff) {
+	    maxRunoff = SoilMap[y][x].Runoff;
+	  }
+	  
+	  if(Map->DX/Ck < minDT)
+	    minDT = Map->DX/Ck;
 	}
-	
-	if(Map->DX/Ck < minDT)
-	  minDT = Map->DX/Ck;
       }
     }
   }
