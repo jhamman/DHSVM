@@ -69,7 +69,7 @@ void InitDump(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   int temp_count;
   uchar **BasinMask;
   char sumoutfile[100];
-  FILE *fs ;
+  
 
   STRINIENTRY StrEnv[] = {
     {"OUTPUT", "OUTPUT DIRECTORY", "", ""},
