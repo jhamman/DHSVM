@@ -660,6 +660,7 @@ typedef struct {
   float CulvertSedToChannel;
   float SedimentOutflow;
   float SurfaceErosion;
+  float mass_error;
 } AGGREGATED;
 
 #endif

@@ -270,6 +270,8 @@ int main(int argc, char **argv)
     InitFineMaps(Input, &Options, &Map, &Soil, &TopoMap, &SoilMap, 
 		  &FineMap);
 
+    printf("Initial Channel Sediment %f\n", Total.ChannelSedimentStorage);
+
     if (Options.HasNetwork){ 
       printf("Initializing channel sediment\n\n");
       InitChannelSedimentDump(&ChannelData, Dump.Path, Options.ChannelRouting); 
@@ -277,7 +279,7 @@ int main(int argc, char **argv)
       InitChannelSediment(ChannelData.roads, &Total);
     }
 
-
+ printf("Initial Channel Sediment %f\n", Total.ChannelSedimentStorage);
     /* Allocate memory for the sediment grid */
     if (!(SedMap = (SEDPIX **) calloc(Map.NY, sizeof(SEDPIX *))))
       ReportError("MainDHSVM", 1);
@@ -325,9 +327,9 @@ int main(int argc, char **argv)
       printf("\n");
     }
 
-/*     PrintDate(&(Time.Current),stdout); */
-/*     printf("\n"); */
-    /* uncomment the above line to print the time at every step*/
+/*	PrintDate(&(Time.Current),stdout);
+        printf("\n");*/
+/* uncomment the above line to print the time at every step*/
 
     /* determine surface erosion and routing scheme */
     SedimentFlag(&Options, &Time); 
