@@ -160,7 +160,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	 (in seconds). Must be an even increment of Dt. */
       
       VariableDT = FindDT(SoilMap, Map, Time, TopoMap, SType); 
-      printf("VariableDT = %.2f\n", VariableDT);
+/*       printf("VariableDT = %.2f\n", VariableDT); */
       
       for (k = 0; k < Map->NumCells; k++) {
 	y = Map->OrderedCells[k].y;
@@ -175,8 +175,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 
       /* estimate kinematic viscosity through interpolation JSL */
       knviscosity=viscosity(Tair, Rh);
-      printf("knviscosity(%f)\n",knviscosity);
-
+ 
       /* Must loop through surface routing multiple times within one DHSVM 
 	 model time step. */
       

@@ -821,7 +821,9 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
   node *new;
 
   // Allocate and initialize a new node
-  new = (node *) malloc(sizeof(node));
+  if(!(new = (node *) malloc(sizeof(node))))
+    ReportError("enqueue", 1);
+
   new->x = x;
   new->y = y;
   new->next = NULL;
