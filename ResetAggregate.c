@@ -120,8 +120,11 @@ void ResetAggregate(LAYER * Soil, LAYER * Veg, AGGREGATED * Total,
     Total->Sediment.SedFluxOut = 0.0; 
     Total->DebrisInflow = 0.0;
     Total->SedimentOverlandInflow = 0.0; 
+    Total->SedimentOverroadInflow = 0.0;
     Total->ChannelSedimentStorage = 0.0;
     Total->ChannelSuspendedSediment = 0.0;
+    Total->CulvertReturnSedFlow = 0.0; 
+    Total->CulvertSedToChannel = 0.0; 
     Total->SedimentOutflow = 0.0; 
     Total->Fine.SatThickness = 0.0; 
     Total->Fine.DeltaDepth = 0.0; 

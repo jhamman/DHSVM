@@ -746,6 +746,26 @@ double channel_grid_outflow(ChannelMapPtr ** map, int col, int row)
 }
 
 /* -------------------------------------------------------------
+   channel_grid_sed_outflow
+   If the channel(s) within the cell are marked as ``sinks'', this
+   function totals the mass from the channels(s) and returns the total
+   mass.
+   ------------------------------------------------------------- */
+double channel_grid_sed_outflow(ChannelMapPtr ** map, int col, int row, int i)
+{
+  ChannelMapPtr cell = map[col][row];
+  double mass = 0.0;
+
+  while (cell != NULL) {
+    if (cell->sink) {
+      mass += cell->channel->sediment.outflow[i];
+    }
+    cell = cell->next;
+  }
+  return mass;
+}
+
+/* -------------------------------------------------------------
    channel_grid_flowlength
    returns the flowlength along a road surface in a channel
    if there is more than one road in a grid cell, the road

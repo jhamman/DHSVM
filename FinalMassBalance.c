@@ -116,9 +116,13 @@ OPTIONSTRUCT * Options)
 	      Mass->CumSedimentErosion*PARTDENSITY*MMTOM/10000.);
     }
     
-    SedInput = Mass->CumDebrisInflow + Mass->CumSedOverlandInflow;
-    
-    SedOutput = Mass->CumSedimentOutflow;
+    SedInput = Mass->CumDebrisInflow + 
+      (Mass->CumSedOverlandInflow - Mass->CumCulvertSedToChannel) + 
+      Mass->CumSedOverroadInflow;
+
+    /* NOTE: CulvertSedToChannel + CulvertReturnSedFlow = CulvertSedFlow */
+    SedOutput = Mass->CumSedimentOutflow - 
+      (Mass->CumCulvertSedToChannel + Mass->CumCulvertReturnSedFlow) ; 
     
     SedMassError = (Total->ChannelSedimentStorage - 
 		    Mass->StartChannelSedimentStorage) + 
@@ -129,10 +133,16 @@ OPTIONSTRUCT * Options)
     fprintf(stderr, " DebrisInflow (kg): %.0f\n", Mass->CumDebrisInflow); 
     fprintf(stderr, " OverlandInflow (kg): %.0f\n", 
 	    Mass->CumSedOverlandInflow);
+    fprintf(stderr, " OverroadInflow (kg): %.0f\n", 
+	     Mass->CumSedOverroadInflow);
     
     fprintf(stderr, " \nOutflow %.0f:\n",  SedOutput);
     fprintf(stderr, " SedimentOutflow (kg): %.0f\n", Mass->CumSedimentOutflow);
-    
+    fprintf(stderr, " CulvertReturnSedFlow (kg): %.0f\n", 
+	    Mass->CumCulvertReturnSedFlow); 
+    fprintf(stderr, " CulvertSedToChannel (kg): %.0f\n", 
+	    Mass->CumCulvertSedToChannel);    
+
     fprintf(stderr, " \nStorage:\n");
     fprintf(stderr, " Initial Storage (kg): %.0f\n", 
 	    Mass->StartChannelSedimentStorage); 

@@ -91,7 +91,7 @@ int main(int argc, char **argv)
     { 0.0, 0.0, 0.0, 0.0}, /*SEDPIX */
     { 0.0, NULL, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, /*FINEPIX */
     0.0, 0.0, 0.0, 0.0, 0.0, 0l, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-    0.0, 0.0
+    0.0, 0.0, 0.0, 0.0, 0.0
   };
   CHANNEL ChannelData = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
   DUMPSTRUCT Dump;
@@ -132,8 +132,8 @@ int main(int argc, char **argv)
   VEGPIX **VegMap = NULL;
   VEGTABLE *VType = NULL;
   WATERBALANCE Mass =		/* parameter for mass balance calculations */
-  { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-    0.0, 0.0, 0.0, 0.0, 0.0 };
+  { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 
 /*****************************************************************************
   Initialization Procedures 
@@ -276,6 +276,8 @@ int main(int argc, char **argv)
     if (Options.HasNetwork){
       printf("Initializing channel sediment\n\n");
       InitChannelSediment(ChannelData.streams, &Total);
+      if(Options.RoadRouting)
+	InitChannelSediment(ChannelData.roads, &Total);
     }
 
 
@@ -398,6 +400,7 @@ int main(int argc, char **argv)
     /* set sediment inflows to zero - they are incremented elsewhere */
     if ((Options.HasNetwork) && (Options.Sediment)){
       InitChannelSedInflow(ChannelData.streams);
+      InitChannelSedInflow(ChannelData.roads);
     }
     
     RouteSubSurface(Time.Dt, &Map, TopoMap, VType, VegMap, Network,
@@ -412,8 +415,14 @@ int main(int argc, char **argv)
     if ((Options.HasNetwork) && (Options.Sediment)){
       SPrintDate(&(Time.Current), buffer);
       flag = IsEqualTime(&(Time.Current), &(Time.Start));
-      RouteChannelSediment(ChannelData.streams, ChannelData.roads,
-			   Time, &Dump, &Total);
+      if(Options.RoadRouting){
+	RouteChannelSediment(ChannelData.roads, Time, &Dump, &Total);
+	channel_save_sed_outflow_text(buffer, ChannelData.roads,
+				      ChannelData.sedroadout,
+				      ChannelData.sedroadflowout, flag);
+	RouteCulvertSediment(&ChannelData, &Map, TopoMap, SedMap, &Total);
+      }
+      RouteChannelSediment(ChannelData.streams, Time, &Dump, &Total);
       channel_save_sed_outflow_text(buffer, ChannelData.streams,
 				    ChannelData.sedstreamout,
 				    ChannelData.sedstreamflowout, flag);

@@ -56,6 +56,8 @@ void CalcWeights(METLOCATION *Station, int NStats, int NX, int NY,
 		 uchar **BasinMask, uchar ****WeightArray,
 		 OPTIONSTRUCT *Options);
 
+double ChannelCulvertSedFlow(int y, int x, CHANNEL * ChannelData, int i);
+
 void CheckOut(int CanopyRadAttOption, LAYER Veg, LAYER Soil, 
 	      VEGTABLE *VType, SOILTABLE *SType, MAPSIZE *Map, 
 	      TOPOPIX **TopoMap, VEGPIX **VegMap, SOILPIX **SoilMap);
@@ -112,9 +114,9 @@ uchar InArea(MAPSIZE *Map, COORD *Loc);
 
 void InitAggregated(int MaxVegLayers, int MaxSoilLayers, AGGREGATED *Total);
 
-void InitChannelSediment(Channel * Head, AGGREGATED *Total);
+int InitChannelSediment(Channel * Head, AGGREGATED *Total);
 
-void InitChannelSedInflow(Channel * Head);
+int InitChannelSedInflow(Channel * Head);
 
 void InitCharArray(char *Array, int Size);
 
@@ -342,8 +344,12 @@ void ResetValues(MAPSIZE *Map, SOILPIX **SoilMap);
 
 int Round(double x);
 
-void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, 
+void RouteChannelSediment(Channel * Head, TIMESTRUCT Time, 
 			  DUMPSTRUCT *Dump, AGGREGATED * Total);
+
+void RouteCulvertSediment(CHANNEL * ChannelData, MAPSIZE * Map,
+			  TOPOPIX ** TopoMap, SEDPIX ** SedMap, 
+			  AGGREGATED * Total);
 
 void RouteDebrisFlow(float *SedimentToChannel, int prevy, 
 		     int prevx, float SlopeAspect, CHANNEL *ChannelData, 

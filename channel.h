@@ -52,7 +52,9 @@ typedef struct {
   float last_mass[NSEDSIZES];      
   float debrisinflow[NSEDSIZES];     /* inflow of sediment from mass wasting, kg, by D */
   float overlandinflow[NSEDSIZES];   /* inflow of sediment from overland
-					  flow erosion, kg, by D */
+					flow erosion, kg, by D */
+  float overroadinflow[NSEDSIZES];   /* inflow of sediment from over road
+					flow erosion, kg, by D */
   float inflow[NSEDSIZES];           /* inflow from upstream reach, kg, by D */
   float last_inflow[NSEDSIZES];           /* inflow from upstream reach, kg, by D */
   float inflowrate[NSEDSIZES];           /* inflow from upstream reach, kg/s, by D */

@@ -66,6 +66,7 @@ double channel_grid_cell_bankht(ChannelMapPtr ** map, int col, int row);
 void channel_grid_inc_inflow(ChannelMapPtr ** map, int col, int row,
 			     float mass);
 double channel_grid_outflow(ChannelMapPtr ** map, int col, int row);
+double channel_grid_sed_outflow(ChannelMapPtr ** map, int col, int row, int i);
 double channel_grid_flowlength(ChannelMapPtr ** map, int col, int row, 
 			       float floslope);
 double channel_grid_flowslope(ChannelMapPtr ** map, int col, int row);

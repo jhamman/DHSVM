@@ -86,6 +86,10 @@ void MassBalance(DATE *Current, FILES *Out, AGGREGATED *Total,
   /* Channel Erosion */
   Mass->CumDebrisInflow += Total->DebrisInflow;
   Mass->CumSedOverlandInflow += Total->SedimentOverlandInflow;
+  Mass->CumSedOverroadInflow += Total->SedimentOverroadInflow;
+
+  Mass->CumCulvertSedToChannel += Total->CulvertSedToChannel;
+  Mass->CumCulvertReturnSedFlow += Total->CulvertReturnSedFlow;
   Mass->CumSedimentOutflow += Total->SedimentOutflow;
 } 
 

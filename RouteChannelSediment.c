@@ -41,37 +41,39 @@
   Assign initial colluvium mass to each unique channel ID (amount
   of storage, kg)
 *****************************************************************************/
-void InitChannelSediment(Channel * Head, AGGREGATED * Total)
+int InitChannelSediment(Channel * Head, AGGREGATED * Total)
 {
-  Channel *Current = NULL;
-  int i;
-  float InitialDepth = 0.010; /* initial depth of sediment in the channel, m */
-  float bulkporosity, initvol;
-
-  printf("Initializing channel sediment\n\n");
-
-  bulkporosity = 0.245+0.14*pow(DEBRISd50,-0.21); /* Komura, 1961 relation */
-
-  /* Assign the storages to the correct IDs */
-  Current = Head;
-  while (Current) {
+  if (Head != NULL){ 
+    Channel *Current = NULL;
+    int i;
+    float InitialDepth = 0.010; /* initial depth of sediment in the channel, m */
+    float bulkporosity, initvol;
     
-    initvol = Current->length * InitialDepth * Current->class->width;
-    for(i=0;i<NSEDSIZES;i++) {
-      Current->sediment.debrisinflow[i]=0.0; 
-      Current->sediment.overlandinflow[i]=0.0;
-      Current->sediment.inflow[i]=0.0;
-      Current->sediment.inflowrate[i]=0.0;
-      Current->sediment.last_inflowrate[i]=0.0; 
-      Current->sediment.outflow[i]=0.0;
-      Current->sediment.outflowrate[i]=0.0;
-      Current->sediment.last_outflowrate[i]=0.0; 
-      Current->sediment.mass[i] = 
-	initvol*(1-bulkporosity)*((float) PARTDENSITY)*(1/((float) NSEDSIZES));
-      Total->ChannelSedimentStorage += Current->sediment.mass[i];
+    bulkporosity = 0.245+0.14*pow(DEBRISd50,-0.21); /* Komura, 1961 relation */
+    
+    /* Assign the storages to the correct IDs */
+    Current = Head;
+    while (Current) {
+      
+      initvol = Current->length * InitialDepth * Current->class->width;
+      for(i=0;i<NSEDSIZES;i++) {
+	Current->sediment.debrisinflow[i]=0.0; 
+	Current->sediment.overlandinflow[i]=0.0;
+	Current->sediment.overroadinflow[i]=0.0;
+	Current->sediment.inflow[i]=0.0;
+	Current->sediment.inflowrate[i]=0.0;
+	Current->sediment.last_inflowrate[i]=0.0; 
+	Current->sediment.outflow[i]=0.0;
+	Current->sediment.outflowrate[i]=0.0;
+	Current->sediment.last_outflowrate[i]=0.0; 
+	Current->sediment.mass[i] = 
+	  initvol*(1-bulkporosity)*((float) PARTDENSITY)*(1/((float) NSEDSIZES));
+	Total->ChannelSedimentStorage += Current->sediment.mass[i];
+      }
+      Current = Current->next;
     }
-    Current = Current->next;
   }
+  return (0);
 }
 /*****************************************************************************
   InitChannelSedInflow
@@ -79,18 +81,21 @@ void InitChannelSediment(Channel * Head, AGGREGATED * Total)
   Assign initial colluvium mass to each unique channel ID (amount
   of storage, kg)
 *****************************************************************************/
-void InitChannelSedInflow(Channel * Head)
+int InitChannelSedInflow(Channel * Head)
 {
-  Channel *Current = NULL;
-  int i;
-
-  Current = Head;
-  while (Current) {
-    for(i=0;i<NSEDSIZES;i++) {
-      Current->sediment.inflow[i] = 0.0;
+  if (Head != NULL){ 
+    Channel *Current = NULL;
+    int i;
+    
+    Current = Head;
+    while (Current) {
+      for(i=0;i<NSEDSIZES;i++) {
+	Current->sediment.inflow[i] = 0.0;
+      }
+      Current = Current->next;
     }
-    Current = Current->next;
   }
+  return (0);
 }
 
 /*****************************************************************************
@@ -101,7 +106,7 @@ void InitChannelSedInflow(Channel * Head)
   first, as done by Williams (1980).
 
 *****************************************************************************/
-void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, 
+void RouteChannelSediment(Channel * Head, TIMESTRUCT Time, 
 			  DUMPSTRUCT *Dump, AGGREGATED * Total)
 {
   Channel *Current = NULL;
@@ -169,7 +174,10 @@ void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time,
 	  if(IsEqualTime(&(Time.Current), &(Time.Start))) 
 	    lateral_sed_inflow_rate = 0.0;
      	  /* lateral inflow for the reach per second kg/s */
-	  else lateral_sed_inflow_rate = (Current->sediment.debrisinflow[i] + Current->sediment.overlandinflow[i])/(float) Time.Dt;
+	  else lateral_sed_inflow_rate = (Current->sediment.debrisinflow[i] + 
+					  Current->sediment.overlandinflow[i]+
+					  Current->sediment.overroadinflow[i])/
+		 (float) Time.Dt;
 
 	  /* inflow from upstream reach */
 	  Current->sediment.inflowrate[i] = Current->sediment.inflow[i]/(float) Time.Dt;
@@ -291,6 +299,9 @@ void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time,
 	  
 	  Total->SedimentOverlandInflow += Current->sediment.overlandinflow[i];
 	  Current->sediment.overlandinflow[i] = 0.;
+
+	  Total->SedimentOverroadInflow += Current->sediment.overroadinflow[i];
+	  Current->sediment.overroadinflow[i] = 0.;
 	  
 	  Total->ChannelSedimentStorage += Current->sediment.mass[i];
 	} /* close loop for each sediment size */
@@ -303,4 +314,59 @@ void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time,
     if (order_count == 0)
       break;
   } /* close loop for the stream order */
+}
+
+
+/*****************************************************************************
+  RouteCulvertSediment()
+
+*****************************************************************************/
+void RouteCulvertSediment(CHANNEL * ChannelData, MAPSIZE * Map,
+			  TOPOPIX ** TopoMap, SEDPIX ** SedMap, 
+			  AGGREGATED * Total)
+{
+  int x, y;
+  float CulvertSedFlow;   /* culvert flow of sediment, kg */
+  int i;
+
+  Total->CulvertReturnSedFlow = 0.0;
+  printf("WARNING: RouteCulvertSediment in under development.\n");
+
+  for (y = 0; y < Map->NY; y++) {
+    for (x = 0; x < Map->NX; x++) {
+      if (INBASIN(TopoMap[y][x].Mask)) {
+	
+	for(i=0; i<NSEDSIZES; i++) {
+	  
+	  CulvertSedFlow = ChannelCulvertSedFlow(y, x, ChannelData,i);
+	
+	  if (channel_grid_has_channel(ChannelData->stream_map, x, y)) {
+	    ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[i] += CulvertSedFlow;
+	    Total->CulvertSedToChannel += CulvertSedFlow;
+	  }
+	  else {
+	    Total->CulvertReturnSedFlow += CulvertSedFlow;
+	  }
+	
+	}
+      }
+    }
+  }
+}
+
+
+/*****************************************************************************
+   ChannelCulvertSedFlow ()   
+   computes sediment outflow (kg) of channel/road network to a grid cell, if it
+   contains a sink (sink check is in channel_grid_sed_outflow)
+
+*****************************************************************************/
+double ChannelCulvertSedFlow(int y, int x, CHANNEL * ChannelData, int i)
+{
+  if (channel_grid_has_channel(ChannelData->road_map, x, y)){
+    return channel_grid_sed_outflow(ChannelData->road_map, x, y, i);
+  }
+  else {
+    return 0;
+  }
 }
