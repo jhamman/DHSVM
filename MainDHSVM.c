@@ -106,8 +106,8 @@ int main(int argc, char **argv)
   OPTIONSTRUCT Options;		/* Structure with information which program
 				   options to follow */
   PIXMET LocalMet;		/* Meteorological conditions for current pixel
-				 */
-  FINEPIX **FineMap = NULL;
+			 */
+  FINEPIX ***FineMap = NULL;
   PRECIPPIX **PrecipMap = NULL;
   RADARPIX **RadarMap = NULL;
   RADCLASSPIX **RadMap = NULL;
@@ -395,7 +395,7 @@ int main(int argc, char **argv)
     
     RouteSubSurface(Time.Dt, &Map, TopoMap, VType, VegMap, Network,
 		    SType, SoilMap, &ChannelData, &Time, &Options, Dump.Path,
-		    SedMap, &FineMap, SedType, MaxStreamID, SnowMap);
+		    SedMap, FineMap, SedType, MaxStreamID, SnowMap);
 
     if (Options.HasNetwork)
       RouteChannel(&ChannelData, &Time, &Map, TopoMap, SoilMap, &Total, 

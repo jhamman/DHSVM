@@ -438,7 +438,7 @@ void HeadSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap, SOILPIX ** SoilMap,
 /* Part of MWM, should probably be merged w/ ElevationSlopeAspect function.   */
 /******************************************************************************/
 
-float ElevationSlope(MAPSIZE *Map, FINEPIX ***FineMap, int y, int x, int *nexty, 
+float ElevationSlope(MAPSIZE *Map, TOPOPIX **TopoMap, FINEPIX ***FineMap, int y, int x, int *nexty, 
 		     int *nextx, int prevy, int prevx, float *Aspect) 
 {
   int n, direction;
@@ -448,29 +448,40 @@ float ElevationSlope(MAPSIZE *Map, FINEPIX ***FineMap, int y, int x, int *nexty,
   float temp_slope[NDIRSfine];
   double length_diagonal;
   float dx, dy, celev;
+  int coarsej, coarsei;
 
   /* fill neighbor array */
   
   for (n = 0; n < NDIRSfine; n++) {
+
     int xn = x + xneighborfine[n];
     int yn = y + yneighborfine[n];
    
-    if (valid_cell_fine(Map, xn, yn)) {
-      bedrock_elev[n] = (((*FineMap)[yn][xn].Mask) ? (*FineMap)[yn][xn].bedrock : (float) OUTSIDEBASIN);
-      soil_elev[n] = (((*FineMap)[yn][xn].Mask) ? (*FineMap)[yn][xn].bedrock+(*FineMap)[yn][xn].sediment : (float) OUTSIDEBASIN);
-      
-    }
-    else {
-      soil_elev[n] = (float) OUTSIDEBASIN;
-      bedrock_elev[n] = (float) OUTSIDEBASIN;
-    }
+    // Initialize soil_elev and bedrock_elev
+    soil_elev[n] = (float) OUTSIDEBASIN;
+    bedrock_elev[n] = (float) OUTSIDEBASIN;
 
+    // Check whether yn, xn are within FineMap array bounds
+    if (valid_cell_fine(Map,xn,yn)){
+
+      coarsej = floor(yn*Map->DMASS/Map->DY);
+      coarsei = floor(xn*Map->DMASS/Map->DX);
+
+      // Check whether FineMap element has been allocated for this cell
+      // (equivalent to checking whether parent coarse grid cell is within coarse mask)
+      if (INBASIN(TopoMap[coarsej][coarsei].Mask)) { 
+
+	bedrock_elev[n] = (((*FineMap[yn][xn]).Mask) ? (*FineMap[yn][xn]).bedrock : (float) OUTSIDEBASIN);
+	soil_elev[n] = (((*FineMap[yn][xn]).Mask) ? (*FineMap[yn][xn]).bedrock+(*FineMap[yn][xn]).sediment : (float) OUTSIDEBASIN);
+	
+      }
+    }
     
   }       
   /*  Find bedrock slope in all directions. Negative slope = ascent, positive slope = descent.  */     
   dx = Map->DMASS;
   dy = Map->DMASS;
-  celev = (*FineMap)[y][x].bedrock;
+  celev = (*FineMap[y][x]).bedrock;
 
 
   length_diagonal = sqrt((pow(dx, 2)) + (pow(dy, 2))); 
@@ -509,7 +520,7 @@ float ElevationSlope(MAPSIZE *Map, FINEPIX ***FineMap, int y, int x, int *nexty,
 
   /* Find dynamic slope in direction of steepest descent. */
   
-  celev = (*FineMap)[y][x].bedrock + (*FineMap)[y][x].sediment;
+  celev = (*FineMap[y][x]).bedrock + (*FineMap[y][x]).sediment;
   if(direction==0 || direction==2 || direction==4 || direction==6)
     Slope = (atan((celev - soil_elev[direction]) / length_diagonal))
       * DEGPRAD;
@@ -535,7 +546,7 @@ float ElevationSlope(MAPSIZE *Map, FINEPIX ***FineMap, int y, int x, int *nexty,
 /* -------------------------------------------------------------
    ElevationSlopeAspectfine
    ------------------------------------------------------------- */
-void ElevationSlopeAspectfine(MAPSIZE * Map, FINEPIX ** FineMap, TOPOPIX **TopoMap)
+void ElevationSlopeAspectfine(MAPSIZE * Map, FINEPIX ***FineMap, TOPOPIX **TopoMap)
 {
   const char *Routine = "ElevationSlopeAspectfine";
   int x;
@@ -560,7 +571,7 @@ void ElevationSlopeAspectfine(MAPSIZE * Map, FINEPIX ** FineMap, TOPOPIX **TopoM
       
       /* Save the elevation, y, and x in the ITEM structure. */
       if (INBASIN(TopoMap[coarsei][coarsej].Mask)) {
-	Map->OrderedCellsfine[k].Rank = FineMap[y][x].Dem;
+	Map->OrderedCellsfine[k].Rank = (*FineMap[y][x]).Dem;
 	Map->OrderedCellsfine[k].y = y;
 	Map->OrderedCellsfine[k].x = x;
 	k++;

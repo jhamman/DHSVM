@@ -229,18 +229,18 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   else
     ReportError(StrEnv[mass_wasting].KeyName, 51);
 
-/* Determine whether surface erosion model should be run */
+  /* Determine whether surface erosion model should be run */
   if (strncmp(StrEnv[surface_erosion].VarStr, "TRUE", 4) == 0){
     Options->ErosionPeriod = TRUE;
     Options->SurfaceErosion = TRUE;
-}
+  }
   else if (strncmp(StrEnv[surface_erosion].VarStr, "FALSE", 5) == 0){
     Options->ErosionPeriod = FALSE;
     Options->SurfaceErosion = FALSE;
-}
+  }
   else
     ReportError(StrEnv[surface_erosion].KeyName, 51);
-
+  
   /* Determine overland flow routing method to use */
   if (strncmp(StrEnv[routing].VarStr, "KINEMATIC", 9) == 0)
     Options->Routing = TRUE;
@@ -259,11 +259,11 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
     Options->RoadRouting = FALSE;
   else
     ReportError(StrEnv[road_routing].KeyName, 51);
-
-
+  
+  
   /* Check for compatible options. */
   if(Options->Sediment == TRUE) {
-
+    
     /* RoadRouting can only be performed if there are roads. 
        This check is made in InitNetwork.c */
     if(!Options->RoadRouting) {
@@ -277,7 +277,7 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
 	      "forest road erosion. \n\n");
     }  
   }
-
+  
   if(Options->Sediment == FALSE){
     if(Options->RoadRouting){
       fprintf(stderr, 
@@ -286,17 +286,15 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
 	      "model. Road Routing being reset to CONVENTIONAL.\n\n");
       Options->RoadRouting = FALSE;
     }
-/* turn off all sediment options if (!Options->Sediment) */
+
+    /* turn off all sediment options if (!Options->Sediment) */
     if(Options->MassWaste || Options->SurfaceErosion)
- fprintf(stderr, 
+      fprintf(stderr, 
 	      "WARNING: Sediment option has not been chosen. All erosion options are being turned off.\n\n");
- 
- Options->MassWaste = FALSE;
- Options->SurfaceErosion = FALSE;
-
+    Options->MassWaste = FALSE;
+    Options->SurfaceErosion = FALSE;
   }
- 
-
+  
   /* Determine if the maximum infiltration rate is static or dynamic */
   if (strncmp(StrEnv[infiltration].VarStr, "STATIC", 6) == 0) {
     Options->Infiltration = STATIC;

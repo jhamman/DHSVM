@@ -39,7 +39,7 @@ extern int e, ndx;
 
 void draw(DATE * Day, int first, int DayStep, MAPSIZE *Map, int NGraphics,
 	  int *which_graphics, VEGTABLE * VType, SOILTABLE * SType,
-	  SNOWPIX ** SnowMap, SOILPIX ** SoilMap, SEDPIX ** SedMap, FINEPIX ** FineMap,
+	  SNOWPIX ** SnowMap, SOILPIX ** SoilMap, SEDPIX ** SedMap, FINEPIX *** FineMap,
 	  VEGPIX ** VegMap, TOPOPIX ** TopoMap, PRECIPPIX ** PrecipMap, float **PrismMap,
 	  float **SkyViewMap, unsigned char ***ShadowMap, EVAPPIX ** EvapMap,
 	  RADCLASSPIX ** RadMap, MET_MAP_PIX ** MetMap, OPTIONSTRUCT * Options)
@@ -686,7 +686,7 @@ void draw(DATE * Day, int first, int DayStep, MAPSIZE *Map, int NGraphics,
 		    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
 		      yy = (int) j*Map->DY/Map->DMASS + ii;
 		      xx = (int) i*Map->DX/Map->DMASS + jj;
-		      temp += FineMap[yy][xx].SedimentToChannel;
+		      temp += (*FineMap[yy][xx]).SedimentToChannel;
 		    }
 		  }
 		  // Normalize by # FineMap cells in a pixel
@@ -801,7 +801,7 @@ void draw(DATE * Day, int first, int DayStep, MAPSIZE *Map, int NGraphics,
 		    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
 		      yy = (int) j*Map->DY/Map->DMASS + ii;
 		      xx = (int) i*Map->DX/Map->DMASS + jj;
-		      temp += FineMap[yy][xx].Dem;
+		      temp += (*FineMap[yy][xx]).Dem;
 		    }
 		  }
 		  // Normalize by # FineMap cells in a pixel
@@ -831,7 +831,7 @@ void draw(DATE * Day, int first, int DayStep, MAPSIZE *Map, int NGraphics,
 /* 		    for (jj=0; jj< Map->DX/Map->DMASS; jj++) { */
 /* 		      yy = (int) j*Map->DY/Map->DMASS + ii; */
 /* 		      xx = (int) i*Map->DX/Map->DMASS + jj; */
-/* 		      temp += FineMap[yy][xx].Slope; */
+/* 		      temp += (*FineMap[yy][xx]).Slope; */
 /* 		    } */
 /* 		  } */
 		  // Normalize by # FineMap cells in a pixel
@@ -861,7 +861,7 @@ void draw(DATE * Day, int first, int DayStep, MAPSIZE *Map, int NGraphics,
 		    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
 		      yy = (int) j*Map->DY/Map->DMASS + ii;
 		      xx = (int) i*Map->DX/Map->DMASS + jj;
-		      temp += FineMap[yy][xx].SatThickness;
+		      temp += (*FineMap[yy][xx]).SatThickness;
 		    }
 		  }
 		  // Normalize by # FineMap cells in a pixel
@@ -891,7 +891,7 @@ void draw(DATE * Day, int first, int DayStep, MAPSIZE *Map, int NGraphics,
 		    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
 		      yy = (int) j*Map->DY/Map->DMASS + ii;
 		      xx = (int) i*Map->DX/Map->DMASS + jj;
-		      temp += FineMap[yy][xx].DeltaDepth;
+		      temp += (*FineMap[yy][xx]).DeltaDepth;
 		    }
 		  }
 		  // Normalize by # FineMap cells in a pixel
@@ -921,7 +921,7 @@ void draw(DATE * Day, int first, int DayStep, MAPSIZE *Map, int NGraphics,
 		    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
 		      yy = (int) j*Map->DY/Map->DMASS + ii;
 		      xx = (int) i*Map->DX/Map->DMASS + jj;
-		      temp += FineMap[yy][xx].Probability;
+		      temp += (*FineMap[yy][xx]).Probability;
 		    }
 		  }
 		  // Normalize by # FineMap cells in a pixel

@@ -25,14 +25,14 @@
 #include "sizeofnt.h"
 #include "slopeaspect.h"
 
-void CalcTopoIndex (MAPSIZE *Map, FINEPIX **FineMap, TOPOPIX **TopoMap);
+void CalcTopoIndex (MAPSIZE *Map, FINEPIX ***FineMap, TOPOPIX **TopoMap);
 
 /*****************************************************************************
   InitFineMaps()
 *****************************************************************************/
 void InitFineMaps(LISTPTR Input, OPTIONSTRUCT *Options, MAPSIZE *Map, 
 		     LAYER *Soil, TOPOPIX ***TopoMap, SOILPIX ***SoilMap, 
-		     FINEPIX ***FineMap)
+		     FINEPIX ****FineMap)
 {
  
   const char *Routine = "InitFineMaps";
@@ -41,23 +41,24 @@ void InitFineMaps(LISTPTR Input, OPTIONSTRUCT *Options, MAPSIZE *Map,
   int ii, jj, xx, yy;            /* Counters */
   int NumberType;		/* Number type of data set */
   float *Elev;                   /* Surface elevation */
+  float **tempElev, **tempMask;       /* Temporary storage */
   int MASKFLAG;
   unsigned char *Mask = NULL;          /* Fine resolution mask */
-   STRINIENTRY StrEnv[] = {
+  STRINIENTRY StrEnv[] = {
     {"FINEDEM", "DEM FILE"        , ""  , ""},
     {"FINEDEM", "MASK FILE"        , ""  , ""},
     {NULL       , NULL            , ""  , NULL}
   };
   
   printf("Initializing mass wasting resolution maps\n");
-
+  
   /* Process the [FINEDEM] section in the input file */
-
+  
   /* Read the key-entry pair for the dem from the input file */
-    GetInitString(StrEnv[0].SectionName, StrEnv[0].KeyName, StrEnv[0].Default,
-                  StrEnv[0].VarStr, (unsigned long) BUFSIZE, Input);
-    if (IsEmptyStr(StrEnv[0].VarStr))
-      ReportError(StrEnv[0].KeyName, 51);
+  GetInitString(StrEnv[0].SectionName, StrEnv[0].KeyName, StrEnv[0].Default,
+		StrEnv[0].VarStr, (unsigned long) BUFSIZE, Input);
+  if (IsEmptyStr(StrEnv[0].VarStr))
+    ReportError(StrEnv[0].KeyName, 51);
   
   /* Read the elevation dataset */ 
   
@@ -68,67 +69,142 @@ void InitFineMaps(LISTPTR Input, OPTIONSTRUCT *Options, MAPSIZE *Map,
     ReportError((char *) Routine, 1);
   Read2DMatrix(StrEnv[demfile].VarStr, Elev, NumberType, Map->NYfine, Map->NXfine, 0,
 	       VarName);
-
- /* Read the key-entry pair for the mask from the input file */
-    GetInitString(StrEnv[1].SectionName, StrEnv[1].KeyName, StrEnv[1].Default,
-                  StrEnv[1].VarStr, (unsigned long) BUFSIZE, Input);
-    if (IsEmptyStr(StrEnv[1].VarStr)) {
-      fprintf(stderr, "\nWARNING: Fine resolution mask not provided, will be set equal to \n");
-      fprintf(stderr, "coarse resolution mask.\n\n");
-      MASKFLAG = FALSE;
-    }
-    else {
-      fprintf(stderr, "fine mask = %s\n",StrEnv[1].VarStr);
-      /* Read the mask */
-      GetVarName(002, 0, VarName);
-      GetVarNumberType(002, &NumberType);
-      if (!(Mask = (unsigned char *) calloc(Map->NXfine * Map->NYfine,
-					    SizeOfNumberType(NumberType))))
-	ReportError((char *) Routine, 1);
-      Read2DMatrix(StrEnv[maskfile].VarStr, Mask, NumberType, Map->NYfine, Map->NXfine, 0,
-		   VarName);
-      MASKFLAG = TRUE;
-    }
   
-  /* Assign the attributes to the correct map pixel */
-  if (!(*FineMap = (FINEPIX **) calloc(Map->NYfine, sizeof(FINEPIX *))))
+  /* Read the key-entry pair for the mask from the input file */
+  GetInitString(StrEnv[1].SectionName, StrEnv[1].KeyName, StrEnv[1].Default,
+		StrEnv[1].VarStr, (unsigned long) BUFSIZE, Input);
+  if (IsEmptyStr(StrEnv[1].VarStr)) {
+    fprintf(stderr, "\nWARNING: Fine resolution mask not provided, will be set equal to \n");
+    fprintf(stderr, "coarse resolution mask.\n\n");
+    MASKFLAG = FALSE;
+  }
+  else {
+    fprintf(stderr, "fine mask = %s\n",StrEnv[1].VarStr);
+    /* Read the mask */
+    GetVarName(002, 0, VarName);
+    GetVarNumberType(002, &NumberType);
+    if (!(Mask = (unsigned char *) calloc(Map->NXfine * Map->NYfine,
+					  SizeOfNumberType(NumberType))))
+      ReportError((char *) Routine, 1);
+    Read2DMatrix(StrEnv[maskfile].VarStr, Mask, NumberType, Map->NYfine, Map->NXfine, 0,
+		 VarName);
+    MASKFLAG = TRUE;
+    
+    if (!(tempMask = (float **)calloc(Map->NYfine, sizeof(float *))))
+      ReportError((char *) Routine, 1);
+    for(i=0; i<Map->NYfine; i++) {
+      if (!(tempMask[i] = (float *)calloc(Map->NXfine, sizeof(float))))
+	ReportError((char *) Routine, 1);
+    }
+  }
+  
+  if (!(tempElev = (float **)calloc(Map->NYfine, sizeof(float *))))
     ReportError((char *) Routine, 1);
-  for (y = 0; y < Map->NYfine; y++) {
-    if (!((*FineMap)[y] = (FINEPIX *) calloc(Map->NXfine, sizeof(FINEPIX))))
+  for(i=0; i<Map->NYfine; i++) {
+    if (!(tempElev[i] = (float *)calloc(Map->NXfine, sizeof(float))))
       ReportError((char *) Routine, 1);
   }
   
-  for (y = 0, i = 0; y < Map->NYfine; y++) {
-    for (x = 0; x < Map->NXfine; x++, i++) {
-      (*FineMap)[y][x].Dem  = Elev[i]; 
-      if(MASKFLAG == TRUE)
-	(*FineMap)[y][x].Mask  = Mask[i];
+  /* Assign the attributes to the correct map pixel */
+  if (!(*FineMap = (FINEPIX ***) calloc(Map->NYfine, sizeof(FINEPIX **))))
+    ReportError((char *) Routine, 1);
+  for (y = 0; y < Map->NYfine; y++) {
+    if (!((*FineMap)[y] = (FINEPIX **) calloc(Map->NXfine, sizeof(FINEPIX *))))
+      ReportError((char *) Routine, 1);
+  }
+  // Only allocate a FINEPIX structure for a fine grid cell if that grid cell
+  // is in the coarse grid mask
+  for (y = 0; y < Map->NY; y++) {
+    for (x = 0; x < Map->NX; x++) { 
+      if (INBASIN((*TopoMap)[y][x].Mask)) {
+	for (ii=0; ii< Map->DY/Map->DMASS; ii++) { 
+ 	  for (jj=0; jj< Map->DX/Map->DMASS; jj++) { 
+	    yy = (int) y*Map->DY/Map->DMASS + ii; 
+ 	    xx = (int) x*Map->DX/Map->DMASS + jj; 
+            if (!((*FineMap)[yy][xx] = (FINEPIX *) malloc(sizeof(FINEPIX)))) {
+fprintf(stderr,"error allocating FineMap[%d][%d]\n",yy,xx);
+              ReportError((char *) Routine, 1);
+            }
+	  }
+	}
+      }
+    }
+  }
+  
+  for (y = 0, i = 0; y < Map->NYfine; y++){
+    for (x = 0; x < Map->NXfine; x++, i++){ 
+      tempElev[y][x]  = Elev[i]; 
     }
   }
   free(Elev);
-  if(MASKFLAG == TRUE)
-    free(Mask);  
-
+  
+  for (y = 0; y < Map->NY; y++) {
+    for (x = 0; x < Map->NX; x++) { 
+      if (INBASIN((*TopoMap)[y][x].Mask)) {
+	for (ii=0; ii< Map->DY/Map->DMASS; ii++) { 
+ 	  for (jj=0; jj< Map->DX/Map->DMASS; jj++) { 
+	    yy = (int) y*Map->DY/Map->DMASS + ii; 
+ 	    xx = (int) x*Map->DX/Map->DMASS + jj; 
+	    (*(*FineMap)[yy][xx]).Dem  = tempElev[yy][xx]; 
+	  }
+	}
+      }
+    }
+  }
+  
+  for(i=0; i<Map->NY; i++) { 
+    free(tempElev[i]);
+  }
+  free(tempElev);
+  
+  if(MASKFLAG == TRUE){
+    for (y = 0, i = 0; y < Map->NYfine; y++){
+      for (x = 0; x < Map->NXfine; x++, i++){ 
+	tempMask[y][x]  = Mask[i]; 
+      }
+    }
+    free (Mask);
+    for (y = 0; y < Map->NY; y++) {
+      for (x = 0; x < Map->NX; x++) { 
+	if (INBASIN((*TopoMap)[y][x].Mask)) {
+	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) { 
+	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) { 
+	      yy = (int) y*Map->DY/Map->DMASS + ii; 
+	      xx = (int) x*Map->DX/Map->DMASS + jj; 
+	      (*(*FineMap)[yy][xx]).Mask  = tempMask[yy][xx]; 
+	    }
+	  }
+	}
+      }
+    }
+    for(i=0; i<Map->NY; i++) { 
+      free(tempMask[i]);
+    }
+    free(tempMask);
+  }
+  
   /* Create fine resolution mask, sediment and bedrock maps. */
   
   for (y = 0, i = 0; y < Map->NY; y++) {
     for (x = 0; x < Map->NX; x++, i++) {
       for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
 	for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
-	  yy = (int) y*Map->DY/Map->DMASS + ii;
-	  xx = (int) x*Map->DX/Map->DMASS + jj;
-	  if(MASKFLAG==FALSE)
-	    (*FineMap)[yy][xx].Mask = (*TopoMap)[y][x].Mask;
-	  else {
-	    // Don't allow fine mask to extend beyond edges of coarse mask.
-	    // This means that failures may still try to leave the basin if the coarse 
-	    // mask isn't wide enough because some of the drainage area may be cropped.
-	    if (!INBASIN((*TopoMap)[y][x].Mask))
-	      (*FineMap)[yy][xx].Mask = (*TopoMap)[y][x].Mask;
-	  }
-	  (*FineMap)[yy][xx].bedrock = (*FineMap)[yy][xx].Dem - (*SoilMap)[y][x].Depth;
-	  (*FineMap)[yy][xx].sediment = (*SoilMap)[y][x].Depth;
+	  if (INBASIN((*TopoMap)[y][x].Mask)) {
+	    yy = (int) y*Map->DY/Map->DMASS + ii;
+	    xx = (int) x*Map->DX/Map->DMASS + jj;
+	    if(MASKFLAG==FALSE)
+	      (*(*FineMap)[yy][xx]).Mask = (*TopoMap)[y][x].Mask;
+	    /*   else { */
+	      // Don't allow fine mask to extend beyond edges of coarse mask.
+	      // This means that failures may still try to leave the basin if the coarse 
+	      // mask isn't wide enough because some of the drainage area may be cropped.
+	/*       if (!INBASIN((*TopoMap)[y][x].Mask)) */
+/* 		(*(*FineMap)[yy][xx]).Mask = (*TopoMap)[y][x].Mask; */
+	 /*    } */
+	    (*(*FineMap)[yy][xx]).bedrock = (*(*FineMap)[yy][xx]).Dem - (*SoilMap)[y][x].Depth;
+	    (*(*FineMap)[yy][xx]).sediment = (*SoilMap)[y][x].Depth;
 	  
+	  }
 	}
       }
     }
@@ -147,9 +223,11 @@ void InitFineMaps(LISTPTR Input, OPTIONSTRUCT *Options, MAPSIZE *Map,
   
   /* Create descending list of fine resolution elevations. */
   ElevationSlopeAspectfine(Map, *FineMap, *TopoMap); 
-    
+     printf("Check passing in ElevationSlopeAspect\n");
+ 
   /* Calculate the topographic index */
   CalcTopoIndex(Map, *FineMap, *TopoMap);
+ printf("Check passing in CalcTopoIndex\n");
   
   for (y = 0; y < Map->NY; y++) {
     for (x  = 0; x < Map->NX; x++) {
@@ -168,7 +246,7 @@ void InitFineMaps(LISTPTR Input, OPTIONSTRUCT *Options, MAPSIZE *Map,
 	  for(jj=0; jj< Map->DX/Map->DMASS; jj++) {
 	    yy = (int) y*Map->DY/Map->DMASS + ii;
 	    xx = (int) x*Map->DX/Map->DMASS + jj;
-	    (*TopoMap)[y][x].OrderedTopoIndex[k].Rank = (*FineMap)[yy][xx].TopoIndex;
+	    (*TopoMap)[y][x].OrderedTopoIndex[k].Rank = (*(*FineMap)[yy][xx]).TopoIndex;
 	    (*TopoMap)[y][x].OrderedTopoIndex[k].y = yy;
 	    (*TopoMap)[y][x].OrderedTopoIndex[k].x = xx;
 	    k++;
@@ -179,4 +257,4 @@ void InitFineMaps(LISTPTR Input, OPTIONSTRUCT *Options, MAPSIZE *Map,
     }
   }
 }
-  
+   

@@ -34,7 +34,7 @@ void ExecDump(MAPSIZE * Map, DATE * Current, DATE * Start, OPTIONSTRUCT * Option
 	      PRECIPPIX ** PrecipMap, RADCLASSPIX ** RadMap, SNOWPIX ** SnowMap,
 	      MET_MAP_PIX ** MetMap, VEGPIX ** VegMap, LAYER * Veg, SOILPIX ** SoilMap,
 	      SEDPIX ** SedMap, ROADSTRUCT ** Network, CHANNEL * ChannelData, 
-	      FINEPIX ** FineMap, LAYER * Soil, AGGREGATED * Total, 
+	      FINEPIX *** FineMap, LAYER * Soil, AGGREGATED * Total, 
 	      UNITHYDRINFO * HydrographInfo, float *Hydrograph)
 {
   int i;			/* counter */
@@ -101,12 +101,12 @@ void ExecDump(MAPSIZE * Map, DATE * Current, DATE * Start, OPTIONSTRUCT * Option
           for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
             yy = (int) y*Map->DY/Map->DMASS + ii;
             xx = (int) x*Map->DX/Map->DMASS + jj;
-            PixAggFineMap.SatThickness += FineMap[yy][xx].SatThickness;
-            PixAggFineMap.DeltaDepth += FineMap[yy][xx].DeltaDepth;
-            PixAggFineMap.Probability += FineMap[yy][xx].Probability;
-            PixAggFineMap.MassWasting += FineMap[yy][xx].MassWasting;
-            PixAggFineMap.MassDeposition += FineMap[yy][xx].MassDeposition;
-            PixAggFineMap.SedimentToChannel += FineMap[yy][xx].SedimentToChannel;
+            PixAggFineMap.SatThickness += (*FineMap[yy][xx]).SatThickness;
+            PixAggFineMap.DeltaDepth += (*FineMap[yy][xx]).DeltaDepth;
+            PixAggFineMap.Probability += (*FineMap[yy][xx]).Probability;
+            PixAggFineMap.MassWasting += (*FineMap[yy][xx]).MassWasting;
+            PixAggFineMap.MassDeposition += (*FineMap[yy][xx]).MassDeposition;
+            PixAggFineMap.SedimentToChannel += (*FineMap[yy][xx]).SedimentToChannel;
           }
         }
         // Normalize PixAggFineMap quantities by # FineMap cells in a pixel
@@ -146,7 +146,7 @@ void ExecDump(MAPSIZE * Map, DATE * Current, DATE * Start, OPTIONSTRUCT * Option
 *****************************************************************************/
 void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 	     EVAPPIX ** EvapMap, PRECIPPIX ** PrecipMap, RADCLASSPIX ** RadMap,
-	     SNOWPIX ** SnowMap, SOILPIX ** SoilMap, SEDPIX ** SedMap, FINEPIX **FineMap,
+	     SNOWPIX ** SnowMap, SOILPIX ** SoilMap, SEDPIX ** SedMap, FINEPIX ***FineMap,
 	     LAYER * Soil, VEGPIX ** VegMap, LAYER * Veg, OPTIONSTRUCT *Options)
 {
   const char *Routine = "DumpMap";
@@ -1075,15 +1075,19 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
     if (DMap->Resolution == MAP_OUTPUT) {
       for (y = 0; y < Map->NY; y++) {
 	for (x = 0; x < Map->NX; x++) {
-	  ((float *) Array)[y * Map->NX+ x] = 0.0;
-	  // FineMap quantities must be aggregated to coarse grid
-	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
-	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
-	      yy = (int) y*Map->DY/Map->DMASS + ii;
-	      xx = (int) x*Map->DX/Map->DMASS + jj;
-	      ((float *) Array)[y * Map->NX+ x] += FineMap[yy][xx].Dem;
+	  if (INBASIN(TopoMap[y][x].Mask)) {
+	    ((float *) Array)[y * Map->NX+ x] = 0.0;
+	    // FineMap quantities must be aggregated to coarse grid
+	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		yy = (int) y*Map->DY/Map->DMASS + ii;
+		xx = (int) x*Map->DX/Map->DMASS + jj;
+		((float *) Array)[y * Map->NX+ x] += (*FineMap[yy][xx]).Dem;
+	      }
 	    }
 	  }
+ 	  else
+	    ((float *) Array)[y * Map->NX + x] = NA;
 	}
       }
       Write2DMatrix(DMap->FileName, Array, DMap->NumberType, Map->NY, Map->NX,
@@ -1092,16 +1096,20 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
     else if (DMap->Resolution == IMAGE_OUTPUT) {
       for (y = 0; y < Map->NY; y++) {
 	for (x = 0; x < Map->NX; x++) {
-	  ((float *) Array)[y * Map->NX+ x] = 0.0;
-	  // FineMap quantities must be aggregated to coarse grid
-	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
-	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
-	      yy = (int) y*Map->DY/Map->DMASS + ii;
-	      xx = (int) x*Map->DX/Map->DMASS + jj;
-	      ((unsigned char *) Array)[y * Map->NX+ x] +=
-		(unsigned char) ((FineMap[yy][xx].Dem - Offset) / Range * MAXUCHAR);
+	  if (INBASIN(TopoMap[y][x].Mask)) {
+	    ((float *) Array)[y * Map->NX+ x] = 0.0;
+	    // FineMap quantities must be aggregated to coarse grid
+	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		yy = (int) y*Map->DY/Map->DMASS + ii;
+		xx = (int) x*Map->DX/Map->DMASS + jj;
+		((unsigned char *) Array)[y * Map->NX+ x] +=
+		  (unsigned char) (((*FineMap[yy][xx]).Dem - Offset) / Range * MAXUCHAR);
+	      }
 	    }
 	  }
+	  else
+	    ((float *) Array)[y * Map->NX + x] = NA;
 	}
       }
       Write2DMatrix(DMap->FileName, Array, NC_BYTE, Map->NY, Map->NX, DMap,
@@ -1118,15 +1126,19 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 /*     if (DMap->Resolution == MAP_OUTPUT) { */
 /*       for (y = 0; y < Map->NY; y++) { */
 /* 	for (x = 0; x < Map->NX; x++) { */
+/* 	  if (INBASIN(TopoMap[y][x].Mask)) { */
 /* 	  ((float *) Array)[y * Map->NX+ x] = 0.0; */
 	  // FineMap quantities must be aggregated to coarse grid
 /* 	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) { */
 /* 	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) { */
 /* 	      yy = (int) y*Map->DY/Map->DMASS + ii; */
 /* 	      xx = (int) x*Map->DX/Map->DMASS + jj; */
-/* 	      ((float *) Array)[y * Map->NX+ x] += FineMap[yy][xx].Slope; */
+/* 	      ((float *) Array)[y * Map->NX+ x] += (*FineMap[yy][xx]).Slope; */
 /* 	    } */
 /* 	  } */
+/* 	  } */
+/* 	  else */
+/* 	    ((float *) Array)[y * Map->NX + x] = NA; */
 /* 	} */
 /*       } */
 /*       Write2DMatrix(DMap->FileName, Array, DMap->NumberType, Map->NY, Map->NX, */
@@ -1135,6 +1147,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 /*     else if (DMap->Resolution == IMAGE_OUTPUT) { */
 /*       for (y = 0; y < Map->NY; y++) { */
 /* 	for (x = 0; x < Map->NX; x++) { */
+/*     if (INBASIN(TopoMap[y][x].Mask)) { */
 /* 	  ((float *) Array)[y * Map->NX+ x] = 0.0; */
 	  // FineMap quantities must be aggregated to coarse grid
 /* 	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) { */
@@ -1142,9 +1155,12 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 /* 	      yy = (int) y*Map->DY/Map->DMASS + ii; */
 /* 	      xx = (int) x*Map->DX/Map->DMASS + jj; */
 /* 	      ((unsigned char *) Array)[y * Map->NX+ x] += */
-/* 		(unsigned char) ((FineMap[yy][xx].Slope - Offset) / Range * MAXUCHAR); */
+/* 		(unsigned char) (((*FineMap[yy][xx]).Slope - Offset) / Range * MAXUCHAR); */
 /* 	    } */
 /* 	  } */
+/* 	  } */
+/* 	  else */
+/* 	    ((float *) Array)[y * Map->NX + x] = NA; */
 /* 	} */
 /*       } */
 /*       Write2DMatrix(DMap->FileName, Array, NC_BYTE, Map->NY, Map->NX, DMap, */
@@ -1161,38 +1177,46 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
     if (DMap->Resolution == MAP_OUTPUT) {
       for (y = 0; y < Map->NY; y++) {
 	for (x = 0; x < Map->NX; x++) {
-	  ((float *) Array)[y * Map->NX+ x] = 0.0;
-	  // FineMap quantities must be aggregated to coarse grid
-	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
-	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
-	      yy = (int) y*Map->DY/Map->DMASS + ii;
-	      xx = (int) x*Map->DX/Map->DMASS + jj;
-	      ((float *) Array)[y * Map->NX+ x] += FineMap[yy][xx].SatThickness;
+	  if (INBASIN(TopoMap[y][x].Mask)) {
+	    ((float *) Array)[y * Map->NX+ x] = 0.0;
+	    // FineMap quantities must be aggregated to coarse grid
+	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		yy = (int) y*Map->DY/Map->DMASS + ii;
+		xx = (int) x*Map->DX/Map->DMASS + jj;
+		((float *) Array)[y * Map->NX+ x] += (*FineMap[yy][xx]).SatThickness;
+	      }
 	    }
 	  }
+	  else
+	    ((float *) Array)[y * Map->NX + x] = NA;
 	}
       }
       Write2DMatrix(DMap->FileName, Array, DMap->NumberType, Map->NY, Map->NX,
-		    DMap, Index);
-    }
-    else if (DMap->Resolution == IMAGE_OUTPUT) {
-      for (y = 0; y < Map->NY; y++) {
-	for (x = 0; x < Map->NX; x++) {
-	  ((float *) Array)[y * Map->NX+ x] = 0.0;
-	  // FineMap quantities must be aggregated to coarse grid
-	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
-	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
-	      yy = (int) y*Map->DY/Map->DMASS + ii;
-	      xx = (int) x*Map->DX/Map->DMASS + jj;
-	      ((unsigned char *) Array)[y * Map->NX+ x] +=
-		(unsigned char) ((FineMap[yy][xx].SatThickness - Offset) / Range * MAXUCHAR);
+		      DMap, Index);
+      }
+      else if (DMap->Resolution == IMAGE_OUTPUT) {
+	for (y = 0; y < Map->NY; y++) {
+	  for (x = 0; x < Map->NX; x++) {
+	    if (INBASIN(TopoMap[y][x].Mask)) {
+	      ((float *) Array)[y * Map->NX+ x] = 0.0;
+	      // FineMap quantities must be aggregated to coarse grid
+	      for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+		for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		  yy = (int) y*Map->DY/Map->DMASS + ii;
+		  xx = (int) x*Map->DX/Map->DMASS + jj;
+		  ((unsigned char *) Array)[y * Map->NX+ x] +=
+		    (unsigned char) (((*FineMap[yy][xx]).SatThickness - Offset) / Range * MAXUCHAR);
+		}
+	      }
 	    }
+	    else
+	      ((float *) Array)[y * Map->NX + x] = NA;
 	  }
 	}
+	Write2DMatrix(DMap->FileName, Array, NC_BYTE, Map->NY, Map->NX, DMap,
+		      Index);
       }
-      Write2DMatrix(DMap->FileName, Array, NC_BYTE, Map->NY, Map->NX, DMap,
-		    Index);
-    }
     else
       ReportError((char *) Routine, 26);
     break;
@@ -1204,15 +1228,19 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
     if (DMap->Resolution == MAP_OUTPUT) {
       for (y = 0; y < Map->NY; y++) {
 	for (x = 0; x < Map->NX; x++) {
-	  ((float *) Array)[y * Map->NX+ x] = 0.0;
-	  // FineMap quantities must be aggregated to coarse grid
-	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
-	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
-	      yy = (int) y*Map->DY/Map->DMASS + ii;
-	      xx = (int) x*Map->DX/Map->DMASS + jj;
-	      ((float *) Array)[y * Map->NX+ x] += FineMap[yy][xx].DeltaDepth;
+	  if (INBASIN(TopoMap[y][x].Mask)) {
+	    ((float *) Array)[y * Map->NX+ x] = 0.0;
+	    // FineMap quantities must be aggregated to coarse grid
+	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		yy = (int) y*Map->DY/Map->DMASS + ii;
+		xx = (int) x*Map->DX/Map->DMASS + jj;
+		((float *) Array)[y * Map->NX+ x] += (*FineMap[yy][xx]).DeltaDepth;
+	      }
 	    }
 	  }
+	  else
+	    ((float *) Array)[y * Map->NX + x] = NA;
 	}
       }
       Write2DMatrix(DMap->FileName, Array, DMap->NumberType, Map->NY, Map->NX,
@@ -1221,16 +1249,20 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
     else if (DMap->Resolution == IMAGE_OUTPUT) {
       for (y = 0; y < Map->NY; y++) {
 	for (x = 0; x < Map->NX; x++) {
-	  ((float *) Array)[y * Map->NX+ x] = 0.0;
-	  // FineMap quantities must be aggregated to coarse grid
-	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
-	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
-	      yy = (int) y*Map->DY/Map->DMASS + ii;
-	      xx = (int) x*Map->DX/Map->DMASS + jj;
-	      ((unsigned char *) Array)[y * Map->NX+ x] +=
-		(unsigned char) ((FineMap[yy][xx].DeltaDepth - Offset) / Range * MAXUCHAR);
+	  if (INBASIN(TopoMap[y][x].Mask)) {
+	    ((float *) Array)[y * Map->NX+ x] = 0.0;
+	    // FineMap quantities must be aggregated to coarse grid
+	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		yy = (int) y*Map->DY/Map->DMASS + ii;
+		xx = (int) x*Map->DX/Map->DMASS + jj;
+		((unsigned char *) Array)[y * Map->NX+ x] +=
+		  (unsigned char) (((*FineMap[yy][xx]).DeltaDepth - Offset) / Range * MAXUCHAR);
+	      }
 	    }
 	  }
+	  else
+	    ((float *) Array)[y * Map->NX + x] = NA;
 	}
       }
       Write2DMatrix(DMap->FileName, Array, NC_BYTE, Map->NY, Map->NX, DMap,
@@ -1247,15 +1279,19 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
     if (DMap->Resolution == MAP_OUTPUT) {
       for (y = 0; y < Map->NY; y++) {
 	for (x = 0; x < Map->NX; x++) {
-	  ((float *) Array)[y * Map->NX+ x] = 0.0;
-	  // FineMap quantities must be aggregated to coarse grid
-	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
-	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
-	      yy = (int) y*Map->DY/Map->DMASS + ii;
-	      xx = (int) x*Map->DX/Map->DMASS + jj;
-	      ((float *) Array)[y * Map->NX+ x] += FineMap[yy][xx].Probability;
+	  if (INBASIN(TopoMap[y][x].Mask)) {
+	    ((float *) Array)[y * Map->NX+ x] = 0.0;
+	    // FineMap quantities must be aggregated to coarse grid
+	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		yy = (int) y*Map->DY/Map->DMASS + ii;
+		xx = (int) x*Map->DX/Map->DMASS + jj;
+		((float *) Array)[y * Map->NX+ x] += (*FineMap[yy][xx]).Probability;
+	      }
 	    }
 	  }
+	  else
+	    ((float *) Array)[y * Map->NX + x] = NA;
 	}
       }
       Write2DMatrix(DMap->FileName, Array, DMap->NumberType, Map->NY, Map->NX,
@@ -1264,16 +1300,20 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
     else if (DMap->Resolution == IMAGE_OUTPUT) {
       for (y = 0; y < Map->NY; y++) {
 	for (x = 0; x < Map->NX; x++) {
-	  ((float *) Array)[y * Map->NX+ x] = 0.0;
-	  // FineMap quantities must be aggregated to coarse grid
-	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
-	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
-	      yy = (int) y*Map->DY/Map->DMASS + ii;
-	      xx = (int) x*Map->DX/Map->DMASS + jj;
-	      ((unsigned char *) Array)[y * Map->NX+ x] +=
-		(unsigned char) ((FineMap[yy][xx].Probability - Offset) / Range * MAXUCHAR);
+	  if (INBASIN(TopoMap[y][x].Mask)) {
+	    ((float *) Array)[y * Map->NX+ x] = 0.0;
+	    // FineMap quantities must be aggregated to coarse grid
+	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		yy = (int) y*Map->DY/Map->DMASS + ii;
+		xx = (int) x*Map->DX/Map->DMASS + jj;
+		((unsigned char *) Array)[y * Map->NX+ x] +=
+		  (unsigned char) (((*FineMap[yy][xx]).Probability - Offset) / Range * MAXUCHAR);
+	      }
 	    }
 	  }
+	  else
+	    ((float *) Array)[y * Map->NX + x] = NA;
 	}
       }
       Write2DMatrix(DMap->FileName, Array, NC_BYTE, Map->NY, Map->NX, DMap,
@@ -1290,15 +1330,19 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
     if (DMap->Resolution == MAP_OUTPUT) {
       for (y = 0; y < Map->NY; y++) {
 	for (x = 0; x < Map->NX; x++) {
-	  ((float *) Array)[y * Map->NX+ x] = 0.0;
-	  // FineMap quantities must be aggregated to coarse grid
-	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
-	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
-	      yy = (int) y*Map->DY/Map->DMASS + ii;
-	      xx = (int) x*Map->DX/Map->DMASS + jj;
-	      ((float *) Array)[y * Map->NX+ x] += FineMap[yy][xx].SedimentToChannel;
+	  if (INBASIN(TopoMap[y][x].Mask)) {
+	    ((float *) Array)[y * Map->NX+ x] = 0.0;
+	    // FineMap quantities must be aggregated to coarse grid
+	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		yy = (int) y*Map->DY/Map->DMASS + ii;
+		xx = (int) x*Map->DX/Map->DMASS + jj;
+		((float *) Array)[y * Map->NX+ x] += (*FineMap[yy][xx]).SedimentToChannel;
+	      }
 	    }
 	  }
+	  else
+	    ((float *) Array)[y * Map->NX + x] = NA;
 	}
       }
       Write2DMatrix(DMap->FileName, Array, DMap->NumberType, Map->NY, Map->NX,
@@ -1307,16 +1351,20 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
     else if (DMap->Resolution == IMAGE_OUTPUT) {
       for (y = 0; y < Map->NY; y++) {
 	for (x = 0; x < Map->NX; x++) {
-	  ((float *) Array)[y * Map->NX+ x] = 0.0;
-	  // FineMap quantities must be aggregated to coarse grid
-	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
-	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
-	      yy = (int) y*Map->DY/Map->DMASS + ii;
-	      xx = (int) x*Map->DX/Map->DMASS + jj;
-	      ((unsigned char *) Array)[y * Map->NX+ x] +=
-		(unsigned char) ((FineMap[yy][xx].SedimentToChannel - Offset) / Range * MAXUCHAR);
+	  if (INBASIN(TopoMap[y][x].Mask)) {
+	    ((float *) Array)[y * Map->NX+ x] = 0.0;
+	    // FineMap quantities must be aggregated to coarse grid
+	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		yy = (int) y*Map->DY/Map->DMASS + ii;
+		xx = (int) x*Map->DX/Map->DMASS + jj;
+		((unsigned char *) Array)[y * Map->NX+ x] +=
+		  (unsigned char) (((*FineMap[yy][xx]).SedimentToChannel - Offset) / Range * MAXUCHAR);
+	      }
 	    }
 	  }
+	  else
+	    ((float *) Array)[y * Map->NX + x] = NA;
 	}
       }
       Write2DMatrix(DMap->FileName, Array, NC_BYTE, Map->NY, Map->NX, DMap,

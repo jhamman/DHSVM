@@ -71,12 +71,12 @@
                  31 (5), 1315-1324.
 *****************************************************************************/
 
-void CalcTopoIndex(MAPSIZE *Map, FINEPIX **FineMap, TOPOPIX **TopoMap)
+void CalcTopoIndex(MAPSIZE *Map, FINEPIX ***FineMap, TOPOPIX **TopoMap)
 {
   FILE *fo;
   char topoindexmap[100];
   int printmap;
-  int i, k, x, y, n, lower;  /* counters */
+  int i, j, k, x, y, n, lower;  /* counters */
   int dx, dy;
   float celev;
   float neighbor_elev[NDIRSfine];
@@ -145,21 +145,33 @@ void CalcTopoIndex(MAPSIZE *Map, FINEPIX **FineMap, TOPOPIX **TopoMap)
     
     /* fill neighbor array */
     for (n = 0; n < NDIRSfine; n++) {
+
       int xn = x + xneighbor[n];
       int yn = y + yneighbor[n];
    
-      coarsei = floor(yn*Map->DMASS/Map->DY);
-      coarsej = floor(xn*Map->DMASS/Map->DX);
+      // Initialize neighbor_elev
+      neighbor_elev[n] = (float) OUTSIDEBASIN;
+
+      // Check whether yn, xn are within FineMap array bounds
+      if (valid_cell_fine(Map,xn,yn)){
+
+        coarsei = floor(yn*Map->DMASS/Map->DY);
+        coarsej = floor(xn*Map->DMASS/Map->DX);
       
-      if(valid_cell_fine(Map,xn,yn)) {
-	// Solve for all grid cells within the coarse mask, not just the fine mask. 
-	neighbor_elev[n] = ((TopoMap[coarsei][coarsej].Mask) ? FineMap[yn][xn].Dem : (float) OUTSIDEBASIN);
+        // Check whether FineMap element has been allocated for this cell
+        // (equivalent to checking whether parent coarse grid cell is within coarse mask)
+        if (INBASIN(TopoMap[coarsei][coarsej].Mask)){
+
+	  // Solve for all grid cells within the coarse mask, not just the fine mask. 
+	  neighbor_elev[n] = ((TopoMap[coarsei][coarsej].Mask) ? (*FineMap[yn][xn]).Dem : (float) OUTSIDEBASIN);
+
+        }
+
       }
-      else 
-	neighbor_elev[n] = (float) OUTSIDEBASIN;
+
     }
     
-    celev = FineMap[y][x].Dem; 
+    celev = (*FineMap[y][x]).Dem; 
     
     switch (NDIRSfine) { 
     case 8:
@@ -248,7 +260,7 @@ void CalcTopoIndex(MAPSIZE *Map, FINEPIX **FineMap, TOPOPIX **TopoMap)
     y = Map->OrderedCellsfine[k].y;
     x = Map->OrderedCellsfine[k].x;
     
-    FineMap[y][x].TopoIndex = log(a[y][x]/tanbeta[y][x]);
+    (*FineMap[y][x]).TopoIndex = log(a[y][x]/tanbeta[y][x]);
   }
   
   /*************************************************************************/
@@ -278,9 +290,12 @@ void CalcTopoIndex(MAPSIZE *Map, FINEPIX **FineMap, TOPOPIX **TopoMap)
     for (y = 0; y < Map->NYfine; y++) {
       for (x  = 0; x < Map->NXfine; x++) {
 	
-	/*   Check to make sure region is in the basin. */
-	if (INBASIN(FineMap[y][x].Mask)) 		
-	  /* 	fprintf(fo, "%2.3f ", FineMap[y][x].TopoIndex); */
+	i = (int) floor(y/(Map->DY/Map->DMASS));
+        j = (int) floor(x/(Map->DX/Map->DMASS));
+	
+        /* Check to make sure region is in the basin. */
+        if (INBASIN(TopoMap[i][j].Mask)) 	
+	  /* 	fprintf(fo, "%2.3f ", (*FineMap[y][x]).TopoIndex); */
 	  /*   fprintf(fo, "%2.3f ", log(a[y][x])); */ 
 	  fprintf(fo, "%2.3f ", log(1/tanbeta[y][x]));
 	else 

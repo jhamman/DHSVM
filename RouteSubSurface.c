@@ -99,6 +99,7 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
   int x;			/* counter */
   int y;			/* counter */
   int i,j;			/* counters for FineMap initialization */
+  int ii, jj, xx, yy;
   float BankHeight;
   float *Adjust;
   float fract_used;
@@ -326,12 +327,20 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
 
   /**********************************************************************/
   // Initialize the mass wasting variables for this time step
-  for (i = 0; i < Map->NYfine; i++) {
-    for (j  = 0; j < Map->NXfine; j++) {
-      (*FineMap)[i][j].Probability = 0.0;
-      (*FineMap)[i][j].MassDeposition = 0.0;
-      (*FineMap)[i][j].MassWasting = 0.0;
-      (*FineMap)[i][j].SedimentToChannel = 0.0;
+  for (y = 0; y < Map->NY; y++) {
+    for (x = 0; x < Map->NX; x++) {
+      if (INBASIN(TopoMap[y][x].Mask)) {
+	for(ii=0; ii< Map->DY/Map->DMASS; ii++) { /* Fine resolution counters. */
+	  for(jj=0; jj< Map->DX/Map->DMASS; jj++) {
+	    yy = (int) y*Map->DY/Map->DMASS + ii;
+	    xx = (int) x*Map->DX/Map->DMASS + jj;
+	    (*FineMap[yy][xx]).Probability = 0.0;
+	    (*FineMap[yy][xx]).MassDeposition = 0.0;
+	    (*FineMap[yy][xx]).MassWasting = 0.0;
+	    (*FineMap[yy][xx]).SedimentToChannel = 0.0;
+	  }
+	}
+      }
     }
   }
 

@@ -40,7 +40,7 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
 	       LAYER *Soil, LAYER * Veg, VEGPIX **VegMap, EVAPPIX **Evap,
 	       PRECIPPIX **Precip, RADCLASSPIX **RadMap, SNOWPIX **Snow,
 	       SOILPIX **SoilMap, AGGREGATED *Total, VEGTABLE *VType,
-	       ROADSTRUCT **Network, SEDPIX **SedMap, FINEPIX **FineMap,
+	       ROADSTRUCT **Network, SEDPIX **SedMap, FINEPIX ***FineMap,
 	       CHANNEL *ChannelData)
 {
   int NPixels;			/* Number of pixels in the basin */
@@ -164,23 +164,23 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
 	Total->RoadInt += SoilMap[y][x].RoadInt;
 	SoilMap[y][x].RoadInt = 0.0;
 	if(Options->Sediment){
-	if (Options->SurfaceErosion) {
-	  Total->Sediment.Erosion += SedMap[y][x].Erosion; 
-	  Total->Sediment.SedFluxOut += SedMap[y][x].SedFluxOut; 
-	  if (ChannelData->stream_map[x][y] != NULL) {
-	    Total->SedimentOverlandInflow += ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[0];
+	  if (Options->SurfaceErosion) {
+	    Total->Sediment.Erosion += SedMap[y][x].Erosion; 
+	    Total->Sediment.SedFluxOut += SedMap[y][x].SedFluxOut; 
+	    if (ChannelData->stream_map[x][y] != NULL) {
+	      Total->SedimentOverlandInflow += ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[0];
+	    }
 	  }
-	}
 	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
 	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
 	      yy = (int) y*Map->DY/Map->DMASS + ii;
 	      xx = (int) x*Map->DX/Map->DMASS + jj;
-	      Total->Fine.SatThickness += FineMap[yy][xx].SatThickness;
-	      Total->Fine.DeltaDepth += FineMap[yy][xx].DeltaDepth;
-	      Total->Fine.Probability += FineMap[yy][xx].Probability;
-	      Total->Fine.MassWasting += FineMap[yy][xx].MassWasting;
-	      Total->Fine.MassDeposition += FineMap[yy][xx].MassDeposition;
-	      Total->Fine.SedimentToChannel += FineMap[yy][xx].SedimentToChannel;
+	      Total->Fine.SatThickness += (*FineMap[yy][xx]).SatThickness;
+	      Total->Fine.DeltaDepth += (*FineMap[yy][xx]).DeltaDepth;
+	      Total->Fine.Probability += (*FineMap[yy][xx]).Probability;
+	      Total->Fine.MassWasting += (*FineMap[yy][xx]).MassWasting;
+	      Total->Fine.MassDeposition += (*FineMap[yy][xx]).MassDeposition;
+	      Total->Fine.SedimentToChannel += (*FineMap[yy][xx]).SedimentToChannel;
 	    }
 	  }
 	}
