@@ -149,14 +149,25 @@ ChannelClass *channel_read_classes(const char *file)
 	    err++;
 	  }
 	  break;
+	  // We do not want those 3 values to be 0.0 EVER
+	  // We then stop the program if it is the case.
 	case 1:
-	  current->width = class_fields[i].value.real;
+		if (class_fields[i].value.real>0.0)
+			current->width = class_fields[i].value.real;
+		else error_handler(ERRHDL_FATAL,
+			  "channel_read_classes: %s: width cannot be 0.0", file);
 	  break;
 	case 2:
-	  current->bank_height = class_fields[i].value.real;
+		if (class_fields[i].value.real>0.0)
+			current->bank_height = class_fields[i].value.real;
+		else error_handler(ERRHDL_FATAL,
+			  "channel_read_classes: %s: bank cannot be 0.0", file);
 	  break;
 	case 3:
-	  current->friction = class_fields[i].value.real;
+		if (class_fields[i].value.real>0.0)
+			current->friction = class_fields[i].value.real;
+		else error_handler(ERRHDL_FATAL,
+			  "channel_read_classes: %s: friction cannot be 0.0", file);
 	  break;
 	case 4:
 	  current->infiltration = class_fields[i].value.real;
@@ -857,9 +868,12 @@ channel_save_sed_outflow_text(char *tstring, Channel * net, FILE * out,
 
   for (; net != NULL; net = net->next) {
     if (net->record) {
-      if (fprintf(out, "%15s %10d %12.5g %12.5g",
-		  tstring, net->id, net->sediment.totalmass, net->sediment.outflowconc) == EOF) {
-	error_handler(ERRHDL_ERROR,
+		/*if (fprintf(out, "%15s %10d %12.5g %12.5g",
+		  tstring, net->id, net->sediment.totalmass, net->sediment.outflowconc) == EOF) {*/
+		// we add the overlandinflow as an output for now...
+		if (fprintf(out, "%15s %10d %12.5g %12.5g %12.5g",
+		  tstring, net->id, net->sediment.totalmass, net->sediment.outflowconc, net->sediment.overlandinflow[0]*NSEDSIZES) == EOF) {
+      	error_handler(ERRHDL_ERROR,
 		      "channel_save_sed_outflow: write error:%s", strerror(errno));
 	err++;
       }

@@ -813,21 +813,29 @@ void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, DU
 	  Current->sediment.totalmass += Current->sediment.mass[i];
 
 	  /* calculate outflow concentration in mg/l */
-	  if(Current->slope>0.0) 
-	    flowdepth = pow(Current->outflow*Current->class->friction/(Current->class->width*sqrt(Current->slope)),0.6);
-	  else flowdepth = 0.005;
-	  V = Current->outflow/(flowdepth*Current->class->width);
-	  Vshear = sqrt(G*flowdepth*Current->slope); /* approximate */
-	  if(SedDiam[i] < 15) Vshearcrit = -0.0003*SedDiam[i]*SedDiam[i]+0.0109*SedDiam[i]+0.0106;
-	  else Vshearcrit = 0.0019*SedDiam[i]+0.0926; /* both in m/s */
-	  if (Vshearcrit > Vshear) Vshearcrit = 0.95*Vshear; /*arbitrary */
-	  /* sed velocity per Wicks and Bathurst, fine particles travel at flow velocity */
-	  Vsed = 8.5*Vshear*sqrt(1-(Vshearcrit/Vshear));
-	  if(Vsed>V || SedDiam[i]<=0.062) Vsed=V;
-	  if(Vsed<(0.2*V)) Vsed=0.2*V;
-	  Current->sediment.outflowconc += 
-	    (1000.0*Current->sediment.outflow[i]/(Current->outflow))*(V/Vsed);
-
+	  
+	  // Olivier - 2003/07/08 : We should add a condition on current->outflow
+	  // to avoid division by zero in the calculation of Current->sediment.outflowconc
+	  // It makes sense as the concentration should be 0 if there is no outflow
+	  if (Current->outflow==0.0)
+			Current->sediment.outflowconc = 0.0;
+	  else {
+		if(Current->slope>0.0) 
+			flowdepth = pow(Current->outflow*Current->class->friction/(Current->class->width*sqrt(Current->slope)),0.6);
+		else flowdepth = 0.005;
+		V = Current->outflow/(flowdepth*Current->class->width);
+		Vshear = sqrt(G*flowdepth*Current->slope); /* approximate */
+		if(SedDiam[i] < 15) Vshearcrit = -0.0003*SedDiam[i]*SedDiam[i]+0.0109*SedDiam[i]+0.0106;
+		else Vshearcrit = 0.0019*SedDiam[i]+0.0926; /* both in m/s */
+		if (Vshearcrit > Vshear) Vshearcrit = 0.95*Vshear; /*arbitrary */
+		/* sed velocity per Wicks and Bathurst, fine particles travel at flow velocity */
+		Vsed = 8.5*Vshear*sqrt(1-(Vshearcrit/Vshear));
+		if(Vsed>V || SedDiam[i]<=0.062) Vsed=V;
+		if(Vsed<(0.2*V)) Vsed=0.2*V;
+		Current->sediment.outflowconc += 
+			(1000.0*Current->sediment.outflow[i]/(Current->outflow))*(V/Vsed);
+	  }
+	  
 	  /* pass the sediment mass outflow to the next downstream reach */
 	  if(Current->outlet != NULL)
 	    Current->outlet->sediment.inflow[i] += Current->sediment.outflow[i];

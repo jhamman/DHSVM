@@ -67,6 +67,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
   double slope, alpha, beta;
   double outflow;
   int k;
+  int particle_size ;
   float VariableDT;
   float total_in, total_out;
   float **SedIn, SedOut;
@@ -237,14 +238,20 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 
 	    /* Find transport capacity of the flow out of this grid cell. */
 	    
-	    streampower= WATER_DENSITY*G*1000.*(outflow/Map->DX)*slope; /* g/s3 */
+		// Olivier - 2003/07/08 : We need to add a condition on h 
+		// if there is no surface water, there should be no transport capacity
+		// By the way it prevents a division by 0 in the effectivepower calculation
+		if (h!=0)
+		{
+			streampower= WATER_DENSITY*G*1000.*(outflow/Map->DX)*slope; /* g/s3 */
 
-	    effectivepower = sqrt(streampower)/pow(h*100.,2./3.); /* g^1.5 * s^-4.5 * cm^-2/3 */
+			effectivepower = sqrt(streampower)/pow(h*100.,2./3.); /* g^1.5 * s^-4.5 * cm^-2/3 */
 
-	    soliddischarge = (0.000001977) * pow(effectivepower, 1.044) * pow(SedType[SoilMap[y][x].Soil-1].d50, 0.478);  /* g/cm*s */
+			soliddischarge = (0.000001977) * pow(effectivepower, 1.044) * pow(SedType[SoilMap[y][x].Soil-1].d50, 0.478);  /* g/cm*s */
 
-	    TC = soliddischarge / (10.* (outflow/Map->DX) * PARTDENSITY);
-
+			TC = soliddischarge / (10.* (outflow/Map->DX) * PARTDENSITY);
+		}
+		else TC =0 ;
 	    /* Find erosion due to overland flow after Morgan et al. (1998). */
 	    
 	    floweff = 0.79*exp(-0.85*SedType[SoilMap[y][x].Soil-1].Cohesion.mean);
@@ -258,28 +265,54 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	    term2 = alpha/(2.*VariableDT);
 	    term3 = (1.-TIMEWEIGHT/Map->DX);
 	
-	    SedOut = (SedIn[y][x]*(term1*Runon[y][x]-term2*pow(Runon[y][x], beta)) +
-	      SedMap[y][x].OldSedOut*(term2*pow(SoilMap[y][x].startRunoff, beta) -
-				      term3*SoilMap[y][x].startRunoff) +
-	      SedMap[y][x].OldSedIn*(term2*pow(SoilMap[y][x].startRunon, beta) + 
-				     term3*SoilMap[y][x].startRunon) +
-	      DR + floweff*Map->DY*settling*TC)/(term2*pow(outflow, beta) + term1*outflow*floweff*Map->DY*settling);
+		// Olivier - 2003/07/08 : we need to add a condition on outflow
+		// To avoid a division by zero, we should add an if statement,
+		// and it makes sense. If there is no outflow, SedOut should be null too.
+		if (outflow > 0.0) {
 
-	    if(SedOut >= TC)
-	      SedOut = (SedIn[y][x]*(term1*Runon[y][x]-term2*pow(Runon[y][x], beta)) +
-	      SedMap[y][x].OldSedOut*(term2*pow(SoilMap[y][x].startRunoff, beta) -
-				      term3*SoilMap[y][x].startRunoff) +
-	      SedMap[y][x].OldSedIn*(term2*pow(SoilMap[y][x].startRunon, beta) + 
-				     term3*SoilMap[y][x].startRunon) +
-	      DR + Map->DY*settling*TC)/(term2*pow(outflow, beta) + term1*outflow*Map->DY*settling);
+			SedOut = (SedIn[y][x]*(term1*Runon[y][x]-term2*pow(Runon[y][x], beta)) +
+			SedMap[y][x].OldSedOut*(term2*pow(SoilMap[y][x].startRunoff, beta) -
+						term3*SoilMap[y][x].startRunoff) +
+			SedMap[y][x].OldSedIn*(term2*pow(SoilMap[y][x].startRunon, beta) + 
+						term3*SoilMap[y][x].startRunon) +
+			DR + floweff*Map->DY*settling*TC)/(term2*pow(outflow, beta) + term1*outflow*floweff*Map->DY*settling);
 
-	      
+			if(SedOut >= TC)
+			SedOut = (SedIn[y][x]*(term1*Runon[y][x]-term2*pow(Runon[y][x], beta)) +
+			SedMap[y][x].OldSedOut*(term2*pow(SoilMap[y][x].startRunoff, beta) -
+						term3*SoilMap[y][x].startRunoff) +
+			SedMap[y][x].OldSedIn*(term2*pow(SoilMap[y][x].startRunon, beta) + 
+						term3*SoilMap[y][x].startRunon) +
+			DR + Map->DY*settling*TC)/(term2*pow(outflow, beta) + term1*outflow*Map->DY*settling);
+
+	    }
+		else SedOut = 0.0 ;
 	    
 
 	    SedMap[y][x].OldSedOut = SedOut;
 	    SedMap[y][x].OldSedIn = SedIn[y][x];
 	    SedMap[y][x].TotalSediment += SedOut;
 	    SedMap[y][x].erosion = (SedIn[y][x]*Runon[y][x] - SedOut*outflow)*Time->Dt/(Map->DX*Map->DY);;
+
+		// This is a first attempt to determine overland inflow added to the channel
+		// It has to be tested and checked.
+
+		// if grid cell has a channel, sediment is intercepted by the channel
+		if (channel_grid_has_channel(ChannelData->stream_map,x,y))
+		{
+
+			for (particle_size=0; particle_size<NSEDSIZES; particle_size++)
+			{
+				// For now, we suppose that the mass of sediments is uniformely 
+				// distributed between all NSEDSIZES sizes of particles
+				ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[particle_size] += SedMap[y][x].TotalSediment * (1/NSEDSIZES) ;
+			}
+			SedMap[y][x].OldSedOut = 0.0;
+			SedMap[y][x].TotalSediment = 0.0;
+		}
+
+
+
 	  }
 
 	  /* Save sub-timestep runoff for q(i)(t-1) and q(i-1)(t-1) of next time step. */
