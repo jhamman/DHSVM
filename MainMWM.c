@@ -363,7 +363,8 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 						     (*FineMap[y][x]).sediment, 
 						     VegMap[i][j].Veg, SedType, VType, 
 						     (*FineMap[y][x]).SatThickness, SType, 
-						     SnowMap[i][j].Swq, SnowMap[i][j].Depth);
+						     SnowMap[i][j].Swq, SnowMap[i][j].Depth,
+						     iter);
 		    
 		    /* check if fine pixel fails */
 		    if (factor_safety < FS_CRITERIA && factor_safety > 0) {
@@ -418,7 +419,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 							     VegMap[coursei][coursej].Veg, SedType, VType,
 							     (*FineMap[y][x]).SatThickness, SType,
 							     SnowMap[coursei][coursej].Swq, 
-							     SnowMap[coursei][coursej].Depth);
+							     SnowMap[coursei][coursej].Depth, iter);
 			    
 			    /* check if fine pixel fails */
 			    if (factor_safety < FS_CRITERIA && factor_safety > 0) {

@@ -18,7 +18,7 @@
 #include "constants.h"
 #include "data.h"
 
-float FindValue(STATSTABLE Stats);
+float FindValue(STATSTABLE Stats, int iter);
 
 /*****************************************************************************
   Function name: CalcSafetyFactor()
@@ -43,7 +43,8 @@ float FindValue(STATSTABLE Stats);
 
 float CalcSafetyFactor(float Slope, int Soil, float SoilDepth, int Veg, 
 		       SEDTABLE *SedType, VEGTABLE *VType, float M, 
-		       SOILTABLE *SType, float Swq, float Depth)
+		       SOILTABLE *SType, float Swq, float Depth,
+		       int iter)
 {
   double angle_int_frict_rad, soil_cohes_kg, slope_angle_rad, fc_soil_density;
   double root_cohes_kg;
@@ -65,10 +66,10 @@ float CalcSafetyFactor(float Slope, int Soil, float SoilDepth, int Veg,
 
     /* Get stochastic parameter values. */
     /* Need to check for valid soil and vegetation types ! */
-    RootCohesion = FindValue(VType[Veg - 1].RootCoh);
-    FrictionAngle = FindValue(SedType[Soil - 1].Friction);
-    SoilCohesion = FindValue(SedType[Soil - 1].Cohesion);
-    Surcharge = FindValue(VType[Veg - 1].VegSurcharge);
+    RootCohesion = FindValue(VType[Veg - 1].RootCoh, iter);
+    FrictionAngle = FindValue(SedType[Soil - 1].Friction, iter);
+    SoilCohesion = FindValue(SedType[Soil - 1].Cohesion, iter);
+    Surcharge = FindValue(VType[Veg - 1].VegSurcharge, iter);
 
     /* Depth is not calculated anywhwere, so SnowDensity
        is not included in the Factor of Safety calculation */

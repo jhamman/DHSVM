@@ -45,7 +45,8 @@ float CalcKhDry(float Density);
 
 float CalcSafetyFactor(float Slope, int Soil, float SoilDepth, int Veg, 
 		       SEDTABLE *SedType, VEGTABLE *VType, 
-		       float M, SOILTABLE *SType, float Swq, float Depth);
+		       float M, SOILTABLE *SType, float Swq, float Depth,
+		       int iter);
 
 float CalcSnowAlbedo(float TSurf, unsigned short Last, SNOWTABLE *SnowAlbedo);
 
