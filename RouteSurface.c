@@ -48,8 +48,6 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 		  PRECIPPIX **PrecipMap, SEDTABLE *SedType,
 		  float Tair)
 {
-
-  FILE *fo;
   const char *Routine = "RouteSurface";
   int Lag;			/* Lag time for hydrograph */
   int Step;
