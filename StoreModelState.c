@@ -479,11 +479,13 @@ void StoreModelState(char *Path, DATE * Current, MAPSIZE * Map,
     for (x = 0; x < Map->NX; x++) {
       if (INBASIN(TopoMap[y][x].Mask)){
 	RoadIExcess = 0.0; 
-	if (channel_grid_has_channel(ChannelData->road_map, x, y)) {
-	  for (i = 0; i < CELLFACTOR; i++)
- 	    RoadIExcess += (Network[y][x].h[i] * Network[y][x].RoadArea)/
-	      ((float)CELLFACTOR * (Map->DX*Map->DY));
-	} 
+	if(Options->RoadRouting){
+	  if (channel_grid_has_channel(ChannelData->road_map, x, y)) {
+	    for (i = 0; i < CELLFACTOR; i++)
+	      RoadIExcess += (Network[y][x].h[i] * Network[y][x].RoadArea)/
+		((float)CELLFACTOR * (Map->DX*Map->DY));
+	  } 
+	}
 	((float *) Array)[y * Map->NX + x] = SoilMap[y][x].IExcess + RoadIExcess;
       }
       else

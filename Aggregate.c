@@ -44,6 +44,7 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
 	       CHANNEL *ChannelData, float *roadarea)
 {
   int NPixels;			/* Number of pixels in the basin */
+  int NPixelsfine;		/* Number of pixels in the finemap */
   int NSoilL;			/* Number of soil layers for current pixel */
   int NVegL;			/* Number of vegetation layers for current
 				   pixel */
@@ -58,6 +59,9 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
   int yy;			/* y-coordinate on FineMap grid */
 
   NPixels = 0;
+  *roadarea = 0.;
+  NPixelsfine = 0;
+
   for (y = 0; y < Map->NY; y++) {
     for (x = 0; x < Map->NX; x++) {
       if (INBASIN(TopoMap[y][x].Mask)) {

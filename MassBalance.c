@@ -139,9 +139,9 @@ void MassBalance(DATE *Current, FILES *Out, FILES *SedOut, AGGREGATED *Total,
 /*        2. Total mass wasted delivered to channel (m3) */
 /*        3. Total mass deposition (m3) */
 /*        4. Total mass wasting mass error (m3) */
-/*        5. Total hillslope erosion (mm) */
-/*        6. Total road erosion (m) */
-/*        7. Total road erosion delivered to hillslope (m)*/                      
+/*        5. Ave hillslope erosion (mm) */
+/*        6. Ave road erosion (m) */
+/*        7. Ave road erosion delivered to hillslope (m)*/                      
 /*        8. Total debris inflow (kg) */
 /*        9. Total overland inflow (kg) */
 /*       10. Total overroad inflow (kg) */
