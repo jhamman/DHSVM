@@ -817,35 +817,35 @@ void draw(DATE * Day, int first, int DayStep, MAPSIZE *Map, int NGraphics,
 	    }
 	  }
 
-	  if (MapNumber == 37 && Options->Sediment) {
-	    text = "Slope";
-	    length = 5;
-	    for (i = 0; i < Map->NX; i++) {
-	      for (j = 0; j < Map->NY; j++) {
+	  /* if (MapNumber == 37 && Options->Sediment) { */
+/* 	    text = "Slope"; */
+/* 	    length = 5; */
+/* 	    for (i = 0; i < Map->NX; i++) { */
+/* 	      for (j = 0; j < Map->NY; j++) { */
 
-		if (INBASIN(TopoMap[j][i].Mask)) {
+/* 		if (INBASIN(TopoMap[j][i].Mask)) { */
 
 		  // FineMap quantities must be aggregated to coarse grid
-		  temp = 0.0;
-		  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
-		    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
-		      yy = (int) j*Map->DY/Map->DMASS + ii;
-		      xx = (int) i*Map->DX/Map->DMASS + jj;
-		      temp += FineMap[yy][xx].Slope;
-		    }
-		  }
+/* 		  temp = 0.0; */
+/* 		  for (ii=0; ii< Map->DY/Map->DMASS; ii++) { */
+/* 		    for (jj=0; jj< Map->DX/Map->DMASS; jj++) { */
+/* 		      yy = (int) j*Map->DY/Map->DMASS + ii; */
+/* 		      xx = (int) i*Map->DX/Map->DMASS + jj; */
+/* 		      temp += FineMap[yy][xx].Slope; */
+/* 		    } */
+/* 		  } */
 		  // Normalize by # FineMap cells in a pixel
-		  temp /= Map->DMASS*Map->DMASS;
+/* 		  temp /= Map->DMASS*Map->DMASS; */
 
-		  if (temp > max)
-		    max = temp;
-		  if (temp < min)
-		    min = temp;
-		}
-		temp_array[j][i] = temp;
-	      }
-	    }
-	  }
+/* 		  if (temp > max) */
+/* 		    max = temp; */
+/* 		  if (temp < min) */
+/* 		    min = temp; */
+/* 		} */
+/* 		temp_array[j][i] = temp; */
+/* 	      } */
+/* 	    } */
+/* 	  } */
 
 	  if (MapNumber == 38 && Options->Sediment) {
 	    text = "Water Table Thickness (m)";

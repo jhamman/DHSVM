@@ -75,6 +75,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX *** FineMap, VEGTABLE *VType,
   float SedToDownslope;		/* Sediment wasted from a pixel, awaiting redistribution */
   float SedFromUpslope;		/* Wasted sediment being redistributed */
   float *SedDiams;
+  float FineMapTableDepth;       /* Fine grid water table depth (m) */
   float TableDepth;              /* Coarse grid water table depth (m) */
   float FineMapSatThickness;    /* Fine grid saturated thickness (m) */
   float **Redistribute, **TopoIndex, **TopoIndexAve;
@@ -183,20 +184,20 @@ void MainMWM(SEDPIX **SedMap, FINEPIX *** FineMap, VEGTABLE *VType,
 	    y = (int) i*Map->DY/Map->DMASS + ii;
 	    x = (int) j*Map->DX/Map->DMASS + jj;
 	    
-	    (*FineMap)[y][x].TableDepth = TableDepth + 
+	    FineMapTableDepth = TableDepth + 
 	      ((TopoIndexAve[i][j]-(*FineMap)[y][x].TopoIndex)/ 
 	       SType[SoilMap[i][j].Soil - 1].KsLatExp);
 	    
 	  
-	    if ((*FineMap)[y][x].TableDepth < 0)
+	    if (FineMapTableDepth < 0)
 	      (*FineMap)[y][x].SatThickness = (*FineMap)[y][x].sediment; 
 	      
-	    else if ((*FineMap)[y][x].TableDepth > (*FineMap)[y][x].sediment)
+	    else if (FineMapTableDepth > (*FineMap)[y][x].sediment)
 	      (*FineMap)[y][x].SatThickness = 0; 
 	      
 	    else 
 	      (*FineMap)[y][x].SatThickness = (*FineMap)[y][x].sediment -
-		(*FineMap)[y][x].TableDepth;
+		FineMapTableDepth;
 	  
 
 	    FineMapSatThickness += (*FineMap)[y][x].SatThickness;

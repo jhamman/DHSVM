@@ -1110,48 +1110,48 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
       ReportError((char *) Routine, 26);
     break;
 
-  case 802:
-    if (!Options->Sediment) {
-      ReportError((char *) Routine, 26);
-    }
-    if (DMap->Resolution == MAP_OUTPUT) {
-      for (y = 0; y < Map->NY; y++) {
-	for (x = 0; x < Map->NX; x++) {
-	  ((float *) Array)[y * Map->NX+ x] = 0.0;
+ /*  case 802: */
+/*     if (!Options->Sediment) { */
+/*       ReportError((char *) Routine, 26); */
+/*     } */
+/*     if (DMap->Resolution == MAP_OUTPUT) { */
+/*       for (y = 0; y < Map->NY; y++) { */
+/* 	for (x = 0; x < Map->NX; x++) { */
+/* 	  ((float *) Array)[y * Map->NX+ x] = 0.0; */
 	  // FineMap quantities must be aggregated to coarse grid
-	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
-	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
-	      yy = (int) y*Map->DY/Map->DMASS + ii;
-	      xx = (int) x*Map->DX/Map->DMASS + jj;
-	      ((float *) Array)[y * Map->NX+ x] += FineMap[yy][xx].Slope;
-	    }
-	  }
-	}
-      }
-      Write2DMatrix(DMap->FileName, Array, DMap->NumberType, Map->NY, Map->NX,
-		    DMap, Index);
-    }
-    else if (DMap->Resolution == IMAGE_OUTPUT) {
-      for (y = 0; y < Map->NY; y++) {
-	for (x = 0; x < Map->NX; x++) {
-	  ((float *) Array)[y * Map->NX+ x] = 0.0;
+/* 	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) { */
+/* 	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) { */
+/* 	      yy = (int) y*Map->DY/Map->DMASS + ii; */
+/* 	      xx = (int) x*Map->DX/Map->DMASS + jj; */
+/* 	      ((float *) Array)[y * Map->NX+ x] += FineMap[yy][xx].Slope; */
+/* 	    } */
+/* 	  } */
+/* 	} */
+/*       } */
+/*       Write2DMatrix(DMap->FileName, Array, DMap->NumberType, Map->NY, Map->NX, */
+/* 		    DMap, Index); */
+/*     } */
+/*     else if (DMap->Resolution == IMAGE_OUTPUT) { */
+/*       for (y = 0; y < Map->NY; y++) { */
+/* 	for (x = 0; x < Map->NX; x++) { */
+/* 	  ((float *) Array)[y * Map->NX+ x] = 0.0; */
 	  // FineMap quantities must be aggregated to coarse grid
-	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
-	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
-	      yy = (int) y*Map->DY/Map->DMASS + ii;
-	      xx = (int) x*Map->DX/Map->DMASS + jj;
-	      ((unsigned char *) Array)[y * Map->NX+ x] +=
-		(unsigned char) ((FineMap[yy][xx].Slope - Offset) / Range * MAXUCHAR);
-	    }
-	  }
-	}
-      }
-      Write2DMatrix(DMap->FileName, Array, NC_BYTE, Map->NY, Map->NX, DMap,
-		    Index);
-    }
-    else
-      ReportError((char *) Routine, 26);
-    break;
+/* 	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) { */
+/* 	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) { */
+/* 	      yy = (int) y*Map->DY/Map->DMASS + ii; */
+/* 	      xx = (int) x*Map->DX/Map->DMASS + jj; */
+/* 	      ((unsigned char *) Array)[y * Map->NX+ x] += */
+/* 		(unsigned char) ((FineMap[yy][xx].Slope - Offset) / Range * MAXUCHAR); */
+/* 	    } */
+/* 	  } */
+/* 	} */
+/*       } */
+/*       Write2DMatrix(DMap->FileName, Array, NC_BYTE, Map->NY, Map->NX, DMap, */
+/* 		    Index); */
+/*     } */
+/*     else */
+/*       ReportError((char *) Routine, 26); */
+/*     break; */
 
   case 803:
     if (!Options->Sediment) {

@@ -513,11 +513,11 @@ void ElevationSlopeAspectfine(MAPSIZE * Map, FINEPIX ** FineMap)
   const char *Routine = "ElevationSlopeAspectfine";
   int x;
   int y;
-  int n;
+ /*  int n; */
   int k;
-  float neighbor_elev[NDIRSfine];
+ /*  float neighbor_elev[NDIRSfine]; */
 
-  /* fill neighbor array */
+  /*fill neighbor array */
 
   for (x = 0; x < Map->NXfine; x++) { 
     for (y = 0; y < Map->NYfine; y++) {
@@ -528,24 +528,24 @@ void ElevationSlopeAspectfine(MAPSIZE * Map, FINEPIX ** FineMap)
 	if (INBASIN(FineMap[y][x].Mask)) 
 	  Map->NumCellsfine++;
 	    	
-	for (n = 0; n < NDIRSfine; n++) {
-	  int xn = x + xneighborfine[n];
-	  int yn = y + yneighborfine[n];
+/* 	for (n = 0; n < NDIRSfine; n++) { */
+/* 	  int xn = x + xneighborfine[n]; */
+/* 	  int yn = y + yneighborfine[n]; */
 	  
-	  if (valid_cell_fine(Map, xn, yn)) {
-	    neighbor_elev[n] = ((FineMap[yn][xn].Mask) ? FineMap[yn][xn].Dem : (float) OUTSIDEBASIN);
-	  }
-	  else {
-	    neighbor_elev[n] = OUTSIDEBASIN;
-	  }
-	}
+/* 	  if (valid_cell_fine(Map, xn, yn)) { */
+/* 	    neighbor_elev[n] = ((FineMap[yn][xn].Mask) ? FineMap[yn][xn].Dem : (float) OUTSIDEBASIN); */
+/* 	  } */
+/* 	  else { */
+/* 	    neighbor_elev[n] = OUTSIDEBASIN; */
+/* 	  } */
+/* 	} */
 	
-	slope_aspect(Map->DMASS, Map->DMASS, FineMap[y][x].Dem, neighbor_elev,
-		     &(FineMap[y][x].Slope), &(FineMap[y][x].Aspect));
+/* 	slope_aspect(Map->DMASS, Map->DMASS, FineMap[y][x].Dem, neighbor_elev, */
+/* 		     &(FineMap[y][x].Slope), &(FineMap[y][x].Aspect)); */
 	
-      } /* end of (FineMap[y][x].Mask */
+      }/*  end of (FineMap[y][x].Mask */
     }
-  }// end of for loops
+  }  /* end of for loops */
   
   /* Create a structure to hold elevations of only those cells
      within the basin and the y,x of those cells.*/

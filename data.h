@@ -580,9 +580,6 @@ struct node {
 typedef struct {
   float Dem;                     /* Elevations */
   uchar Mask;                   /* Mask for modeled area */
-  float Slope;                   /* Land surface slope */  
-  float Aspect;                  /* This isn't used. Just have it because the way 
-				    the code is setup. */
   float bedrock;                 /* Bedrock elevation (m) */
   float sediment;                /* Sediment thickness in m */
   float SatThickness;            /* Water table thickness (m) */
@@ -591,11 +588,14 @@ typedef struct {
   float MassWasting;             /* Sediment (m3) lost due to mass wasting */
   float MassDeposition;          /* Sediment (m3) deposited in grid cell from mass wasting elsewhere */
   float SedimentToChannel;       /* Sediment (m3) deposited in channel from mass wasting elsewhere */
-  float TableDepth;              /* Water table depth (m bgs) */
   float TopoIndex;               /* Topographic Index used for soil
 				    moisture redistribution from coarse 
 				    grid to dinfe grid */
 } FINEPIX; 
+ 
+/* These are not needed */
+/* float Slope;                    Land surface slope */  
+/* float Aspect;  */                 
 
 typedef struct {
   EVAPPIX Evap;
