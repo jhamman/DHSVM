@@ -90,7 +90,8 @@ int main(int argc, char **argv)
     0.0, 0.0, 0.0},	/*SOILPIX */
     { 0.0, 0.0, 0.0, 0.0}, /*SEDPIX */
     { 0.0, NULL, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, /*FINEPIX */
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0l, 0.0, 0.0, 0.0, 0.0
+    0.0, 0.0, 0.0, 0.0, 0.0, 0l, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+    0.0, 0.0
   };
   CHANNEL ChannelData = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
   DUMPSTRUCT Dump;
@@ -131,8 +132,8 @@ int main(int argc, char **argv)
   VEGPIX **VegMap = NULL;
   VEGTABLE *VType = NULL;
   WATERBALANCE Mass =		/* parameter for mass balance calculations */
-  { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-    0.0, 0.0, 0.0 };
+  { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+    0.0, 0.0, 0.0, 0.0, 0.0 };
 
 /*****************************************************************************
   Initialization Procedures 
@@ -273,7 +274,8 @@ int main(int argc, char **argv)
 		  &FineMap);
 
     if (Options.HasNetwork){
-      InitChannelSediment(ChannelData.streams);
+      printf("Initializing channel sediment\n\n");
+      InitChannelSediment(ChannelData.streams, &Total);
     }
 
 
@@ -300,7 +302,9 @@ int main(int argc, char **argv)
     Total.Soil.SatFlow;
   Mass.OldWaterStorage = Mass.StartWaterStorage;
 
-  	
+  if (Options.Sediment)
+    Mass.StartChannelSedimentStorage = Total.ChannelSedimentStorage;
+
 /*****************************************************************************
   Perform Calculations 
 *****************************************************************************/
@@ -326,7 +330,7 @@ int main(int argc, char **argv)
         printf("\n");*/
 /* uncomment the above line to print the time at every step*/
 
- SedimentFlag(&Options, &Time);  /* determine surface erosion and routing scheme */
+    SedimentFlag(&Options, &Time);  /* determine surface erosion and routing scheme */
 
 
     InitNewStep(&InFiles, &Map, &Time, Soil.MaxLayers, &Options, NStats, Stat,
@@ -409,7 +413,7 @@ int main(int argc, char **argv)
       SPrintDate(&(Time.Current), buffer);
       flag = IsEqualTime(&(Time.Current), &(Time.Start));
       RouteChannelSediment(ChannelData.streams, ChannelData.roads,
-			   Time, &Dump);
+			   Time, &Dump, &Total);
       channel_save_sed_outflow_text(buffer, ChannelData.streams,
 				    ChannelData.sedstreamout,
 				    ChannelData.sedstreamflowout, flag);

@@ -566,11 +566,14 @@ typedef struct {
   float CumCulvertReturnFlow;
   float CumCulvertToChannel;
   float CumRunoffToChannel;
+  float StartChannelSedimentStorage;
   float CumMassWasting;
   float CumSedimentToChannel;
   float CumMassDeposition;
   float CumSedimentErosion;
-  float CumSurfaceErosion;
+  float CumDebrisInflow;
+  float CumSedOverlandInflow;
+  float CumSedimentOutflow;
 } WATERBALANCE;
 
 typedef struct {
@@ -636,7 +639,6 @@ typedef struct {
   SOILPIX Soil;
   SEDPIX Sediment;
   FINEPIX Fine;
-  float SedimentOverlandInflow;
   float SoilWater;
   float CanopyWater;
   float Runoff;
@@ -646,6 +648,11 @@ typedef struct {
   float CulvertReturnFlow;
   float CulvertToChannel;
   float RunoffToChannel;
+  float DebrisInflow;
+  float SedimentOverlandInflow;
+  float ChannelSedimentStorage;
+  float ChannelSuspendedSediment;
+  float SedimentOutflow;
   float SurfaceErosion;
 } AGGREGATED;
 

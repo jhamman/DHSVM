@@ -879,7 +879,7 @@ channel_save_sed_outflow_text(char *tstring, Channel * net, FILE * out,
 
   if (fprintf(out2, "%15s ", tstring) == EOF) {
     error_handler(ERRHDL_ERROR,
-		  "channel_save_outflow: write error:%s", strerror(errno));
+		  "channel_save_sed_outflow: write error:%s", strerror(errno));
     err++;
   }
 
@@ -896,13 +896,13 @@ channel_save_sed_outflow_text(char *tstring, Channel * net, FILE * out,
       }
       if (fprintf(out2, "%12.5g ", net->sediment.outflowconc) == EOF) {
 	error_handler(ERRHDL_ERROR,
-		      "channel_save_outflow: write error:%s", strerror(errno));
+		      "channel_save_sed_outflow: write error:%s", strerror(errno));
 	err++;
       }
       if (net->record_name != NULL) {
 	if (fprintf(out, "   \"%s\"\n", net->record_name) == EOF) {
 	  error_handler(ERRHDL_ERROR,
-			"channel_save_outflow: write error:%s",
+			"channel_save_sed_outflow: write error:%s",
 			strerror(errno));
 	  err++;
 	}

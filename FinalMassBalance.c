@@ -42,6 +42,7 @@ OPTIONSTRUCT * Options)
   float MassError;		/* mass balance error m  */
   float Input;
   float MWMMassError;
+  float SedInput, SedOutput, SedMassError;
 
   NewWaterStorage = Total->Soil.IExcess + Total->Road.IExcess + 
     Total->CanopyWater + Total->SoilWater +
@@ -101,14 +102,47 @@ OPTIONSTRUCT * Options)
       
       fprintf(stderr, " \nTotal Mass Wasting\n");
       fprintf(stderr, " MassWasted (m3): %.0f\n", Mass->CumMassWasting);
-      fprintf(stderr, " SedimentToChannel (m3): %.0f\n", Mass->CumSedimentToChannel);
-      fprintf(stderr, " MassDepostion (m3): %.0f\n", Mass->CumMassDeposition );
+      fprintf(stderr, " SedimentToChannel (m3): %.0f\n", 
+	      Mass->CumSedimentToChannel);
+      fprintf(stderr, " MassDepostion (m3): %.0f\n", Mass->CumMassDeposition);
       fprintf(stderr, " Mass Error (m3): %f\n", MWMMassError);
     }
+    
     if (Options->SurfaceErosion){
       fprintf(stderr, " \nAverage Surface Erosion\n");
-      fprintf(stderr, " Surface Erosion (mm): %f\n", Mass->CumSedimentErosion);
-      fprintf(stderr, " Surface Erosion (kg/hectare): %f\n", Mass->CumSurfaceErosion);
+      fprintf(stderr, " Surface Erosion (mm): %e\n", 
+	      Mass->CumSedimentErosion);
+      fprintf(stderr, " Surface Erosion (kg/hectare): %e\n", 
+	      Mass->CumSedimentErosion*PARTDENSITY*MMTOM/10000.);
     }
+    
+    SedInput = Mass->CumDebrisInflow + Mass->CumSedOverlandInflow;
+    
+    SedOutput = Mass->CumSedimentOutflow;
+    
+    SedMassError = (Total->ChannelSedimentStorage - 
+		    Mass->StartChannelSedimentStorage) + 
+      SedOutput - SedInput;  
+    
+    fprintf(stderr, " \nChannel Erosion");
+    fprintf(stderr, " \nInflow %.0f:\n", SedInput); 
+    fprintf(stderr, " DebrisInflow (kg): %.0f\n", Mass->CumDebrisInflow); 
+    fprintf(stderr, " OverlandInflow (kg): %.0f\n", 
+	    Mass->CumSedOverlandInflow);
+    
+    fprintf(stderr, " \nOutflow %.0f:\n",  SedOutput);
+    fprintf(stderr, " SedimentOutflow (kg): %.0f\n", Mass->CumSedimentOutflow);
+    
+    fprintf(stderr, " \nStorage:\n");
+    fprintf(stderr, " Initial Storage (kg): %.0f\n", 
+	    Mass->StartChannelSedimentStorage); 
+    fprintf(stderr, " End of Run Storage (kg): %.0f\n", 
+	    Total->ChannelSedimentStorage + Total->ChannelSuspendedSediment); 
+    fprintf(stderr, " \tFinal Bed Storage (kg): %.0f\n", 
+	    Total->ChannelSedimentStorage); 
+    fprintf(stderr, " \tFinal Suspended Sediment (kg): %.0f\n", 
+	    Total->ChannelSuspendedSediment); 
+    fprintf(stderr, " \nMass Error (kg): %f\n", SedMassError); 
   }
 }
+

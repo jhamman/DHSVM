@@ -336,8 +336,8 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
   }
 
   /**********************************************************************/
-/* Initialize the mass wasting variables for all time steps
-    to maintain the mass balance */
+  /* Initialize the mass wasting variables for all time steps
+     to maintain the mass balance */
   if(Options->Sediment){
     for (y = 0; y < Map->NY; y++) {
       for (x = 0; x < Map->NX; x++) {
@@ -356,6 +356,7 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
       }
     }
   }
+  
   /* Call the mass wasting algorithm; currently not very intelligent */
   
   if(Options->MassWaste && Options->Sediment && Time->Current.Hour == 00) {

@@ -112,7 +112,7 @@ uchar InArea(MAPSIZE *Map, COORD *Loc);
 
 void InitAggregated(int MaxVegLayers, int MaxSoilLayers, AGGREGATED *Total);
 
-void InitChannelSediment(Channel * Head);
+void InitChannelSediment(Channel * Head, AGGREGATED *Total);
 
 void InitChannelSedInflow(Channel * Head);
 
@@ -340,7 +340,7 @@ void ResetValues(MAPSIZE *Map, SOILPIX **SoilMap);
 int Round(double x);
 
 void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, 
-			  DUMPSTRUCT *Dump);
+			  DUMPSTRUCT *Dump, AGGREGATED * Total);
 
 void RouteDebrisFlow(float *SedimentToChannel, int prevy, 
 		     int prevx, float SlopeAspect, CHANNEL *ChannelData, 

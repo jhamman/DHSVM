@@ -79,9 +79,13 @@ void MassBalance(DATE *Current, FILES *Out, AGGREGATED *Total,
   Mass->CumMassWasting += Total->Fine.MassWasting;
   Mass->CumSedimentToChannel += Total->Fine.SedimentToChannel;
   Mass->CumMassDeposition += Total->Fine.MassDeposition;
-  
+
   /* Surface Erosion */
   Mass->CumSedimentErosion += Total->Sediment.Erosion;
-  Mass->CumSurfaceErosion += Total->SurfaceErosion;
+  
+  /* Channel Erosion */
+  Mass->CumDebrisInflow += Total->DebrisInflow;
+  Mass->CumSedOverlandInflow += Total->SedimentOverlandInflow;
+  Mass->CumSedimentOutflow += Total->SedimentOutflow;
 } 
 

@@ -167,9 +167,6 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
 	  if (Options->SurfaceErosion) {
 	    Total->Sediment.Erosion += SedMap[y][x].Erosion; 
 	    Total->Sediment.SedFluxOut += SedMap[y][x].SedFluxOut; 
-	    if (ChannelData->stream_map[x][y] != NULL) {
-	      Total->SedimentOverlandInflow += ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[0];
-	    }
 	  }
 	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
 	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
@@ -269,11 +266,9 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
   Total->RunoffToChannel /= NPixels;
   if (Options->Sediment) {
     if (Options->SurfaceErosion){
-      Total->SurfaceErosion = Total->Sediment.Erosion *Map->DX*Map->DY*
-	PARTDENSITY*MMTOM/10000.;
       Total->Sediment.Erosion /= NPixels; 
       Total->Sediment.SedFluxOut /= NPixels; 
-      Total->SedimentOverlandInflow /= NPixels; 
+/*       Total->SedimentOverlandInflow /= NPixels;  */
     }
     // FineMap quantities must be averaged over number of FineMap cells
     // rather than over the number of coarse grid cells

@@ -41,7 +41,7 @@
   Assign initial colluvium mass to each unique channel ID (amount
   of storage, kg)
 *****************************************************************************/
-void InitChannelSediment(Channel * Head)
+void InitChannelSediment(Channel * Head, AGGREGATED * Total)
 {
   Channel *Current = NULL;
   int i;
@@ -68,6 +68,7 @@ void InitChannelSediment(Channel * Head)
       Current->sediment.last_outflowrate[i]=0.0; 
       Current->sediment.mass[i] = 
 	initvol*(1-bulkporosity)*((float) PARTDENSITY)*(1/((float) NSEDSIZES));
+      Total->ChannelSedimentStorage += Current->sediment.mass[i];
     }
     Current = Current->next;
   }
@@ -101,7 +102,7 @@ void InitChannelSedInflow(Channel * Head)
 
 *****************************************************************************/
 void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, 
-			  DUMPSTRUCT *Dump)
+			  DUMPSTRUCT *Dump, AGGREGATED * Total)
 {
   Channel *Current = NULL;
   float DS,DT_sed,numinc;
@@ -127,11 +128,11 @@ void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time,
     while (Current != NULL) {
       if (Current->order == order) {
 	
-	Current->sediment.outflowconc=0.0;
+	Current->sediment.outflowconc = 0.0;
 	CapacityUsed = 0.0;
 	
 	if (Current->outlet != NULL)
-	  Current->outlet->sediment.totalmass=0;
+	  Current->outlet->sediment.totalmass = 0.;
 	
 	/* rate of inflow and outflow change over model time step*/
 	dIdt = (Current->inflow - Current->last_inflow)/(float) Time.Dt;
@@ -200,7 +201,7 @@ void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time,
 	    if(TotalCapacity<=0) TotalCapacity=0.0;
 	    if(TotalCapacity*DT_sed >= Current->sediment.mass[i]) {
 	      dMdt = Current->sediment.mass[i]/DT_sed;
-	      Current->sediment.mass[i] = 0;
+	      Current->sediment.mass[i] = 0.;
 	    }
 	    else {
 	      dMdt = TotalCapacity;
@@ -270,17 +271,28 @@ void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time,
 	/* 	if(Vsed<(0.2*V)) Vsed=0.2*V; */
 		Vsed=V;	
 		Current->sediment.outflowconc += 
-			(1000.0*Current->sediment.outflow[i]/(Current->outflow))*(V/Vsed);
+		(1000.0*Current->sediment.outflow[i]/(Current->outflow))*(V/Vsed);
 	  }
 	  
 	  /* pass the sediment mass outflow to the next downstream reach */
-	  if(Current->outlet != NULL)
+	  if(Current->outlet != NULL){
 	    Current->outlet->sediment.inflow[i] += Current->sediment.outflow[i];
-
-	  /* Iniitalize for next time step */
-	  Current->sediment.debrisinflow[i] = 0.0;
-	  Current->sediment.overlandinflow[i] = 0.0;
+	    /* Needed for last time step to balance mass */
+	    Total->ChannelSuspendedSediment += Current->sediment.outflow[i];
+	  }
+	  /* If no stream segment outlet, there is a road sink or a basin outlet.
+	     Track this for the sediment mass balance. */
+	  else{
+	    Total->SedimentOutflow += Current->sediment.outflow[i];
+	  }
+	  /* Mass Balance Variables */
+	  Total->DebrisInflow += Current->sediment.debrisinflow[i];
+	  Current->sediment.debrisinflow[i] = 0.;
 	  
+	  Total->SedimentOverlandInflow += Current->sediment.overlandinflow[i];
+	  Current->sediment.overlandinflow[i] = 0.;
+	  
+	  Total->ChannelSedimentStorage += Current->sediment.mass[i];
 	} /* close loop for each sediment size */
 	/* the next 7 lines are from channel_route_network -- closes the loop above */
 	order_count += 1;

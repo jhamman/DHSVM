@@ -117,9 +117,12 @@ void ResetAggregate(LAYER * Soil, LAYER * Veg, AGGREGATED * Total,
   Total->RunoffToChannel = 0;
   if (Options->Sediment) {
     Total->Sediment.Erosion = 0.0; 
-    Total->SurfaceErosion = 0.0;
     Total->Sediment.SedFluxOut = 0.0; 
+    Total->DebrisInflow = 0.0;
     Total->SedimentOverlandInflow = 0.0; 
+    Total->ChannelSedimentStorage = 0.0;
+    Total->ChannelSuspendedSediment = 0.0;
+    Total->SedimentOutflow = 0.0; 
     Total->Fine.SatThickness = 0.0; 
     Total->Fine.DeltaDepth = 0.0; 
     Total->Fine.Probability = 0.0; 
