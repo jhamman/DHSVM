@@ -172,9 +172,6 @@ typedef struct {
   int NumFineIn;                 /* Number of fine cells in one coarse cell */  
   ITEM *OrderedCells;           /* Structure array to hold the ranked elevations;
 				   NumCells in size */
-  ITEM *OrderedCellsfine;       /* Structure array to hold the ranked elevations
-				   for pixel spacing for mass wasting algorithm;
-				   NumCellsfine in size */
 } MAPSIZE;
 
 typedef struct {

@@ -536,42 +536,43 @@ float ElevationSlope(MAPSIZE *Map, TOPOPIX **TopoMap, FINEPIX ***FineMap, int y,
 /* -------------------------------------------------------------
    ElevationSlopeAspectfine
    ------------------------------------------------------------- */
-void ElevationSlopeAspectfine(MAPSIZE * Map, FINEPIX ***FineMap, TOPOPIX **TopoMap)
-{
-  const char *Routine = "ElevationSlopeAspectfine";
-  int x;
-  int y;
+/* void ElevationSlopeAspectfine(MAPSIZE * Map, FINEPIX ***FineMap, TOPOPIX **TopoMap) */
+/* { */
+/*   const char *Routine = "ElevationSlopeAspectfine"; */
+/*   int x; */
+/*   int y; */
  /*  int n; */
-  int k;
-  int coarsei, coarsej;
+/*   int k; */
+/*   int coarsei, coarsej; */
  /*  float neighbor_elev[NNEIGHBORS]; */
 
+/* Moved to CalcTopoIndex for local calculation */
   /* Create a structure to hold elevations of all cells within the coarse
      resolution mask and the y,x of those cells.*/
   
-  if (!(Map->OrderedCellsfine = (ITEM *) calloc(Map->NumCellsfine, sizeof(ITEM))))
-    ReportError((char *) Routine, 1);
+/*   if (!(Map->OrderedCellsfine = (ITEM *) calloc(Map->NumCellsfine, sizeof(ITEM)))) */
+/*     ReportError((char *) Routine, 1); */
   
-  k = 0;
-  for (y = 0; y < Map->NYfine; y++) {
-    for (x = 0; x < Map->NXfine; x++) {
+/*   k = 0; */
+/*   for (y = 0; y < Map->NYfine; y++) { */
+/*     for (x = 0; x < Map->NXfine; x++) { */
       
-      coarsei = floor(y*Map->DMASS/Map->DY);
-      coarsej = floor(x*Map->DMASS/Map->DX);
+/*       coarsei = floor(y*Map->DMASS/Map->DY); */
+/*       coarsej = floor(x*Map->DMASS/Map->DX); */
       
       /* Save the elevation, y, and x in the ITEM structure. */
-      if (INBASIN(TopoMap[coarsei][coarsej].Mask)) {
-	Map->OrderedCellsfine[k].Rank = (*FineMap[y][x]).Dem;
-	Map->OrderedCellsfine[k].y = y;
-	Map->OrderedCellsfine[k].x = x;
-	k++;
-      }
-    }
-  }
+/*       if (INBASIN(TopoMap[coarsei][coarsej].Mask)) { */
+/* 	Map->OrderedCellsfine[k].Rank = (*FineMap[y][x]).Dem; */
+/* 	Map->OrderedCellsfine[k].y = y; */
+/* 	Map->OrderedCellsfine[k].x = x; */
+/* 	k++; */
+/*       } */
+/*     } */
+/*   } */
  
   /* Sort Elev in descending order-- Elev.x and Elev.y hold indices. */
   
-  quick(Map->OrderedCellsfine, Map->NumCellsfine);
+/*   quick(Map->OrderedCellsfine, Map->NumCellsfine); */
 
-  return;
-}
+/*   return; */
+/* } */

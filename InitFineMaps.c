@@ -198,8 +198,10 @@ void InitFineMaps(LISTPTR Input, OPTIONSTRUCT *Options, MAPSIZE *Map,
   printf("Basin has %d active pixels in the mass wasting resolution map\n",
 	 Map->NumCellsfine);
   
-  /* Create descending list of fine resolution elevations. */
-  ElevationSlopeAspectfine(Map, *FineMap, *TopoMap); 
+  /* Create descending list of fine resolution elevations. 
+     Don't need to save this information. Moved to calculate locally in 
+     CalcTopoIndex*/
+  /*   ElevationSlopeAspectfine(Map, *FineMap, *TopoMap);  */
  
   /* Calculate the topographic index */
   CalcTopoIndex(Map, *FineMap, *TopoMap);

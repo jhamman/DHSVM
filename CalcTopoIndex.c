@@ -87,6 +87,7 @@ void CalcTopoIndex(MAPSIZE *Map, FINEPIX ***FineMap, TOPOPIX **TopoMap)
   float **tanbeta;
   float **contour_length;
   int coarsei, coarsej;
+  ITEM *OrderedCellsfine;
 
   /* These indices are so neighbors can be looked up quickly */
   int xneighbor[NNEIGHBORS] = {
@@ -128,20 +129,44 @@ void CalcTopoIndex(MAPSIZE *Map, FINEPIX ***FineMap, TOPOPIX **TopoMap)
       ReportError("CalcTopoIndex", 1);
   }
   
+  if (!(OrderedCellsfine = (ITEM *) calloc(Map->NumCellsfine, sizeof(ITEM))))
+    ReportError("CalcTopoIndex", 1);
+  
   dx = Map->DMASS;
   dy = Map->DMASS;
   length_diagonal = sqrt((pow(dx, 2)) + (pow(dy, 2)));
   
+  k = 0;
+  for (y = 0; y < Map->NYfine; y++) {
+    for (x = 0; x < Map->NXfine; x++) {
+      
+      coarsei = floor(y*Map->DMASS/Map->DY);
+      coarsej = floor(x*Map->DMASS/Map->DX);
+      
+      /* Save the elevation, y, and x in the ITEM structure. */
+      if (INBASIN(TopoMap[coarsei][coarsej].Mask)) {
+	OrderedCellsfine[k].Rank = (*FineMap[y][x]).Dem;
+	OrderedCellsfine[k].y = y;
+	OrderedCellsfine[k].x = x;
+	k++;
+      }
+    }
+  }
+ 
+  /* Sort Elev in descending order-- Elev.x and Elev.y hold indices. */
+  
+  quick(OrderedCellsfine, Map->NumCellsfine);
+
   for (k = (Map->NumCellsfine)-1; k >-1; k--) { 
-    y = Map->OrderedCellsfine[k].y;
-    x = Map->OrderedCellsfine[k].x;
+    y = OrderedCellsfine[k].y;
+    x = OrderedCellsfine[k].x;
     a[y][x]= dx * dy; /* Intialize cummulative area to cell area  */
   }
   
   /* Loop through all cells in descending order of elevation */
   for (k = (Map->NumCellsfine)-1; k >-1; k--) { 
-    y = Map->OrderedCellsfine[k].y;
-    x = Map->OrderedCellsfine[k].x;
+    y = OrderedCellsfine[k].y;
+    x = OrderedCellsfine[k].x;
     
     /* fill neighbor array */
     for (n = 0; n < NNEIGHBORS; n++) {
@@ -257,8 +282,8 @@ void CalcTopoIndex(MAPSIZE *Map, FINEPIX ***FineMap, TOPOPIX **TopoMap)
   } /* end  for (k = 0; k < Map->NumCellsfine; k++) { */
   
   for (k = (Map->NumCellsfine)-1; k >-1; k--) { 
-    y = Map->OrderedCellsfine[k].y;
-    x = Map->OrderedCellsfine[k].x;
+    y = OrderedCellsfine[k].y;
+    x = OrderedCellsfine[k].x;
     
     (*FineMap[y][x]).TopoIndex = log(a[y][x]/tanbeta[y][x]);
   }
@@ -272,7 +297,7 @@ void CalcTopoIndex(MAPSIZE *Map, FINEPIX ***FineMap, TOPOPIX **TopoMap)
   printmap = 0;
 
   if (printmap == 1){
-    sprintf(topoindexmap, "logtanbeta.asc");
+    sprintf(topoindexmap, "topoindex.asc");
     
     if((fo=fopen(topoindexmap,"a")) == NULL)
       {
@@ -295,9 +320,9 @@ void CalcTopoIndex(MAPSIZE *Map, FINEPIX ***FineMap, TOPOPIX **TopoMap)
 	
         /* Check to make sure region is in the basin. */
         if (INBASIN(TopoMap[i][j].Mask)) 	
-	  /* 	fprintf(fo, "%2.3f ", (*FineMap[y][x]).TopoIndex); */
+	   	fprintf(fo, "%2.3f ", (*FineMap[y][x]).TopoIndex);
 	  /*   fprintf(fo, "%2.3f ", log(a[y][x])); */ 
-	  fprintf(fo, "%2.3f ", log(1/tanbeta[y][x]));
+	/*   fprintf(fo, "%2.3f ", log(1/tanbeta[y][x])); */
 	else 
 	  fprintf(fo, "0. "); 
 	
@@ -315,6 +340,7 @@ void CalcTopoIndex(MAPSIZE *Map, FINEPIX ***FineMap, TOPOPIX **TopoMap)
   free(a);
   free(tanbeta);
   free(contour_length);
+  free(OrderedCellsfine);
   
   return;
 }
