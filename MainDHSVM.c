@@ -303,8 +303,9 @@ int main(int argc, char **argv)
     Total.Soil.SatFlow;
   Mass.OldWaterStorage = Mass.StartWaterStorage;
 
-  if (Options.Sediment)
+  if (Options.Sediment){
     Mass.StartChannelSedimentStorage = Total.ChannelSedimentStorage;
+    Mass.LastChannelSedimentStorage = Total.ChannelSedimentStorage;}
 
 /*****************************************************************************
   Perform Calculations 
