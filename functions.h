@@ -198,7 +198,8 @@ void InitNewStep(INPUTFILES *InFiles, MAPSIZE *Map, TIMESTRUCT *Time,
 		 TOPOPIX **TopoMap, RADCLASSPIX **RadMap, SOILPIX **SoilMap,
 		 float ***MM5Input, float ***WindModel, MAPSIZE *MM5Map);
 
-void InitParameters(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map);
+void InitParameters(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
+		    TIMESTRUCT * Time);
 
 int InitPixDump(LISTPTR Input, MAPSIZE *Map, uchar **BasinMask, char *Path,
 		int NPix, PIXDUMP **Pix, OPTIONSTRUCT *Options);
@@ -209,6 +210,8 @@ void InitPrecipLapseMap(char *PrecipLapseFile, int NY, int NX,
 			float ***PrecipLapseMap);
 
 void InitPrismMap(int NY, int NX, float ***PrismMap);
+
+void InitSurfaceSed(LISTPTR Input, TIMESTRUCT *Time);
 
 void InitSedimentTables(int StepsPerDay, LISTPTR Input, SEDTABLE **SedType, SOILTABLE **SType,
 			VEGTABLE **VType, LAYER *Soil, LAYER *Veg);

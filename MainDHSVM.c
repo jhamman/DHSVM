@@ -266,7 +266,7 @@ int main(int argc, char **argv)
 
     ReadInitFile(Options.SedFile, &Input);
 
-    InitParameters(Input, &Options, &Map);
+    InitParameters(Input, &Options, &Map, &Time);
 
     InitSedimentTables(Time.NDaySteps, Input, &SedType, &SType, &VType, &Soil, &Veg);
 
@@ -326,12 +326,12 @@ int main(int argc, char **argv)
       printf("\n");
     }
 
-/*	PrintDate(&(Time.Current),stdout);
-        printf("\n");*/
-/* uncomment the above line to print the time at every step*/
+   /*  PrintDate(&(Time.Current),stdout); */
+/*     printf("\n"); */
+    /* uncomment the above line to print the time at every step*/
 
-    SedimentFlag(&Options, &Time);  /* determine surface erosion and routing scheme */
-
+    /* determine surface erosion and routing scheme */
+    SedimentFlag(&Options, &Time); 
 
     InitNewStep(&InFiles, &Map, &Time, Soil.MaxLayers, &Options, NStats, Stat,
 		InFiles.RadarFile, &Radar, RadarMap, &SolarGeo, TopoMap, RadMap,

@@ -33,7 +33,7 @@ int InitVegStats(VEGTABLE **VType, LISTPTR Input);
 float CalcSatDensity(float AveDensity);
 
 /*******************************************************************************/
-/*				  InitTables()                                 */
+/*		      InitSedimentTables()                                 */
 /*******************************************************************************/
 void InitSedimentTables(int StepsPerDay, LISTPTR Input, SEDTABLE **SedType, SOILTABLE **SType, 
 			VEGTABLE **VType, LAYER *Soil, LAYER *Veg)

@@ -69,9 +69,6 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
     {"OPTIONS", "SENSIBLE HEAT FLUX", "", ""},
     {"OPTIONS", "SEDIMENT", "", ""},
     {"OPTIONS", "SEDIMENT INPUT FILE", "", ""},
-    {"OPTIONS", "EROSION PERIOD", "", ""},
-    {"OPTIONS", "MASS WASTING", "", ""},
-    {"OPTIONS", "SURFACE EROSION", "", ""},
     {"OPTIONS", "OVERLAND ROUTING", "", ""}, 
     {"OPTIONS", "ROAD ROUTING", "", ""},
     {"OPTIONS", "INFILTRATION", "", ""},
@@ -109,8 +106,6 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
     {"TIME", "TIME STEP", "", ""},
     {"TIME", "MODEL START", "", ""},
     {"TIME", "MODEL END", "", ""},
-    {"TIME", "EROSION START", "", ""},
-    {"TIME", "EROSION END", "", ""},
     {"CONSTANTS", "GROUND ROUGHNESS", "", ""},
     {"CONSTANTS", "SNOW ROUGHNESS", "", ""},
     {"CONSTANTS", "RAIN THRESHOLD", "", ""},
@@ -210,8 +205,14 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   /* Determine whether sediment model should be run */
   if (strncmp(StrEnv[sediment].VarStr, "TRUE", 4) == 0)
     Options->Sediment = TRUE;
-  else if (strncmp(StrEnv[sediment].VarStr, "FALSE", 5) == 0)
+  else if (strncmp(StrEnv[sediment].VarStr, "FALSE", 5) == 0){
+    printf("WARNING: Sediment option has not been chosen. All erosion\n");
+    printf("options are being turned off.\n\n");
     Options->Sediment = FALSE;
+    Options->MassWaste = FALSE;
+    Options->SurfaceErosion = FALSE;
+    Options->ErosionPeriod = FALSE;
+  }
   else
     ReportError(StrEnv[sediment].KeyName, 51);
 
@@ -220,26 +221,6 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
       ReportError(StrEnv[sed_input_file].KeyName, 51);
     strcpy(Options->SedFile, StrEnv[sed_input_file].VarStr);
   }
-
- /* Determine whether mass wasting model should be run */
-  if (strncmp(StrEnv[mass_wasting].VarStr, "TRUE", 4) == 0)
-    Options->MassWaste = TRUE;
-  else if (strncmp(StrEnv[mass_wasting].VarStr, "FALSE", 5) == 0)
-    Options->MassWaste = FALSE;
-  else
-    ReportError(StrEnv[mass_wasting].KeyName, 51);
-
-  /* Determine whether surface erosion model should be run */
-  if (strncmp(StrEnv[surface_erosion].VarStr, "TRUE", 4) == 0){
-    Options->ErosionPeriod = TRUE;
-    Options->SurfaceErosion = TRUE;
-  }
-  else if (strncmp(StrEnv[surface_erosion].VarStr, "FALSE", 5) == 0){
-    Options->ErosionPeriod = FALSE;
-    Options->SurfaceErosion = FALSE;
-  }
-  else
-    ReportError(StrEnv[surface_erosion].KeyName, 51);
   
   /* Determine overland flow routing method to use */
   if (strncmp(StrEnv[routing].VarStr, "KINEMATIC", 9) == 0)
@@ -252,8 +233,7 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   /* Determine road flow routing method to use */
   if (strncmp(StrEnv[road_routing].VarStr, "KINEMATIC", 9) == 0){
     Options->RoadRouting = TRUE;
-    fprintf(stderr, 
-	    "MODEL IN DEVELOPMENT: Road routing included, but not road erosion.\n");
+    printf("MODEL IN DEVELOPMENT: Road routing included, but not road erosion.\n");
   }
   else if (strncmp(StrEnv[road_routing].VarStr, "CONVENTIONAL", 12) == 0)
     Options->RoadRouting = FALSE;
@@ -263,36 +243,22 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   
   /* Check for compatible options. */
   if(Options->Sediment == TRUE) {
-    
     /* RoadRouting can only be performed if there are roads. 
        This check is made in InitNetwork.c */
     if(!Options->RoadRouting) {
-      fprintf(stderr, 
-	      "WARNING: Sediment model (forest roads component) cannot be run\n");
-      fprintf(stderr, 
-	      "with conventional road flow routing. To run this component, set\n");
-      fprintf(stderr, 
-	      "Road Routing to KINEMATIC. This model run will continue without\n");
-      fprintf(stderr, 
-	      "forest road erosion. \n\n");
+      printf("WARNING: Sediment model (forest roads component) cannot be run\n");
+      printf("with conventional road flow routing. To run this component, set\n");
+      printf("Road Routing to KINEMATIC. This model run will continue without\n");
+      printf("forest road erosion. \n\n");
     }  
   }
   
   if(Options->Sediment == FALSE){
     if(Options->RoadRouting){
-      fprintf(stderr, 
-	      "WARNING: Kinematic road routing is for use in the sediment\n");
-      fprintf(stderr, 
-	      "model. Road Routing being reset to CONVENTIONAL.\n\n");
+      printf("WARNING: Kinematic road routing is for use in the sediment\n");
+      printf("model. Road Routing being reset to CONVENTIONAL.\n\n");
       Options->RoadRouting = FALSE;
     }
-
-    /* turn off all sediment options if (!Options->Sediment) */
-    if(Options->MassWaste || Options->SurfaceErosion)
-      fprintf(stderr, 
-	      "WARNING: Sediment option has not been chosen. All erosion options are being turned off.\n\n");
-    Options->MassWaste = FALSE;
-    Options->SurfaceErosion = FALSE;
   }
   
   /* Determine if the maximum infiltration rate is static or dynamic */
@@ -301,8 +267,8 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   }
   else if (strncmp(StrEnv[infiltration].VarStr, "DYNAMIC", 7) == 0) {
     Options->Infiltration = DYNAMIC ;
-    printf("WARNING: Dynamic maximum infiltration capacity has
- not been tested. It is a work in progress.\n\n");
+    printf("WARNING: Dynamic maximum infiltration capacity has\n");
+    printf("not been tested. It is a work in progress.\n\n");
   }
   else
     ReportError(StrEnv[infiltration].KeyName, 51);
@@ -517,15 +483,7 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
 
   InitTime(Time, &Start, &End, NULL, NULL, (int) TimeStep);
 
-   /* Determine sediment routing period */
-
-  if (!SScanMonthDay(StrEnv[erosion_start].VarStr, &(Time->StartSed)))
-    ReportError(StrEnv[erosion_start].KeyName, 51);
-  
-  if (!SScanMonthDay(StrEnv[erosion_end].VarStr, &(Time->EndSed)))
-    ReportError(StrEnv[erosion_end].KeyName, 51);
-
-  /**************** Determine model constants ****************/
+   /**************** Determine model constants ****************/
 
   if (!CopyFloat(&Z0_GROUND, StrEnv[ground_roughness].VarStr, 1))
     ReportError(StrEnv[ground_roughness].KeyName, 51);

@@ -44,15 +44,16 @@ typedef struct {
   int Dt;			/* Timestep (in sec) */
   DATE Start;			/* Starting date of run */
   DATE End;			/* Ending date of run */
-  DATE StartSed;		/* Starting date of sediment run */
-  DATE EndSed;			/* Ending date of sediment run */
+  DATE *StartSed;		/* Starting date of sediment run */
+  DATE *EndSed;			/* Ending date of sediment run */
   DATE Current;			/* Current date in run */
   DATE StartRadar;		/* Start radar file */
   DATE StartMM5;		/* Start of MM5 files */
   int Step;			/* Timestep since start */
   int DayStep;			/* Time step since midnight */
-  int NDaySteps;		/* Number of timesteps per day */
+  int NDaySteps;		        /* Number of timesteps per day */
   int NTotalSteps;		/* Total number of steps in run */
+  int NSETotalSteps;             /* Total number of times the surface erosio nmodel is run */
 } TIMESTRUCT;
 
 /* -------------------------------------------------------------

@@ -576,8 +576,18 @@ float viscosity(float Tair, float Rh)
 *****************************************************************************/
 void SedimentFlag(OPTIONSTRUCT *Options,  TIMESTRUCT * Time)
 {
+  int i;             /* Counter */
+  int flag = 0;
   int oldrouting;
+  double StartSed;      /* Start of the current or next surface erosion 
+			calculation period (Julian day) */
+  double EndSed;        /* End of the current or next surface erosion 
+			calculation period (Julian day) */
   
+  StartSed = 0.; 
+  EndSed = 0.;      
+			
+
   if ((Options->ErosionPeriod) && (Time->Current.Julian==Time->Start.Julian)){
     Options->OldSedFlag = 1;
   }
@@ -587,27 +597,32 @@ void SedimentFlag(OPTIONSTRUCT *Options,  TIMESTRUCT * Time)
   }
   
   oldrouting = Options->Routing;
+
+   /* Determine next period for calculating surface erosion */
+  if (Time->NSETotalSteps == 0){
+    StartSed = Time->Start.Julian; 
+    EndSed = Time->End.Julian; 
+  }
+  else{
+    for (i = 0; i < Time->NSETotalSteps; i++){
+      if((Time->Current.Julian <= Time->EndSed[i].Julian) && flag < 1){
+	StartSed = Time->StartSed[i].Julian; 
+	EndSed = Time->EndSed[i].Julian; 
+	flag = 1;
+      }
+    }
+  }
   
   if((Options->Sediment) && (Options->ErosionPeriod)) {
-    
-    if (Time->StartSed.JDay>=Time->EndSed.JDay){
-      if((Time->Current.JDay<=Time->StartSed.JDay && 
-	  Time->Current.JDay<=Time->EndSed.JDay) || 
-	 (Time->Current.JDay>=Time->StartSed.JDay && 
-	  Time->Current.JDay>=Time->EndSed.JDay)) {
-
-        Options->SurfaceErosion = TRUE;
-	
-      }
-      else Options->SurfaceErosion=FALSE;
-    }
-    else if (Time->Current.JDay>=Time->StartSed.JDay && Time->Current.JDay<=Time->EndSed.JDay){
+     if ((Time->Current.Julian >= StartSed) && (Time->Current.Julian <= EndSed)){
       Options->SurfaceErosion=TRUE;
     }
     else Options->SurfaceErosion=FALSE;
   }
-  if ((Options->OldSedFlag != Options->SurfaceErosion) && (Time->Current.Julian!=Time->Start.Julian)) {
-    if (Options->SurfaceErosion==1)
+
+  if ((Options->OldSedFlag != Options->SurfaceErosion) && 
+      (Time->Current.Julian != Time->Start.Julian)) {
+    if (Options->SurfaceErosion)
       fprintf(stderr,"Beginning surface erosion model calculations.\n");
     else
       fprintf(stderr,"Ending surface erosion model calculations.\n");

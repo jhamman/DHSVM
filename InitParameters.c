@@ -1,10 +1,10 @@
 /*
- * SUMMARY:      InitParameters.c - Initialize constants for MWM
+ * SUMMARY:      InitParameters.c - Initialize constants for sediment tranport model
  * USAGE:        Part of DHSVM
  *
- * AUTHOR:       Bart Nijssen
+ * AUTHOR:       Laura C. Bowling/Colleen O. Doten
  * ORG:          University of Washington, Department of Civil Engineering
- * E-MAIL:       nijssen@u.washington.edu
+ * E-MAIL:       dhsvm@hydro.washington.edu
  * ORIG-DATE:    Apr-96 
  * DESCRIPTION:  Initialize constants for DHSVM
  * DESCRIP-END.
@@ -46,11 +46,14 @@
 
   Comments     :
 *****************************************************************************/
-void InitParameters(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map)
+void InitParameters(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
+		    TIMESTRUCT * Time)
 {
   int i;			/* counter */
 
   STRINIENTRY StrEnv[] = {
+    {"SEDOPTIONS", "MASS WASTING", "", ""},
+    {"SEDOPTIONS", "SURFACE EROSION", "", ""},
     {"PARAMETERS", "MASS WASTING SPACING", "", ""},
     {"PARAMETERS", "MAXIMUM ITERATIONS", "", ""},
     {"PARAMETERS", "CHANNEL PARENT D50", "", ""},
@@ -67,6 +70,29 @@ void InitParameters(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map)
   }
 
   /**************** Determine model options ****************/
+
+ /* Determine whether mass wasting model should be run */
+  if (strncmp(StrEnv[mass_wasting].VarStr, "TRUE", 4) == 0) {
+    printf("Mass Wasting component will be run\n");
+    Options->MassWaste = TRUE;
+  }
+  else if (strncmp(StrEnv[mass_wasting].VarStr, "FALSE", 5) == 0)
+    Options->MassWaste = FALSE;
+  else
+    ReportError(StrEnv[mass_wasting].KeyName, 51);
+
+  /* Determine whether surface erosion model should be run */
+  if (strncmp(StrEnv[surface_erosion].VarStr, "TRUE", 4) == 0){
+    Options->ErosionPeriod = TRUE;
+    Options->SurfaceErosion = TRUE;
+    printf("Surface Erosion component will be run\n");
+  }
+  else if (strncmp(StrEnv[surface_erosion].VarStr, "FALSE", 5) == 0){
+    Options->ErosionPeriod = FALSE;
+    Options->SurfaceErosion = FALSE;
+  }
+  else
+    ReportError(StrEnv[surface_erosion].KeyName, 51);
 
   if (!CopyFloat(&(Map->DMASS), StrEnv[mass_spacing].VarStr, 1))
     ReportError(StrEnv[mass_spacing].KeyName, 51);
@@ -89,4 +115,82 @@ void InitParameters(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map)
   
   if (!CopyFloat(&DEBRISd90, StrEnv[debrisd90].VarStr, 1))
     ReportError(StrEnv[debrisd90].KeyName, 51);
+
+  /* Determine surface erosion period */
+  if (Options->SurfaceErosion == TRUE){
+    InitSurfaceSed(Input, Time);
+  }
 }
+
+/*******************************************************************************
+  Function name: InitSurfaceSed()
+
+  Purpose      : Initialize the image dumps.  This information is in the 
+		 [OUTPUT] section of the input file
+
+  Required     : 
+    LISTPTR Input         - Linked list with input strings
+     int NSteps          - Number of images to dump 
+ 
+
+  Returns      : void
+
+  Modifies     : Members of Time
+
+  Comments     : 
+*******************************************************************************/
+void InitSurfaceSed(LISTPTR Input, TIMESTRUCT *Time)
+{
+  const char *Routine = "InitSurfaceSed";
+  int i,j;			/* counter */
+  char KeyName[erosion_end+1][BUFSIZE + 1];
+  char *KeyStr[] = {
+    "EROSION START", 
+    "EROSION END",
+  };
+
+  char SectionName[] = "SEDTIME";
+  char VarStr[erosion_end+1][BUFSIZE+1];
+
+  /* Get the number of calculation periods */
+  GetInitString(SectionName, "TIME STEPS", "", VarStr[0], 
+		(unsigned long) BUFSIZE, Input);
+
+  if (!CopyInt(&(Time->NSETotalSteps), VarStr[0], 1))
+    ReportError("TIME STEPS", 51);
+
+  if ((Time->NSETotalSteps) < 0)
+    ReportError(SectionName, 51);
+
+  if (!((*Time).StartSed = (DATE *) calloc(Time->NSETotalSteps, sizeof(DATE)))) 
+    ReportError((char *)Routine, 1);  
+
+  if (!((*Time).EndSed = (DATE *) calloc(Time->NSETotalSteps, sizeof(DATE)))) 
+      ReportError((char *)Routine, 1);
+
+  /* Read the key-entry pairs from the input file */
+  for (i = 0; i < Time->NSETotalSteps ; i++) {
+
+    /* Read the key-entry pairs from the input file */
+    for (j = 0; j <= erosion_end; j++) {
+      sprintf(KeyName[j], "%s %d",KeyStr[j], i+1);
+      GetInitString(SectionName, KeyName[j], "", VarStr[j],
+		    (unsigned long) BUFSIZE, Input);
+    }
+    
+    if (!SScanDate(VarStr[erosion_start], &((*Time).StartSed[i])))
+      ReportError(KeyName[erosion_start], 51);
+        
+    if (!SScanDate(VarStr[erosion_end], &((*Time).EndSed[i])))
+      ReportError(KeyName[erosion_end], 51);
+
+    /* Ensure that end times are berfore start tiems */
+    if (After(&((*Time).StartSed[i]),&((*Time).EndSed[i])))
+       ReportError(SectionName, 23);
+
+   }
+
+}
+
+
+

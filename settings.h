@@ -109,8 +109,8 @@ typedef unsigned int unint;
 enum KEYS {
 /* Options *//* list order must match order in InitConstants.c */
   format = 0, extent, gradient, flow_routing, sensible_heat_flux, sediment,
-  sed_input_file, erosion_period, mass_wasting, surface_erosion, routing, 
-  road_routing, infiltration, interpolation, mm5, qpf, prism, canopy_radatt, 
+  sed_input_file, routing, road_routing, infiltration, interpolation, 
+  mm5, qpf, prism, canopy_radatt, 
   shading, snotel, outside, rhoverride, precipitation_source, wind_source, 
   temp_lapse, precip_lapse, cressman_radius, cressman_stations, prism_data_path, 
   prism_data_ext, shading_data_path, shading_data_ext, skyview_data_path, 
@@ -119,7 +119,7 @@ enum KEYS {
   center_longitude, time_zone_meridian, number_of_rows,
   number_of_columns, grid_spacing, point_north, point_east,
   /* Time */
-  time_step, model_start, model_end, erosion_start, erosion_end,
+  time_step, model_start, model_end, 
   /* Constants */
   ground_roughness, snow_roughness, rain_threshold, snow_threshold,
   snow_water_capacity, reference_height, rain_lai_multiplier,
@@ -175,8 +175,13 @@ enum KEYS {
   image_upper, image_lower,
   /* graphics information */
   graphics_variable = 0,
+  /* Sediment oconfiguration file */
+  /* Sedoptions */ 
+  mass_wasting = 0, surface_erosion, 
   /* Parameters */
-  mass_spacing = 0, max_iterations, channeld50, channeld90, debrisd50, debrisd90,
+  mass_spacing, max_iterations, channeld50, channeld90, debrisd50, debrisd90,
+  /* Sedtime*/
+  erosion_start = 0, erosion_end,
   /* Sediment information */
   sed_description = 0, kindex, dfifty, cohesion, 
   coh_min, coh_max, coh_mean, coh_dev, coh_mode, friction_angle, fa_min, fa_max, fa_mean, 
