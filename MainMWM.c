@@ -663,7 +663,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
   }
 
   /*average sediment delivery to each stream segment***************/
-  for(i=0; i<MaxStreamID; i++) {
+  for(i=1; i<MaxStreamID+1; i++) {
     SegmentSediment[i] /= (float)massitertemp;
     if(SegmentSediment[i] < 0.0) SegmentSediment[i]=0.0;
   }
