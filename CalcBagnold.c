@@ -19,8 +19,8 @@
 #include "data.h"
 #include "DHSVMChannel.h"
 
-#define DEPTHTHRESHOLD 0.030   /* Min. depth below which no transport occurs */
-
+#define DEPTHTHRESHOLD 0.0001   /* Min. depth below which no transport occurs 
+				   To avoid divide by zero */
 /*****************************************************************************
   Function name: CalcBagnold()
 

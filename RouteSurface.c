@@ -301,16 +301,22 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 		  Fw = exp(1 - (h/PrecipMap[y][x].Dm));
 		
 		/* If there is an understory, it is assumed to cover the entire
-		   grid cell. Fract = 1 and DR = 0. */
-		if (VType->OverStory == TRUE) 
-		  /* Then (1-VType->Fract[1]) is the fraction of understory */
-		  DR = SedType[SoilMap[y][x].Soil-1].KIndex * Fw * (1-VType->Fract[1]) *
-		    PrecipMap[y][x].MomentSq; /* (kg/m^2*s) */
-		else
+		   grid cell. DR is in kg/m^2*s) */
+ 		if (VType->OverStory == TRUE) {
+ 		  if (VType->UnderStory == FALSE)
+ 		    DR = SedType[SoilMap[y][x].Soil-1].KIndex * Fw * PrecipMap[y][x].MomentSq; 
+ 		  if (VType->UnderStory == TRUE)
+ 		    DR = SedType[SoilMap[y][x].Soil-1].KIndex * Fw * (1-VType->Fract[1]) 
+ 		      * PrecipMap[y][x].MomentSq;
+ 		}
+ 		else if (VType->UnderStory == TRUE)
 		  /* There is no Overstory, then (1-VType->Fract[0]) is the 
-		     fraction of understory */
+		     fraction of understory */	
 		  DR = SedType[SoilMap[y][x].Soil-1].KIndex * Fw * (1-VType->Fract[0]) *
-		    PrecipMap[y][x].MomentSq; /* (kg/m^2*s) */
+		    PrecipMap[y][x].MomentSq; 
+		/* no vegetation */
+ 		else
+ 		  DR = 0.;
 		
 		/* converting units to m3 m-1 s-1*/
 		DR = DR/PARTDENSITY * Map->DX;
