@@ -100,7 +100,8 @@ void InitChannelSedInflow(Channel * Head)
   first, as done by Williams (1980).
 
 *****************************************************************************/
-void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, DUMPSTRUCT *Dump)
+void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, 
+			  DUMPSTRUCT *Dump)
 {
   Channel *Current = NULL;
   float DS,DT_sed,numinc;
@@ -176,10 +177,10 @@ void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, DU
 	  /* Loop for each sub-timestep           */
 	  /****************************************/
 	  for(tstep=0;tstep<numinc;tstep++) {
-
+	    
 	    Qup = Current->last_inflow + dIdt*tstep*DT_sed;
 	    Qdown = Current->last_outflow + dOdt*tstep*DT_sed;
-
+	    
 	    /****************************************/
 	    /* Find rate of bed change and new mass */
 	    /****************************************/
@@ -190,9 +191,9 @@ void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, DU
 	    }
 	    else {
 	      TotalCapacityUp = CalcBagnold(DS,&Time,Qup,Current->class->width,
-					Current->class->friction,Current->slope);
+					    Current->class->friction,Current->slope);
 	      TotalCapacityDown = CalcBagnold(DS,&Time,Qdown,Current->class->width,
-					  Current->class->friction,Current->slope);
+					      Current->class->friction,Current->slope);
 	      TotalCapacity=phi*TotalCapacityDown + (1.0-phi)*TotalCapacityUp;
 	      TotalCapacity -= CapacityUsed; /* Avoid mult use of streampower */
 	    }
@@ -205,7 +206,7 @@ void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, DU
 	      dMdt = TotalCapacity;
 	      Current->sediment.mass[i] -=  TotalCapacity*DT_sed;
 	    }
-
+	    
 	    /****************************************/
 	    /* Calculate reach sed outflow rate     */
 	    /****************************************/
@@ -228,37 +229,37 @@ void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, DU
 	    /****************************************/
 	    Current->sediment.last_outflowrate[i]=Current->sediment.outflowrate[i];
 	    Current->sediment.last_inflowrate[i]=Current->sediment.inflowrate[i];
-
+	    
 	    /****************************************/
 	    /* Accumulate reach sed outflow mass    */
 	    /****************************************/
 	    Current->sediment.outflow[i] += Current->sediment.outflowrate[i]*DT_sed;
-
+	    
 	    CapacityUsed += dMdt;
-
+	    
 	  } /* end of sub-time step loop */
-
+	  
 	  Current->sediment.totalmass += Current->sediment.mass[i];
-
+	  
 	  /* calculate outflow concentration in mg/l */
 	  
 	  // Olivier - 2003/07/08 : We should add a condition on current->outflow
 	  // to avoid division by zero in the calculation of Current->sediment.outflowconc
 	  // It makes sense as the concentration should be 0 if there is no outflow
 	  if (Current->outflow >= 0.0) {
-		if(Current->slope>0.0) 
-			flowdepth = pow(Current->outflow*Current->class->friction/(Current->class->width*sqrt(Current->slope)),0.6);
-		else flowdepth = 0.005;
-		
-		V = Current->outflow/(flowdepth*Current->class->width);
-		
-		if (Current->slope >= 0.0)
-		  Vshear = sqrt(G*flowdepth*Current->slope); /* approximate */
-		else Vshear = 0.0; /* could calculate with friction slope */ 
-		
-		if(SedDiams[i] < 15) Vshearcrit = -0.0003*SedDiams[i]*SedDiams[i]+0.0109*SedDiams[i]+0.0106;
-		else Vshearcrit = 0.0019*SedDiams[i]+0.0926; /* both in m/s */
-		
+	    if(Current->slope>0.0) 
+	      flowdepth = pow(Current->outflow*Current->class->friction/(Current->class->width*sqrt(Current->slope)),0.6);
+	    else flowdepth = 0.005;
+	    
+	    V = Current->outflow/(flowdepth*Current->class->width);
+	    
+	    if (Current->slope >= 0.0)
+	      Vshear = sqrt(G*flowdepth*Current->slope); /* approximate */
+	    else Vshear = 0.0; /* could calculate with friction slope */ 
+	    
+	    if(SedDiams[i] < 15) Vshearcrit = -0.0003*SedDiams[i]*SedDiams[i]+0.0109*SedDiams[i]+0.0106;
+	    else Vshearcrit = 0.0019*SedDiams[i]+0.0926; /* both in m/s */
+	    
 /* 		if (Vshearcrit > 0.95*Vshear) */
 	/*	  Vsed = 8.5*Vshear*sqrt(0.05); arbitrary - substituted Vshearcrit = 0.95*Vshear in equation below */
 	/*	else sed velocity per Wicks and Bathurst, fine particles travel at flow velocity */
@@ -275,6 +276,10 @@ void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, DU
 	  /* pass the sediment mass outflow to the next downstream reach */
 	  if(Current->outlet != NULL)
 	    Current->outlet->sediment.inflow[i] += Current->sediment.outflow[i];
+
+	  /* Iniitalize for next time step */
+	  Current->sediment.debrisinflow[i] = 0.0;
+	  Current->sediment.overlandinflow[i] = 0.0;
 	  
 	} /* close loop for each sediment size */
 	/* the next 7 lines are from channel_route_network -- closes the loop above */

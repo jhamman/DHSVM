@@ -359,8 +359,10 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	  if((Options->SurfaceErosion)&&(SedOut > 0.)&&
 	     (channel_grid_has_channel(ChannelData->stream_map, x, y))) {
 	    
-	    ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[0] += SedOut; 
-	    
+	    /* Converting SedOut from m3/m3 to kg for channel routing */
+	    ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[0] += 
+	      (SedOut*sedoutflow*VariableDT*PARTDENSITY);
+
 	    for (i = 1; i < NSEDSIZES; i++)
 	      ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[i] = 0.0;	
 	    

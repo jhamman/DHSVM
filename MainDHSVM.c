@@ -90,7 +90,7 @@ int main(int argc, char **argv)
     0.0, 0.0, 0.0},	/*SOILPIX */
     { 0.0, 0.0, 0.0, 0.0}, /*SEDPIX */
     { 0.0, NULL, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, /*FINEPIX */
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0l, 0.0, 0.0, 0.0
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0l, 0.0, 0.0, 0.0, 0.0
   };
   CHANNEL ChannelData = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
   DUMPSTRUCT Dump;
@@ -131,7 +131,8 @@ int main(int argc, char **argv)
   VEGPIX **VegMap = NULL;
   VEGTABLE *VType = NULL;
   WATERBALANCE Mass =		/* parameter for mass balance calculations */
-  { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+  { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+    0.0, 0.0, 0.0 };
 
 /*****************************************************************************
   Initialization Procedures 

@@ -99,11 +99,16 @@ OPTIONSTRUCT * Options)
       MWMMassError = Mass->CumMassWasting - Mass->CumSedimentToChannel - 
 	Mass->CumMassDeposition;
       
-      fprintf(stderr, " \nMass Wasting\n");
+      fprintf(stderr, " \nTotal Mass Wasting\n");
       fprintf(stderr, " MassWasted (m3): %.0f\n", Mass->CumMassWasting);
       fprintf(stderr, " SedimentToChannel (m3): %.0f\n", Mass->CumSedimentToChannel);
       fprintf(stderr, " MassDepostion (m3): %.0f\n", Mass->CumMassDeposition );
       fprintf(stderr, " Mass Error (m3): %f\n", MWMMassError);
+    }
+    if (Options->SurfaceErosion){
+      fprintf(stderr, " \nAverage Surface Erosion\n");
+      fprintf(stderr, " Surface Erosion (mm): %f\n", Mass->CumSedimentErosion);
+      fprintf(stderr, " Surface Erosion (kg/hectare): %f\n", Mass->CumSurfaceErosion);
     }
   }
 }

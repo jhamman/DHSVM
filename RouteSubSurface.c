@@ -98,7 +98,7 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
   const char *Routine = "RouteSubSurface";
   int x;			/* counter */
   int y;			/* counter */
-  int i,j;			/* counters for FineMap initialization */
+  int i,j, ii, jj, yy, xx;	/* counters for FineMap initialization */
   float BankHeight;
   float *Adjust;
   float fract_used;
@@ -336,7 +336,26 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
   }
 
   /**********************************************************************/
-
+/* Initialize the mass wasting variables for all time steps
+    to maintain the mass balance */
+  if(Options->Sediment){
+    for (y = 0; y < Map->NY; y++) {
+      for (x = 0; x < Map->NX; x++) {
+	if (INBASIN(TopoMap[y][x].Mask)) {
+	  for(ii=0; ii< Map->DY/Map->DMASS; ii++) { /* Fine resolution counters. */
+	    for(jj=0; jj< Map->DX/Map->DMASS; jj++) {
+	      yy = (int) y*Map->DY/Map->DMASS + ii;
+	      xx = (int) x*Map->DX/Map->DMASS + jj;
+	      (*FineMap[yy][xx]).Probability = 0.;
+	      (*FineMap[yy][xx]).MassWasting = 0.;
+	      (*FineMap[yy][xx]).MassDeposition = 0.;
+	      (*FineMap[yy][xx]).SedimentToChannel = 0.;
+	    }
+	  }
+	}
+      }
+    }
+  }
   /* Call the mass wasting algorithm; currently not very intelligent */
   
   if(Options->MassWaste && Options->Sediment && Time->Current.Hour == 00) {
