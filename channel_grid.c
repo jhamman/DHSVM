@@ -232,8 +232,8 @@ Channel *Find_Next_Segment(ChannelMapPtr ** map, int curr_col, int curr_row, int
     fprintf(stderr, "Problem in Find_Next_Segment\n");
     exit(0);
   }
-    
-  if(test <= 70. && NextPtr->slope > 0.061) {
+
+  if(test <= 70.*PI/180. && NextPtr->slope > 0.061) {    
     *Continue = TRUE;
     *SedimentToChannel += CurrPtr->sediment.tempvol;
     CurrPtr->sediment.tempvol = 0.0;
@@ -242,7 +242,7 @@ Channel *Find_Next_Segment(ChannelMapPtr ** map, int curr_col, int curr_row, int
     *Continue = FALSE;
     *SedimentToChannel += CurrPtr->sediment.tempvol;
     CurrPtr->sediment.tempvol = 0.;
-    if(test > 70.) { 
+    if(test > 70.*PI/180.) { 
       NextPtr->sediment.tempvol += *SedimentToChannel/2.;
       CurrPtr->sediment.tempvol = *SedimentToChannel/2.;
       *SedimentToChannel = 0.0;
@@ -289,7 +289,7 @@ Channel *Find_First_Segment(ChannelMapPtr ** map, int col, int row, float SlopeA
     }
     cell = cell->next;
   }
-  if(DeltaAspect <= 70.)
+  if(DeltaAspect <= 70.*PI/180.)
     *Continue = TRUE;
   else
     *Continue = FALSE;
