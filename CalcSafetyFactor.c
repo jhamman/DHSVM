@@ -56,7 +56,7 @@ float CalcSafetyFactor(float Slope, int Soil, float SoilDepth, int Veg,
   float safetyfactor;
   float SnowDensity;                   /* Density of snow (kg/m2) */ 
 
-  if (Slope >= 0. && Slope <= 45.) { 
+  if (Slope >= 0. && Slope <= 55.) { 
 
     if(SoilDepth<=0.0) SoilDepth=0.001;
 

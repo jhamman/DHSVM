@@ -354,10 +354,10 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 
 		  LocalSlope = ElevationSlope(Map, TopoMap, FineMap, y, x, &nexty, &nextx, y, x, &SlopeAspect);
 	
-		  /* Slopes >45 are not likely to have soil. Also, factor of safety 
+		  /* Slopes >55 are not likely to have soil. Also, factor of safety 
 		     increases (indicating slope is more stable) with slope for slopes 
-		     greater than 45 degrees. */
-		  if(LocalSlope >= 10. && LocalSlope <= 45.) { 
+		     greater than 55 degrees. */
+		  if(LocalSlope >= 10. && LocalSlope <= 55.) { 
 		    factor_safety = CalcSafetyFactor(LocalSlope, SoilMap[i][j].Soil, 
 						     (*FineMap[y][x]).sediment, 
 						     VegMap[i][j].Veg, SedType, VType, 
