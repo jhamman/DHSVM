@@ -368,7 +368,8 @@ int main(int argc, char **argv)
 	  
 	  MassEnergyBalance(y, x, SolarGeo.SineSolarAltitude, Map.DX, Map.DY, 
 			    Time.Dt, Options.HeatFlux, Options.CanopyRadAtt, 
-			    Options.RoadRouting, Veg.MaxLayers, &LocalMet, 
+			    Options.RoadRouting, Options.Infiltration,
+			    Veg.MaxLayers, &LocalMet, 
 			    &(Network[y][x]), &(PrecipMap[y][x]), 
 			    &(VType[VegMap[y][x].Veg-1]), &(VegMap[y][x]),
 			    &(SType[SoilMap[y][x].Soil-1]), &(SoilMap[y][x]), 

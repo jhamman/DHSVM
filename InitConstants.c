@@ -67,10 +67,11 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
     {"OPTIONS", "GRADIENT", "", ""},
     {"OPTIONS", "FLOW ROUTING", "", ""},
     {"OPTIONS", "SENSIBLE HEAT FLUX", "", ""},
-    {"OPTIONS", "OVERLAND ROUTING", "", ""},
     {"OPTIONS", "SEDIMENT", "", ""},
     {"OPTIONS", "SEDIMENT INPUT FILE", "", ""},
+    {"OPTIONS", "OVERLAND ROUTING", "", ""}, 
     {"OPTIONS", "ROAD ROUTING", "", ""},
+    {"OPTIONS", "INFILTRATION", "", ""},
     {"OPTIONS", "INTERPOLATION", "", ""},
     {"OPTIONS", "MM5", "", ""},
     {"OPTIONS", "QPF", "", ""},
@@ -201,15 +202,7 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   else
     ReportError(StrEnv[sensible_heat_flux].KeyName, 51);
 
-  /* Determine overland flow routing method to use */
-  if (strncmp(StrEnv[routing].VarStr, "KINEMATIC", 9) == 0)
-    Options->Routing = TRUE;
-  else if (strncmp(StrEnv[routing].VarStr, "CONVENTIONAL", 12) == 0)
-    Options->Routing = FALSE;
-  else
-    ReportError(StrEnv[routing].KeyName, 51);
-
-    /* Determine whether sediment model should be run */
+  /* Determine whether sediment model should be run */
   if (strncmp(StrEnv[sediment].VarStr, "TRUE", 4) == 0)
     Options->Sediment = TRUE;
   else if (strncmp(StrEnv[sediment].VarStr, "FALSE", 5) == 0)
@@ -223,6 +216,14 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
     strcpy(Options->SedFile, StrEnv[sed_input_file].VarStr);
   }
 
+  /* Determine overland flow routing method to use */
+  if (strncmp(StrEnv[routing].VarStr, "KINEMATIC", 9) == 0)
+    Options->Routing = TRUE;
+  else if (strncmp(StrEnv[routing].VarStr, "CONVENTIONAL", 12) == 0)
+    Options->Routing = FALSE;
+  else
+    ReportError(StrEnv[routing].KeyName, 51);
+  
   /* Determine road flow routing method to use */
   if (strncmp(StrEnv[road_routing].VarStr, "KINEMATIC", 9) == 0)
     Options->RoadRouting = TRUE;
@@ -239,7 +240,19 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
       Options->Routing = TRUE;
     }
   }
-
+ 
+  /* Determine if the maximum infiltration rate is static or dynamic */
+  if (strncmp(StrEnv[infiltration].VarStr, "STATIC", 6) == 0) {
+    Options->Infiltration = STATIC;
+  }
+  else if (strncmp(StrEnv[infiltration].VarStr, "DYNAMIC", 7) == 0) {
+    Options->Infiltration = DYNAMIC ;
+    printf("WARNING: Dynamic maximum infiltration capacity has
+ not been tested. It is a work in progress.\n\n");
+  }
+  else
+    ReportError(StrEnv[infiltration].KeyName, 51);
+    
   /* Determine whether the mm5 interface should be used */
   if (strncmp(StrEnv[mm5].VarStr, "TRUE", 4) == 0)
     Options->MM5 = TRUE;

@@ -39,7 +39,7 @@
 void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX, 
 		       float DY, int Dt, int HeatFluxOption, 
 		       int CanopyRadAttOption, int RoadRouteOption,
-		       int MaxVegLayers, PIXMET *LocalMet,
+		       int InfiltOption, int MaxVegLayers, PIXMET *LocalMet,
 		       ROADSTRUCT *LocalNetwork, PRECIPPIX *LocalPrecip,
 		       VEGTABLE *VType, VEGPIX *LocalVeg, SOILTABLE *SType,
 		       SOILPIX *LocalSoil, SNOWPIX *LocalSnow,
@@ -48,12 +48,14 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
  PIXRAD LocalRad;		/* Radiation balance components (W/m^2) */
   float SurfaceWater;		/* Pixel average depth of water before
 				   infiltration is calculated (m) */
-  float Infiltration;		/* Infiltration into the top soil layer (m)
-				 */
-  float LowerRa;		/* Aerodynamic resistance for lower layer 
+  float Infiltration;		/* Infiltration into the top soil layer (m) */
+  float Infiltrability;          /* Dynamic infiltration capacity (m/s)*/
+  float B;                       /* Capillary drive and soil saturation deficit
+				  used in dynamic infiltration calculation*/
+  float LowerRa;		        /* Aerodynamic resistance for lower layer 
 				   (s/m) */
   float LowerWind;		/* Wind for lower layer (m/s) */
-  float MaxInfiltration;	/* Maximum infiltration into the top
+  float MaxInfiltration;	        /* Maximum infiltration into the top
 				   soil layer (m) */
   float MaxRoadbedInfiltration;	/* Maximum infiltration through the road bed
 				   soil layer (m) */
@@ -68,7 +70,7 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
   float Roughness;		/* Roughness length (m) */
   float Rp;			/* radiation flux in visible part of the 
 				   spectrum (W/m^2) */
-  float UpperRa;		/* Aerodynamic resistance for upper layer 
+  float UpperRa;		        /* Aerodynamic resistance for upper layer 
 				   (s/m) */
   float UpperWind;		/* Wind for upper layer (m/s) */
   float SnowLongIn;		/* Incoming longwave radiation at snow surface 
@@ -76,7 +78,7 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
   float SnowNetShort;		/* Net amount of short wave radiation at the 
 				   snow surface (W/m2) */
   float SnowRa;			/* Aerodynamic resistance for snow */
-  float SnowWind;		/* Wind 2 m above snow */
+  float SnowWind;		        /* Wind 2 m above snow */
   float Tsurf;			/* Surface temperature used in
 				   LongwaveBalance() (C) */
   int NVegLActual;		/* Number of vegetation layers above snow */
@@ -304,16 +306,53 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
 #ifndef NO_SOIL
 
   LocalSoil->SurfaceWater = 0.0;
-  SurfaceWater = LocalPrecip->RainFall + LocalSoil->IExcess + LocalSnow->Outflow;
+  SurfaceWater = LocalPrecip->RainFall + LocalSoil->IExcess + 
+    LocalSnow->Outflow;
 
-  MaxInfiltration = (1 - VType->ImpervFrac) * LocalNetwork->PercArea[0] * 
+  MaxInfiltration = 0.;
+
+  if(InfiltOption == STATIC)
+    MaxInfiltration = (1 - VType->ImpervFrac) * LocalNetwork->PercArea[0] * 
     SType->MaxInfiltrationRate * Dt; 
+   
+  else { /* InfiltOption == DYNAMIC 
+	    Dynamic Infiltration Capacity after Parlange and Smith 1978, 
+	    as used in KINEROS and THALES */
+    Infiltration = 0.0;
 
+    if (SurfaceWater > 0.) {
+      /* Infiltration is a function of the smount of water infiltrated since the storm started */
+      if (LocalPrecip->PrecipStart){
+	LocalSoil->MoistInit = LocalSoil->Moist[0];
+	LocalSoil->InfiltAcc = 0.0;
+      }
+
+      /* Check that the B parameter > 0 */
+      if ((LocalSoil->InfiltAcc > 0.) && (SType->Porosity[0] > LocalSoil->MoistInit)) {
+	
+	B = (SType->Porosity[0] - LocalSoil->MoistInit) * 
+	  (SType->G_Infilt + SurfaceWater);
+	Infiltrability = SType->Ks[0] * exp((LocalSoil->InfiltAcc)/B) / 
+	  (exp((LocalSoil->InfiltAcc)/B) - 1);
+      }
+
+      else 
+	Infiltrability = SurfaceWater/Dt ; 
+        
+     
+      MaxInfiltration = Infiltrability * LocalNetwork->PercArea[0] *
+                                        (1 - VType->ImpervFrac) *  Dt;
+      LocalPrecip->PrecipStart = FALSE; 
+    }/* end  if (SurfaceWater > 0.) */
+    else 
+      LocalPrecip->PrecipStart = TRUE;
+  	
+  } /* end Dynamic MaxInfiltration calculation */ 
+  
+  
   Infiltration = (1 - VType->ImpervFrac) * LocalNetwork->PercArea[0] * 
     SurfaceWater; 
-
   
-
   if (Infiltration > MaxInfiltration) {
     Infiltration = MaxInfiltration;
   }
@@ -343,8 +382,14 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
 		  LocalSoil->Perc, LocalNetwork->PercArea,
 		  LocalNetwork->Adjust, LocalNetwork->CutBankZone,
 		  LocalNetwork->BankHeight, &(LocalSoil->TableDepth),
-		  &(LocalSoil->IExcess), LocalSoil->Moist, RoadRouteOption);
-
+		  &(LocalSoil->IExcess), LocalSoil->Moist, RoadRouteOption,
+		  InfiltOption);
+  
+  /* Infiltration is updated in UnsaturatedFlow and accumulated 
+     below */
+  if ((InfiltOption == DYNAMIC) && (SurfaceWater > 0.)) 
+    LocalSoil->InfiltAcc += Infiltration;
+  
   if (HeatFluxOption == TRUE) {
     if (LocalSnow->HasSnow == TRUE) {
       Reference = 2. + Z0_SNOW;

@@ -240,6 +240,8 @@ typedef struct {
 				   or KINEMATIC. */
   int RoadRouting;              /* Road flow routing indicator, either CONVENTIONAL
 				   or KINEMATIC. */
+  int Infiltration;             /* Specifies static or dynamic maximum infiltration 
+				  rate */
   int FlowGradient;		/* Specifies whether the flow gradient is based
 				   on the terrain elevation (TOPOGRAPHY) or the 
 				   water table elevation (WATERTABLE).  The 
@@ -271,14 +273,14 @@ typedef struct {
   float Precip;			/* Total amount of precipitation at pixel (m) */
   float RainFall;		        /* Amount of rainfall (m) */
   float SnowFall;		        /* Amount of snowfall (m) */
-  float KineticEnergy;          /*Rainfall energy at the ground surface, used for
+  float KineticEnergy;           /*Rainfall energy at the ground surface, used for
 				   the sediment model (J/m2*mm) */
-  float *IntRain;		/* Rain interception by each vegetation layer
-				   (m) */
-  float *IntSnow;		/* Snow interception by each vegetation layer
-				   (m) */
+  float *IntRain;		        /* Rain interception by each vegetation layer (m) */
+  float *IntSnow;		        /* Snow interception by each vegetation layer (m) */
   float TempIntStorage;		/* Temporary snow and rain interception storage,
 				   used by MassRelease() */
+  int PrecipStart;               /* TRUE if there was surface water in the last
+				    time step */  
  } PRECIPPIX;
 
 typedef struct {
@@ -287,11 +289,11 @@ typedef struct {
 
 typedef struct {
   float Beam;			/* Beam value */
-  float Diffuse;		/* Diffuse value */
+  float Diffuse;		        /* Diffuse value */
 } RADCLASSPIX;
 
 typedef struct {
-  float NetShort[2];            /* Shortwave radiation for vegetation surfaces 
+  float NetShort[2];             /* Shortwave radiation for vegetation surfaces 
 				   and ground/snow surface W/m2 */
   float LongIn[2];		/* Incoming longwave radiation for vegetation
 				   surfaces and ground/snow surface W/m2 */
@@ -378,13 +380,13 @@ typedef struct {
   float WaterLevel;		/* Absolute height of the watertable above 
 				   datum (m), i.e. corrected for terrain
 				   elevation */
-  float SatFlow;		/* amount of saturated flow generated */
-  float IExcess;		/* amount of surface runoff generated from
+  float SatFlow;		        /* amount of saturated flow generated */
+  float IExcess;		        /* amount of surface runoff generated from
 				   HOF and Return flow */
-  float Runoff;                 /* Surface water flux from the grid cell. */
+  float Runoff;                  /* Surface water flux from the grid cell. */
   float ChannelInt;		/* amount of subsurface flow intercepted by
 				   the channel */
-  float RoadInt;		/* amount of water intercepted by the road */
+  float RoadInt;		        /* amount of water intercepted by the road */
   float TSurf;			/* Soil surface temperature */
   float Qnet;			/* Net radiation exchange at surface */
   float Qrest;			/* Rest term for energy balance (should be 0) */
@@ -394,9 +396,13 @@ typedef struct {
   float Qst;			/* Ground heat storage */
   float Ra;			/* Soil surface aerodynamic resistance (s/m) */
   float SurfaceWater;		/* used in the impervious calculations (m) */
-  float startRunoff;            /* Surface water flux from the previus (sub) time step. */
-  float startRunon;             /* Surface water flux from the previus (sub) time step. */
-                                /* Used for kinematic wave routing. */
+  float InfiltAcc;               /* Accumulated water in the top layer (m) */
+  float MoistInit;               /* Initial moisture content when ponding 
+				    begins (0-1) */
+  float startRunoff;             /* Surface water flux from the previus (sub) time 
+				    step. Used for kinematic wave routing.*/
+  float startRunon;              /* Surface water flux from the previus (sub) time 
+				    step. Used for kinematic wave routing.*/
 } SOILPIX;
 
 typedef struct {
@@ -404,7 +410,7 @@ typedef struct {
   int Index;
   int NLayers;			/* Number of soil layers */
   float Albedo;			/* Albedo of the soil surface */
-  float Manning;		/* Manning's roughness of the soil surface */ 
+  float Manning;		        /* Manning's roughness of the soil surface */ 
   float *Porosity;		/* Soil porosity for each layer */
   float *PoreDist;		/* Pore size distribution for each layer */
   float *Press;			/* Soil bubbling pressure for each layer */
@@ -415,7 +421,7 @@ typedef struct {
 				   (vertical) for each layer */
   float KsLat;			/* Saturated hydraulic conductivity 
 				   (lateral) */
-  float KsLatExp;		/* Exponent for vertical change of KsLat */
+  float KsLatExp;		        /* Exponent for vertical change of KsLat */
   float *KhDry;			/* Thermal conductivity for dry soil 
 				   (W/(m*K)) */
   float *KhSol;			/* Effective solids thermal conductivity
@@ -423,6 +429,8 @@ typedef struct {
   float *Ch;			/* Heat capacity for soil medium */
   float MaxInfiltrationRate;	/* Maximum infiltration rate for upper layer
 				   (m/s) */
+  float G_Infilt;                /* Mean capillary drive for dynamic infiltration
+                                            capacity (m)   */
 } SOILTABLE;
 
 typedef struct {
@@ -516,8 +524,6 @@ typedef struct {
   STATSTABLE RootCoh;           /* Used for the mass wasting model. */
   STATSTABLE VegSurcharge;      /* Used for the mass wasting model. */
 } VEGTABLE;
-
-
 
 typedef struct {
   float StartWaterStorage;

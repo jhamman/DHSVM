@@ -73,6 +73,10 @@ typedef unsigned int unint;
 #define VARIABLE 2
 #define MAP 3
 
+/* Options for infiltration */
+#define STATIC 1
+#define DYNAMIC 2
+
 /* Options for canopy radiation attenuation */
 #define FIXED    1
 #define VARIABLE 2
@@ -103,8 +107,9 @@ typedef unsigned int unint;
 
 enum KEYS {
 /* Options *//* list order must match order in InitConstants.c */
-  format = 0, extent, gradient, flow_routing, sensible_heat_flux, routing, sediment,
-  sed_input_file, road_routing, interpolation, mm5, qpf, prism, canopy_radatt, shading, snotel, outside, 
+  format = 0, extent, gradient, flow_routing, sensible_heat_flux, sediment,
+  sed_input_file, routing, road_routing, infiltration,interpolation, mm5, qpf,
+  prism, canopy_radatt, shading, snotel, outside, 
   rhoverride, precipitation_source, wind_source, temp_lapse, precip_lapse, 
   cressman_radius, cressman_stations, prism_data_path, prism_data_ext, 
   shading_data_path, shading_data_ext, skyview_data_path, 
@@ -134,7 +139,8 @@ enum KEYS {
   MM5_longwave, MM5_precip, MM5_terrain, MM5_lapse,
   MM5_rows, MM5_cols, MM5_ext_north, MM5_ext_west, MM5_dy,
   /* Soil information */
-  soil_description = 0, lateral_ks, exponent, infiltration, soil_albedo, manning,
+  soil_description = 0, lateral_ks, exponent, max_infiltration, capillary_drive,
+  soil_albedo, manning,
   number_of_layers, porosity, pore_size, bubbling_pressure, field_capacity,
   wilting_point, bulk_density, vertical_ks, solids_thermal, thermal_capacity,
   /* Vegetation information */

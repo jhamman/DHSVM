@@ -79,6 +79,7 @@ int InitSoilTable(SOILTABLE ** SType, LISTPTR Input, LAYER * Soil)
     "LATERAL CONDUCTIVITY",
     "EXPONENTIAL DECREASE",
     "MAXIMUM INFILTRATION",
+    "CAPILLARY DRIVE",
     "SURFACE ALBEDO",
     "MANNINGS N",
     "NUMBER OF SOIL LAYERS",
@@ -136,8 +137,11 @@ int InitSoilTable(SOILTABLE ** SType, LISTPTR Input, LAYER * Soil)
     if (!CopyFloat(&((*SType)[i].KsLatExp), VarStr[exponent], 1))
       ReportError(KeyName[exponent], 51);
 
-    if (!CopyFloat(&((*SType)[i].MaxInfiltrationRate), VarStr[infiltration], 1))
-      ReportError(KeyName[infiltration], 51);
+    if (!CopyFloat(&((*SType)[i].MaxInfiltrationRate), VarStr[max_infiltration], 1))
+      ReportError(KeyName[max_infiltration], 51);
+
+    if (!CopyFloat(&((*SType)[i].G_Infilt), VarStr[capillary_drive], 1))
+      ReportError(KeyName[capillary_drive], 51); 
 
     if (!CopyFloat(&((*SType)[i].Albedo), VarStr[soil_albedo], 1))
       ReportError(KeyName[soil_albedo], 51);

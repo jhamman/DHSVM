@@ -189,6 +189,8 @@ void InitSoilMap(LISTPTR Input, MAPSIZE * Map, LAYER * Soil,
 	ReportError(StrEnv[soiltype_file].VarStr, 32);
       (*SoilMap)[y][x].Soil = Type[i];
       (*SoilMap)[y][x].Depth = Depth[i];
+      (*SoilMap)[y][x].InfiltAcc = 0.; 
+      (*SoilMap)[y][x].MoistInit = 0.; 
 
       /* allocate memory for the number of root layers, plus an additional 
          layer below the deepest root layer */

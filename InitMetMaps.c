@@ -170,6 +170,13 @@ void InitPrecipMap(MAPSIZE * Map, PRECIPPIX *** PrecipMap, VEGPIX ** VegMap,
       }
     }
   }
+
+  for (y = 0; y < Map->NY; y++) {
+    for (x = 0; x < Map->NX; x++) {
+      if (INBASIN(TopoMap[y][x].Mask)) 
+	(*PrecipMap)[y][x].PrecipStart = TRUE;
+    }
+  }
 }
 
 /*******************************************************************************
