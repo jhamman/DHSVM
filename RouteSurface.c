@@ -80,12 +80,6 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
   float settling;              /* Settling velocity (m/s) */
   float Fw;                      /* Water depth correction factor */
   
-
- if((fo = fopen("TC.out","a+")) == NULL) {
-    printf("Cannot open/read output file\n");  
-    exit(0);  }  
-
-
   if (Options->Sediment) {
     if ((SedIn = (float **) calloc(Map->NY, sizeof(float *))) == NULL) {
       ReportError((char *) Routine, 1);
@@ -446,7 +440,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
     PrintDate(&(Time->Current), Dump->Stream.FilePtr);
     fprintf(Dump->Stream.FilePtr, " %g\n", StreamFlow);
   }
- fclose(fo);
+
 }
 
 
