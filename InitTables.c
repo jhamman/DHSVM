@@ -609,13 +609,14 @@ void InitSnowTable(SNOWTABLE ** SnowAlbedo, int StepsPerDay)
     ReportError((char *) Routine, 1);
 
   /* Laramie and Schaake (1972) */
+  /* Updated based on Storck (2000) */
   for (i = 0; i < ((DAYPYEAR + 1) * StepsPerDay); i++) {
     (*SnowAlbedo)[i].Freeze =
       0.85 * pow(0.92, pow(((float) i) / StepsPerDay, 0.58));
     if ((*SnowAlbedo)[i].Freeze < 0.4)
       (*SnowAlbedo)[i].Freeze = 0.4;
     (*SnowAlbedo)[i].Thaw =
-      0.85 * pow(0.87, pow(((float) i) / StepsPerDay, 0.46));
+      0.85 * pow(0.70, pow(((float) i) / StepsPerDay, 0.46));
     if ((*SnowAlbedo)[i].Thaw < 0.4)
       (*SnowAlbedo)[i].Thaw = 0.4;
   }
