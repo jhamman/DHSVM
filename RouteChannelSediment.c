@@ -149,6 +149,7 @@ void RouteChannelSediment(Channel * Head, TIMESTRUCT Time,
   int i,tstep;
   int order;
   int order_count;
+  float mass_error, sediment_mass_adjust, error_count;
  
   /* the next 5 lines are from channel_route_network - used to order streams */
   for (order = 1;; order += 1) {
@@ -230,55 +231,93 @@ void RouteChannelSediment(Channel * Head, TIMESTRUCT Time,
 		  between current and previous steps */
 	      if(Current->sediment.inflowrate[i]>0 || Current->sediment.last_inflowrate[i]>0 ){
 		if(abs(1-Current->sediment.last_inflowrate[i]/Current->sediment.inflowrate[i])>0.75 || abs(1-Current->sediment.inflowrate[i]/Current->sediment.last_inflowrate[i])>0.75 || abs(1-Current->sediment.outflowrate[i]/Current->sediment.inflowrate[i])>0.7  )
-		  theta=1.0;
-		else theta=0.55;} /* this should be .55 */
+		  theta = 1.0;
+		else theta = 0.55; /* this should be .55 */
+	      } 
 	      else theta=1.0;
-	      /* TotalCapacity is in kg/s */
-	      if(SedDiams[i] < 0.062) { /* per Wicks and Bathurst, wash load */
-		TotalCapacity = 
-		  Current->sediment.inflowrate[i]+Current->sediment.mass[i]/DT_sed;
-	      }
-	      else {
-		TotalCapacityUp = CalcBagnold(DS,&Time,Qup,Current->class->width,
-					      Current->class->friction,Current->slope);
-		TotalCapacityDown = CalcBagnold(DS,&Time,Qdown,Current->class->width,
+
+	      mass_error = 1.;
+	      error_count = 0;
+	      while(abs(mass_error) > 0.1){
+		if(error_count > 0)
+		  theta = 1.;
+		
+		/* TotalCapacity is in kg/s */
+		if(SedDiams[i] < 0.062) { /* per Wicks and Bathurst, wash load */
+		  TotalCapacity = 
+		    Current->sediment.inflowrate[i]+Current->sediment.mass[i]/DT_sed;
+		}
+		else {
+		  TotalCapacityUp = CalcBagnold(DS,&Time,Qup,Current->class->width,
 						Current->class->friction,Current->slope);
-		TotalCapacity=phi*TotalCapacityDown + (1.0-phi)*TotalCapacityUp;
-		TotalCapacity -= CapacityUsed; /* Avoid mult use of streampower */
+		  TotalCapacityDown = CalcBagnold(DS,&Time,Qdown,Current->class->width,
+						  Current->class->friction,Current->slope);
+		  TotalCapacity=phi*TotalCapacityDown + (1.0-phi)*TotalCapacityUp;
+		  TotalCapacity -= CapacityUsed; /* Avoid mult use of streampower */
+		}
+		
+		if(TotalCapacity<=0) TotalCapacity=0.0;
+		
+		if(TotalCapacity*DT_sed > Current->sediment.mass[i]) {	   
+		  dMdt= -Current->sediment.mass[i]/DT_sed;
+		  Current->sediment.mass[i] = 0.;	     
+		}
+		
+		else {
+		  dMdt =-TotalCapacity;
+		  Current->sediment.mass[i] -=  TotalCapacity*DT_sed;	     
+		}
+		
+		/****************************************/
+		/* Calculate reach sed outflow rate     */
+		/****************************************/
+		/* limit it to the total available sediment transport capacity */
+		term3 = (1.-theta) * 
+		  (Current->sediment.last_outflowrate[i] - 
+		   Current->sediment.last_inflowrate[i]);
+		term4 = theta * Current->sediment.inflowrate[i];
+		 
+		Current->sediment.outflowrate[i] = 
+		  (1./theta)*(lateral_sed_inflow_rate-dMdt-term3+term4);
+		
+		if(Current->sediment.outflowrate[i]<0.0){
+		  Current->sediment.outflowrate[i]=0.0;
+		}
+		
+		if(Current->sediment.outflowrate[i]>=TotalCapacity) {
+		  Current->sediment.mass[i] += 
+		    (Current->sediment.outflowrate[i]-TotalCapacity)*DT_sed;
+		  
+		  mass_error=(lateral_sed_inflow_rate+Current->sediment.inflowrate[i]
+			      -dMdt-Current->sediment.outflowrate[i])*DT_sed;
+		  
+		  dMdt += Current->sediment.outflowrate[i]-TotalCapacity;
+		  Current->sediment.outflowrate[i]=TotalCapacity;
+		  
+		  if(abs(mass_error) > 0.1){
+		    sediment_mass_adjust = (dMdt-(Current->sediment.inflowrate[i] + 
+						  lateral_sed_inflow_rate - 
+						  Current->sediment.outflowrate[i]))*DT_sed;
+		    
+		    Current->sediment.mass[i]-=sediment_mass_adjust;
+		    mass_error = (lateral_sed_inflow_rate+Current->sediment.inflowrate[i] - 
+				  dMdt-Current->sediment.outflowrate[i])*DT_sed;
+		    dMdt = lateral_sed_inflow_rate+Current->sediment.inflowrate[i] - 
+		      Current->sediment.outflowrate[i];
+		  }
+		}
+		mass_error = (lateral_sed_inflow_rate+Current->sediment.inflowrate[i] - 
+			      dMdt-Current->sediment.outflowrate[i])*DT_sed;
+		error_count++;
+		
+		if (error_count>2)
+		  break;
 	      }
 	      
-	      if(TotalCapacity<=0) TotalCapacity=0.0;
-	      
-	      if(TotalCapacity*DT_sed > Current->sediment.mass[i]) {	   
-		dMdt= -Current->sediment.mass[i]/DT_sed;
-		Current->sediment.mass[i] = 0.;	     
+	      if (error_count>2){
+		printf("Warning: Unable to reduce mass error below specified level\n
+                         in RouteChannelSediment");
 	      }
-	      
-	      else {
-		dMdt =-TotalCapacity;
-		Current->sediment.mass[i] -=  TotalCapacity*DT_sed;	     
-	      }
-	      
-	      /****************************************/
-	      /* Calculate reach sed outflow rate     */
-	      /****************************************/
-	      /* limit it to the total available sediment transport capacity */
-	      term3 = (1.-theta) * 
-		(Current->sediment.last_outflowrate[i]-Current->sediment.last_inflowrate[i]);
-	      term4 = theta * Current->sediment.inflowrate[i];
-	      
-	      Current->sediment.outflowrate[i] = 
-		(1./theta)*(lateral_sed_inflow_rate-dMdt-term3+term4);
-	      if(Current->sediment.outflowrate[i]<0.0){
-		Current->sediment.outflowrate[i]=0.0;}
-	      
-	      if(Current->sediment.outflowrate[i]>=TotalCapacity) {
-		Current->sediment.mass[i] += 
-		  (Current->sediment.outflowrate[i]-TotalCapacity)*DT_sed;
-		dMdt += Current->sediment.outflowrate[i]-TotalCapacity;
-		Current->sediment.outflowrate[i]=TotalCapacity;
-	      }
-	      
 	      
 	      /****************************************/
 	      /* Assign new values to next step old   */
