@@ -38,12 +38,12 @@ void InitFineMaps(LISTPTR Input, OPTIONSTRUCT *Options, MAPSIZE *Map,
   const char *Routine = "InitFineMaps";
   char VarName[BUFSIZE+1];	/* Variable name */
   int i, k, x, y;		/* Counters */
-  int ii, jj, xx, yy;            /* Counters */
+  int ii, jj, xx, yy, xy;            /* Counters */
   int NumberType;		/* Number type of data set */
   float *Elev;                   /* Surface elevation */
-  float **tempElev, **tempMask;       /* Temporary storage */
   int MASKFLAG;
   unsigned char *Mask = NULL;          /* Fine resolution mask */
+
   STRINIENTRY StrEnv[] = {
     {"FINEDEM", "DEM FILE"        , ""  , ""},
     {"FINEDEM", "MASK FILE"        , ""  , ""},
@@ -90,19 +90,6 @@ void InitFineMaps(LISTPTR Input, OPTIONSTRUCT *Options, MAPSIZE *Map,
 		 VarName);
     MASKFLAG = TRUE;
     
-    if (!(tempMask = (float **)calloc(Map->NYfine, sizeof(float *))))
-      ReportError((char *) Routine, 1);
-    for(i=0; i<Map->NYfine; i++) {
-      if (!(tempMask[i] = (float *)calloc(Map->NXfine, sizeof(float))))
-	ReportError((char *) Routine, 1);
-    }
-  }
-  
-  if (!(tempElev = (float **)calloc(Map->NYfine, sizeof(float *))))
-    ReportError((char *) Routine, 1);
-  for(i=0; i<Map->NYfine; i++) {
-    if (!(tempElev[i] = (float *)calloc(Map->NXfine, sizeof(float))))
-      ReportError((char *) Routine, 1);
   }
   
   /* Assign the attributes to the correct map pixel */
@@ -131,13 +118,6 @@ void InitFineMaps(LISTPTR Input, OPTIONSTRUCT *Options, MAPSIZE *Map,
     }
   }
   
-  for (y = 0, i = 0; y < Map->NYfine; y++){
-    for (x = 0; x < Map->NXfine; x++, i++){ 
-      tempElev[y][x]  = Elev[i]; 
-    }
-  }
-  free(Elev);
-  
   for (y = 0; y < Map->NY; y++) {
     for (x = 0; x < Map->NX; x++) { 
       if (INBASIN((*TopoMap)[y][x].Mask)) {
@@ -145,25 +125,17 @@ void InitFineMaps(LISTPTR Input, OPTIONSTRUCT *Options, MAPSIZE *Map,
  	  for (jj=0; jj< Map->DX/Map->DMASS; jj++) { 
 	    yy = (int) y*Map->DY/Map->DMASS + ii; 
  	    xx = (int) x*Map->DX/Map->DMASS + jj; 
-	    (*(*FineMap)[yy][xx]).Dem  = tempElev[yy][xx]; 
+	    xy = (int) yy*Map->NXfine + xx;
+	    (*(*FineMap)[yy][xx]).Dem  = Elev[xy]; 
 	  }
 	}
       }
     }
   }
   
-  for(i=0; i<Map->NY; i++) { 
-    free(tempElev[i]);
-  }
-  free(tempElev);
+  free(Elev);
   
   if(MASKFLAG == TRUE){
-    for (y = 0, i = 0; y < Map->NYfine; y++){
-      for (x = 0; x < Map->NXfine; x++, i++){ 
-	tempMask[y][x]  = Mask[i]; 
-      }
-    }
-    free (Mask);
     for (y = 0; y < Map->NY; y++) {
       for (x = 0; x < Map->NX; x++) { 
 	if (INBASIN((*TopoMap)[y][x].Mask)) {
@@ -171,18 +143,16 @@ void InitFineMaps(LISTPTR Input, OPTIONSTRUCT *Options, MAPSIZE *Map,
 	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) { 
 	      yy = (int) y*Map->DY/Map->DMASS + ii; 
 	      xx = (int) x*Map->DX/Map->DMASS + jj; 
-	      (*(*FineMap)[yy][xx]).Mask  = tempMask[yy][xx]; 
+	      xy = (int) yy*Map->NXfine + xx;
+	      (*(*FineMap)[yy][xx]).Mask  = Mask[xy]; 
 	    }
 	  }
 	}
       }
     }
-    for(i=0; i<Map->NY; i++) { 
-      free(tempMask[i]);
-    }
-    free(tempMask);
   }
-  
+
+ free(Mask);  
   /* Create fine resolution mask, sediment and bedrock maps.
    Initialize other variables*/
   

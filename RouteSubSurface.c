@@ -336,6 +336,18 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
     }
   }
 
+ for(i=0; i<Map->NY; i++) { 
+    free(SubTotalDir[i]);
+    free(SubFlowGrad[i]);
+    for(j=0; j<Map->NX; j++){
+      free(SubDir[i][j]);
+    }
+    free(SubDir[i]);
+  }
+  free(SubDir);
+  free(SubTotalDir);
+  free(SubFlowGrad);
+
   /**********************************************************************/
   /* Initialize the mass wasting variables for all time steps
      to maintain the mass balance */
@@ -361,7 +373,7 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
   /* Call the mass wasting algorithm; currently not very intelligent */
   
   if(Options->MassWaste && Options->Sediment && Time->Current.Hour == 00) {
-  
+    
     count =0;
     totalcount = 0;
     for (y = 0; y < Map->NY; y++) {
@@ -384,19 +396,7 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
   }
   
   /**********************************************************************/
-    /* End added code. */
-
-  for(i=0; i<Map->NY; i++) { 
-    free(SubTotalDir[i]);
-    free(SubFlowGrad[i]);
-    for(j=0; j<Map->NX; j++){
-      free(SubDir[i][j]);
-    }
-    free(SubDir[i]);
-  }
-  free(SubDir);
-  free(SubTotalDir);
-  free(SubFlowGrad);
-
+  /* End added code. */
+   
 }
 
