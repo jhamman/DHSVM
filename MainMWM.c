@@ -8,7 +8,8 @@
  * ORIG-DATE:    Sep-02
  * Last Change: Thu Jun 19 09:27:02 2003 by Ed Maurer <edm@u.washington.edu>
  * DESCRIPTION:  Main routine to drive MWM - the Mass Wasting Module for DHSVM 
- * DESCRIP-END.cd
+ * DESCRIP-END.   
+ cd
  * FUNCTIONS:    main()
  * COMMENTS:
  */
@@ -841,13 +842,12 @@ void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, DU
 	    Current->outlet->sediment.inflow[i] += Current->sediment.outflow[i];
 	  
 	} /* close loop for each sediment size */
-	
-      } /* close if statement checking for stream order */
-      
-	/* the next 7 lines are from channel_route_network -- closes the loop above */
-      order_count += 1;
+			/* the next 7 lines are from channel_route_network -- closes the loop above */
+			order_count += 1;
+		} /* close if statement checking for stream order */
+		Current = Current->next;  
+		
     } /* close while statement checking that CURRENT != NULL */
-    Current = Current->next;
 
     if (order_count == 0)
       break;
