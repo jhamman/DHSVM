@@ -179,7 +179,10 @@ enum KEYS {
   /* Sedoptions */ 
   mass_wasting = 0, surface_erosion, road_erosion, channel_routing,
   /* Parameters */
-  mass_spacing, max_iterations, channeld50, channeld90, debrisd50, debrisd90,
+  mass_spacing, max_iterations,
+// Channel Parent parameters not currently used
+//  channeld50, channeld90,
+  debrisd50, debrisd90,
   /* Sedtime*/
   mass_wasting_date = 0, erosion_start = 0, erosion_end,
   /* Sediment information */

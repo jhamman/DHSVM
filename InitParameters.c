@@ -59,8 +59,9 @@ void InitParameters(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
     {"SEDOPTIONS", "CHANNEL ROUTING", "", ""},
     {"PARAMETERS", "MASS WASTING SPACING", "", ""},
     {"PARAMETERS", "MAXIMUM ITERATIONS", "", ""},
-    {"PARAMETERS", "CHANNEL PARENT D50", "", ""},
-    {"PARAMETERS", "CHANNEL PARENT D90", "", ""},
+// Channel Parent parameters not currently used
+//    {"PARAMETERS", "CHANNEL PARENT D50", "", ""},
+//    {"PARAMETERS", "CHANNEL PARENT D90", "", ""},
     {"PARAMETERS", "DEBRIS FLOW D50", "", ""},
     {"PARAMETERS", "DEBRIS FLOW D90", "", ""},
     {NULL, NULL, "", NULL}
@@ -159,11 +160,12 @@ void InitParameters(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   if (!CopyFloat(&MASSITER, StrEnv[max_iterations].VarStr, 1))
   ReportError(StrEnv[max_iterations].KeyName, 51);
 
-  if (!CopyFloat(&CHANNELd50, StrEnv[channeld50].VarStr, 1))
-    ReportError(StrEnv[channeld50].KeyName, 51);
-
-  if (!CopyFloat(&CHANNELd90, StrEnv[channeld90].VarStr, 1))
-    ReportError(StrEnv[channeld90].KeyName, 51);
+// Channel Parent parameters not currently used
+//  if (!CopyFloat(&CHANNELd50, StrEnv[channeld50].VarStr, 1))
+//    ReportError(StrEnv[channeld50].KeyName, 51);
+//
+//  if (!CopyFloat(&CHANNELd90, StrEnv[channeld90].VarStr, 1))
+//    ReportError(StrEnv[channeld90].KeyName, 51);
 
   if (!CopyFloat(&DEBRISd50, StrEnv[debrisd50].VarStr, 1))
     ReportError(StrEnv[debrisd50].KeyName, 51);
