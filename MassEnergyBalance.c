@@ -411,7 +411,6 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
 
 #ifndef NO_SOIL
 
-  LocalSoil->SurfaceWater = 0.0;
   SurfaceWater = LocalPrecip->RainFall + LocalSoil->IExcess + 
     LocalSnow->Outflow;
 
@@ -474,8 +473,6 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
   }
 
   LocalSoil->IExcess = SurfaceWater - Infiltration - RoadbedInfiltration;
-
-  LocalSoil->SurfaceWater = LocalSoil->IExcess;
 
   /* Calculate unsaturated soil water movement, and adjust soil water 
      table depth */

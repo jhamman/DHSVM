@@ -400,7 +400,6 @@ typedef struct {
   float Qg;			/* Ground heat exchange */
   float Qst;			/* Ground heat storage */
   float Ra;			/* Soil surface aerodynamic resistance (s/m) */
-  float SurfaceWater;		/* used in the impervious calculations (m) */
   float InfiltAcc;               /* Accumulated water in the top layer (m) */
   float MoistInit;               /* Initial moisture content when ponding 
 				    begins (0-1) */
