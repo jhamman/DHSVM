@@ -47,7 +47,8 @@ float CalcSafetyFactor(float Slope, int Soil, float SoilDepth, int Veg,
 {
   double angle_int_frict_rad, soil_cohes_kg, slope_angle_rad, fc_soil_density;
   double root_cohes_kg;
-  float FrictionAngle, SoilCohesion;   /* soil parameters for infinite slope model */
+  float FrictionAngle;                 /* soil parameter for infinite slope model (deg)*/
+  float SoilCohesion;                  /* soil parameter for infinite slope model (kPa)*/
   float RootCohesion;                  /* veg parameter for infinite slope model (kPa) */ 
   float Surcharge;                     /* surcharge from snow and vegetation (kg/m2) */
   double term1;
@@ -89,7 +90,7 @@ float CalcSafetyFactor(float Slope, int Soil, float SoilDepth, int Veg,
       ((1 - M) * (fc_soil_density / WATER_DENSITY));
     
     /* Check to see if slope is unconditionally unstable.*/
-    term1 = ((SoilCohesion + root_cohes_kg) /
+    term1 = ((soil_cohes_kg + root_cohes_kg) /
 	     (Surcharge + SoilDepth * fc_soil_density) *
 	     cos(slope_angle_rad)*cos(slope_angle_rad)) + 
       (tan(angle_int_frict_rad));
@@ -99,7 +100,7 @@ float CalcSafetyFactor(float Slope, int Soil, float SoilDepth, int Veg,
       safetyfactor = -.1;
     }
     else {
-      safetyfactor = (((2 * (SoilCohesion + root_cohes_kg)) / (WATER_DENSITY * SoilDepth * (sin(2 * slope_angle_rad)))) + ((loading - M) * ((tan(angle_int_frict_rad)) / (tan(slope_angle_rad))))) / loading; 
+      safetyfactor = (((2. * (soil_cohes_kg + root_cohes_kg)) / (WATER_DENSITY * SoilDepth * (sin(2. * slope_angle_rad)))) + ((loading - M) * ((tan(angle_int_frict_rad)) / (tan(slope_angle_rad))))) / loading; 
     }
 
   }    /* End of factor of safety calculation loop */
