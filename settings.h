@@ -134,8 +134,8 @@ enum KEYS {
   MM5_longwave, MM5_precip, MM5_terrain, MM5_lapse,
   MM5_rows, MM5_cols, MM5_ext_north, MM5_ext_west, MM5_dy,
   /* Soil information */
-  soil_description = 0, lateral_ks, exponent, infiltration, soil_albedo,
-  number_of_layers, manning, porosity, pore_size, bubbling_pressure, field_capacity,
+  soil_description = 0, lateral_ks, exponent, infiltration, soil_albedo, manning,
+  number_of_layers, porosity, pore_size, bubbling_pressure, field_capacity,
   wilting_point, bulk_density, vertical_ks, solids_thermal, thermal_capacity,
   /* Vegetation information */
   veg_description = 0, overstory, understory, fraction, hemifraction, trunk_space,
@@ -171,7 +171,7 @@ enum KEYS {
   /* Parameters */
   mass_spacing = 0, max_iterations, channeld50, channeld90, debrisd50, debrisd90,
   /* Sediment information */
-  sed_description = 0, sat_density, kindex, dfifty, cohesion, 
+  sed_description = 0, kindex, dfifty, cohesion, 
   coh_min, coh_max, coh_mean, coh_dev, coh_mode, friction_angle, fa_min, fa_max, fa_mean, 
   fa_dev, fa_mode
 };

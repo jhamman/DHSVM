@@ -82,7 +82,6 @@ int InitSedTable(SEDTABLE **SedType, LISTPTR Input, SOILTABLE **SType)
   char KeyName[fa_mode+1][BUFSIZE+1];
   char *KeyStr[] = {
     "SOIL DESCRIPTION",
-    "SATURATED SOIL DENSITY",
     "KINDEX",
     "D50", 
     "SOIL COHESION DISTRIBUTION",

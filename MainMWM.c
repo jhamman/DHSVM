@@ -136,10 +136,10 @@ void MainMWM(SEDPIX **SedMap, FINEPIX *** FineMap, VEGTABLE *VType,
   /*****************************************************************************
   Perform Calculations 
   *****************************************************************************/
-   /* Redistribute soil moisture from coarse grid to fine grid. The is done similarly
-    to Burton, A. and J.C. Bathurst, 1998, Physically based modelling of shallot landslide 
-    sediment yield as a catchment scale, Environmental Geology, 35 (2-3), 89-99.*/
- 
+  /* Redistribute soil moisture from coarse grid to fine grid. The is done similarly
+     to Burton, A. and J.C. Bathurst, 1998, Physically based modelling of shallot landslide 
+     sediment yield as a catchment scale, Environmental Geology, 35 (2-3), 89-99.*/
+  
   /* This could be moved elsewhere. */
   for (i = 0; i < Map->NY; i++) {
     for (j = 0; j < Map->NX; j++) {
@@ -154,18 +154,18 @@ void MainMWM(SEDPIX **SedMap, FINEPIX *** FineMap, VEGTABLE *VType,
 	    x = (int) j*Map->DX/Map->DMASS + jj;
 	    
 	    TopoIndex[i][j] += (*FineMap)[y][x].TopoIndex;
-	
+	    
 	  }
 	}
 	/* TopoIndexAve is the TopoIndex for the coarse grid calculated as the average of the 
 	   TopoIndex of the fine grids in the coarse grid. */
-	  TopoIndexAve[i][j] = TopoIndex[i][j]/Map->NumFineIn;
+	TopoIndexAve[i][j] = TopoIndex[i][j]/Map->NumFineIn;
       }
     }
   }
-
+  
   FineMapSatThickness = 0.;
-
+  
   for (i = 0; i < Map->NY; i++) {
     for (j  = 0; j < Map->NX; j++) {
       if (INBASIN(TopoMap[i][j].Mask)) {
@@ -368,7 +368,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX *** FineMap, VEGTABLE *VType,
 		      //	  fprintf(stderr, "Original failure did not intersect a channel.\n");
 		    }
 		    else {
-		      //	  fprintf(stderr, "Original failure intersected a channel:i=%d, j=%d, y=%d, x=%d\n", i, j, y, x);
+		      //	  fprintf(stderr, "Original failure intersected a channel:i=%d, j=%d, y=%d, x=%d\n", i,j,y,x);
 		    }
 		  }
 		}		      
@@ -466,7 +466,8 @@ void MainMWM(SEDPIX **SedMap, FINEPIX *** FineMap, VEGTABLE *VType,
 		
 		if(SedimentToChannel > 0.0) {
 		  if(SlopeAspect < 0.) {
-		    fprintf(stderr, "No Valid aspect.\n");
+		    fprintf(stderr, "Invalid aspect (%3.1f) in cell y= %d x= %d\n",
+			    SlopeAspect,y,x);
 		    exit(0);
 		  }
 		  else
@@ -665,7 +666,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX *** FineMap, VEGTABLE *VType,
   free(SegmentSediment);
   free(SedDiams);
   free(InitialSegmentSediment);
-  }
+}
 
 /*****************************************************************************
   End of Main
@@ -691,6 +692,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX *** FineMap, VEGTABLE *VType,
     (*tail)->next = new;
     *tail = new;
   }
+  free(new);
 }
 
 void dequeue(node **head, node **tail, int *y, int *x)
@@ -709,11 +711,11 @@ void dequeue(node **head, node **tail, int *y, int *x)
 /*****************************************************************************
   Alloc_Chan_Sed_Mem
 *****************************************************************************/
-void Alloc_Chan_Sed_Mem(float ** DummyVar)
-{
-   if (!(*DummyVar = (float *) calloc(NSEDSIZES, sizeof(float))))
-    ReportError(" Alloc_Chan_Sed_Mem", 1);
- }
+/* void Alloc_Chan_Sed_Mem(float ** DummyVar) */
+/* { */
+/*    if (!(*DummyVar = (float *) calloc(NSEDSIZES, sizeof(float)))) */
+/*     ReportError(" Alloc_Chan_Sed_Mem", 1); */
+/*  } */
 /*****************************************************************************
   InitChannelSediment)
 

@@ -85,6 +85,7 @@ static char *ErrorMessage[] = {
   "No GLACIER land use class defined:", /*62*/
   "Ran out of data in surface routing file:", /* 63 */
   "Row column mismatch in surface routing file:", /* 64 */
+  "Current version does not support this setup:", /* 65 */
   NULL
 };
 

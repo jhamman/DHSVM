@@ -220,7 +220,7 @@ void CalcTopoIndex(MAPSIZE *Map, FINEPIX **FineMap)
 	    a[y][x-1] += delta_a[n]/tanbeta[y][x];
 	    break;
 	  default:
-	    ReportError("CalcTopoIndex", 1);
+	    ReportError("CalcTopoIndex", 65);
 	    assert(0);
 	  } /* end switch (n) {*/
 	}/* end 	 if(neighbor_elev[n]<celev){ */	
@@ -228,11 +228,11 @@ void CalcTopoIndex(MAPSIZE *Map, FINEPIX **FineMap)
       break; /*end case 8: */
 		     
     case 4:
-      ReportError("CalcTopoIndex", 1);
+      ReportError("CalcTopoIndex", 65);
       assert(0);                       /* not set up to do this */
       break;
     default:
-      ReportError("CalcTopoIndex", 1);
+      ReportError("CalcTopoIndex", 65);
       assert(0);			/* other cases don't work either */
     } /* end  switch (NDIRSfine) {  */
   } /* end  for (k = 0; k < Map->NumCellsfine; k++) { */

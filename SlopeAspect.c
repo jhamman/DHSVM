@@ -150,6 +150,7 @@ static void slope_aspect(float dx, float dy, float celev, float
     }
     break;
   default:
+    ReportError("slope_aspect",65);
     assert(0);			/* nothing else works */
     break;
   }
@@ -213,6 +214,7 @@ static void flow_fractions(float dx, float dy, float slope, float aspect,
 	effective_width = (sine < 0 ? -sine * dx : 0.0);
 	break;
       default:
+	ReportError("flow_fractions",65);
 	assert(0);		/* How can this happen? */
       }
       dir[n] = (int) ((effective_width / total_width) * 255.0 + 0.5);
@@ -220,9 +222,11 @@ static void flow_fractions(float dx, float dy, float slope, float aspect,
     }
     break;
   case 8:
+    ReportError("flow_fractions",65);
     assert(0);			/* can't handle this */
     break;
   default:
+    ReportError("flow_fractions",65);
     assert(0);			/* other cases don't work either */
   }
   return;
@@ -396,32 +400,31 @@ void HeadSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap, SOILPIX ** SoilMap)
 }
 
 /******************************************************************************/
-/*			     ElevationSlope                                     */
-/* Part of MWM, should probably be merged w/ ElevationSlopeAspect function. */
+/*			     ElevationSlope                            */
+/* Part of MWM, should probably be merged w/ ElevationSlopeAspect function.   */
 /******************************************************************************/
 
 float ElevationSlope(MAPSIZE *Map, FINEPIX ***FineMap, int y, int x, int *nexty, 
 		     int *nextx, int prevy, int prevx, float *Aspect) 
 {
   int n;
-  float neighbor_elev[NDIRS];
+  float neighbor_elev[NDIRSfine];
   float Slope;
-  float temp_slope[8];
+  float temp_slope[NDIRSfine];
   double length_diagonal;
   float dx, dy, celev;
   float elevsink=0.0;
 
   /* fill neighbor array */
   
-  for (n = 0; n < NDIRS; n++) {
+  for (n = 0; n < NDIRSfine; n++) {
     int xn = x + xneighbor[n];
     int yn = y + yneighbor[n];
           
-    if (valid_cell_fine(Map, xn, yn)) {
+    if (valid_cell_fine(Map, xn, yn)) 
       neighbor_elev[n] = (*FineMap)[yn][xn].bedrock + (*FineMap)[yn][xn].sediment;
-    } else {
+    else 
       neighbor_elev[n] = OUTSIDEBASIN;
-    }
   }
         
   dx = Map->DMASS;
@@ -430,39 +433,59 @@ float ElevationSlope(MAPSIZE *Map, FINEPIX ***FineMap, int y, int x, int *nexty,
 
   length_diagonal = sqrt((pow(dx, 2)) + (pow(dy, 2))); 
 
-/* added to remove sinks. Will be removed when this becomes a preprocessing step */
- 
-     if(celev < neighbor_elev[0] && celev < neighbor_elev[1] && celev < neighbor_elev[2] && celev < neighbor_elev[3]){
+  switch (NDIRSfine){
+  case 8:     
+    for (n = 0; n < NDIRSfine; n++) {
+      if (neighbor_elev[n] == OUTSIDEBASIN) 
+	neighbor_elev[n] = celev;
+      if(n==0 || n==2 || n==4 || n==6)
+	temp_slope[n] = (atan((celev - neighbor_elev[n]) / length_diagonal))
+	  * DEGPRAD;
+      else if(n==1 || n==5)
+	temp_slope[n] = (atan((celev - neighbor_elev[n]) / dy)) * DEGPRAD;
+      else
+	temp_slope[n] = (atan((celev - neighbor_elev[n]) / dx)) * DEGPRAD;
+    }
+    break;
+  
+  case 4:
+    ReportError("ElevationSlope",65);
+    assert(0); 
+    
+    /* Removes sinks since preprocessing does not remove sinks in 4 directions. 
+       This is WORK IN PROGRESS, thus the assert(0) prior to it. */
+       if(celev < neighbor_elev[0] && celev < neighbor_elev[1] && celev < neighbor_elev[2] && celev < neighbor_elev[3]){
       elevsink=neighbor_elev[0];
-      for (n = 1; n < NDIRS; n++) {
-          if (neighbor_elev[n] < elevsink && neighbor_elev[n] != OUTSIDEBASIN)
-               elevsink= neighbor_elev[n];
+      for (n = 1; n < NDIRSfine; n++) {
+	if (neighbor_elev[n] < elevsink && neighbor_elev[n] != OUTSIDEBASIN)
+	  elevsink= neighbor_elev[n];
       }
       celev=elevsink;
-     }
-/* end of added text */
-
-/*changed to reflect that currently DHSVM can only be run in 4 directions */
-
-  for (n = 0; n < NDIRS; n++) {
-    if (neighbor_elev[n] == OUTSIDEBASIN) 
-      neighbor_elev[n] = celev;
-/*    if(n==0 || n==2 || n==4 || n==6) */
-/*      temp_slope[n] = (atan((celev - neighbor_elev[n]) / length_diagonal)) * DEGPRAD; */
-    if(n==1 || n==3)
-      temp_slope[n] = (atan((celev - neighbor_elev[n]) / dy)) * DEGPRAD;
-    else
-      temp_slope[n] = (atan((celev - neighbor_elev[n]) / dx)) * DEGPRAD;
+    } 
+  
+    for (n = 0; n < NDIRSfine; n++) {
+      if (neighbor_elev[n] == OUTSIDEBASIN) 
+	neighbor_elev[n] = celev;
+      if(n==1 || n==3)
+	temp_slope[n] = (atan((celev - neighbor_elev[n]) / dy)) * DEGPRAD;
+      else
+	temp_slope[n] = (atan((celev - neighbor_elev[n]) / dx)) * DEGPRAD;
+    }
+    break;
+  default:
+    ReportError("ElevationSlope",65);
+    assert(0);	/* nothing else works */
+    break;
   }
-    
+  
   Slope = -999.;
   *Aspect = -99.;
 
-  for (n = 0; n < NDIRS; n++){
+  for (n = 0; n < NDIRSfine; n++){
     if (temp_slope[n] >= 0.) {
       if(temp_slope[n] > Slope) {
 	if((y + yneighbor[n]) == prevy && (x + xneighbor[n]) == prevx) {
-	  /* Not allowed to back track!. */
+	 /*  fprintf(stderr, "%d %d %d Not allowed to back track!\n", n, y, x); */
 	}
 	else {
 	  Slope = temp_slope[n];
@@ -471,13 +494,18 @@ float ElevationSlope(MAPSIZE *Map, FINEPIX ***FineMap, int y, int x, int *nexty,
 	  *nextx = x + xneighbor[n];
 	}
       }
+
     }
   }
-
-  //  if(Slope == -999.) {
-  //    fprintf(stderr, "Sink encountered, all routes from here go up!\n");
-  //    fprintf(stderr, "Fill the dem and try again.\n");
-  //  }
+  
+  if(Slope == -999.) {
+    fprintf(stderr, "Sink encountered in cell y= %d x= %d, all routes from here go up!\n", y,x);
+    fprintf(stderr, "Celev= %4.1f Nelev= %4.1f %4.1f %4.1f %4.1f\n",
+	    celev, neighbor_elev[0], neighbor_elev[1], neighbor_elev[2], neighbor_elev[3]);
+    fprintf(stderr, "dem=   %4.1f        %4.1f %4.1f %4.1f %4.1f\n",(*FineMap)[y][x].Dem,(*FineMap)[y + yneighbor[0]][x + xneighbor[0]].Dem,(*FineMap)[y + yneighbor[1]][x + xneighbor[1]].Dem,(*FineMap)[y + yneighbor[2]][x + xneighbor[2]].Dem,(*FineMap)[y + yneighbor[3]][x + xneighbor[3]].Dem);    
+    fprintf(stderr, "temp_slope=         %3.2f %3.2f %3.2f %3.2f\n\n", 
+	    temp_slope[0], temp_slope[1], temp_slope[2], temp_slope[3]);
+  }
 
   return Slope;
 }
