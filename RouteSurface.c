@@ -271,7 +271,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	  
 	  if(Options->SurfaceErosion) {
 	    
-	    DS = SedType[SoilMap[y][x].Soil-1].d50/1000000.;
+	    DS = SedType[SoilMap[y][x].Soil-1].d50;
 	    
             /* calculate unit streampower = u*S (m/s)  */
 	    streampower = (sedoutflow/Map->DX/h)*slope;
@@ -371,7 +371,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	      
 	      /* Converting SedOut from m3/m3 to kg for channel routing */
 	      ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[0] += 
-		(SedOut*sedoutflow*VariableDT*PARTDENSITY);
+		(SedOut*sedoutflow*VariableDT*PARTDENSITY)/(Map->DX*Map->DY);
 	      SedOut = 0.;
 	      for (i = 1; i < NSEDSIZES; i++)
 		ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[i] = 0.0;
@@ -381,7 +381,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	      
 	      /* Converting SedOut from m3/m3 to kg for channel routing */
  	      ChannelData->road_map[x][y]->channel->sediment.overlandinflow[0] += 
- 		(SedOut*sedoutflow*VariableDT*PARTDENSITY); 
+ 		(SedOut*sedoutflow*VariableDT*PARTDENSITY)/(Map->DX*Map->DY); 
  	      SedOut = 0.; 
 	      for (i = 1; i < NSEDSIZES; i++) 
 		ChannelData->road_map[x][y]->channel->sediment.overlandinflow[i] = 0.0;	 

@@ -16,7 +16,7 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
-#define CELLFACTOR 3           /* For discretization of forest roads
+#define CELLFACTOR 3          /* For discretization of forest roads
 				     for kinematic wave routing */
 
 #define CH_ICE     (2100.0e3)	/* Volumetric heat capacity (J/(m3*C) of ice 

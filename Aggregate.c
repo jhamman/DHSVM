@@ -41,7 +41,7 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
 	       PRECIPPIX **Precip, RADCLASSPIX **RadMap, SNOWPIX **Snow,
 	       SOILPIX **SoilMap, AGGREGATED *Total, VEGTABLE *VType,
 	       ROADSTRUCT **Network, SEDPIX **SedMap, FINEPIX ***FineMap,
-	       CHANNEL *ChannelData)
+	       CHANNEL *ChannelData, float *roadarea)
 {
   int NPixels;			/* Number of pixels in the basin */
   int NSoilL;			/* Number of soil layers for current pixel */
@@ -148,7 +148,7 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
 	Total->Soil.Qg += SoilMap[y][x].Qg;
 	Total->Soil.Qst += SoilMap[y][x].Qst;
 	Total->Soil.IExcess += SoilMap[y][x].IExcess;
-	if (channel_grid_has_channel(ChannelData->road_map, x, y)) {
+	if(Options->RoadRouting){
 	  for (i = 0; i < CELLFACTOR; i++)
 	    Total->Road.IExcess += (Network[y][x].h[i] * Network[y][x].RoadArea)/
 				    ((float)CELLFACTOR * (Map->DX*Map->DY));
@@ -165,6 +165,9 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
 	    Total->Sediment.Erosion += SedMap[y][x].Erosion; 
 	    Total->Sediment.SedFluxOut += SedMap[y][x].SedFluxOut; 
 	  }
+	  *roadarea += Network[y][x].RoadArea;
+	  Total->Road.Erosion += Network[y][x].Erosion;
+	  Total->Sediment.RoadSed += SedMap[y][x].RoadSed;
 	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
 	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
 	      yy = (int) y*Map->DY/Map->DMASS + ii;
@@ -181,6 +184,9 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
       }
     }
   }
+  /* divide road area by pixel area so it can be used to calculate depths
+     over the road surface in FinalMassBalancs */
+  *roadarea /= Map->DX * Map->DY * NPixels;
 
   /* calculate average values for all quantities except the surface flow */
 
@@ -265,8 +271,9 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
     if (Options->SurfaceErosion){
       Total->Sediment.Erosion /= NPixels; 
       Total->Sediment.SedFluxOut /= NPixels; 
-/*       Total->SedimentOverlandInflow /= NPixels;  */
     }
+    Total->Road.Erosion /= NPixels;
+    Total->Sediment.RoadSed /= NPixels;
     // FineMap quantities must be averaged over number of FineMap cells
     // rather than over the number of coarse grid cells
     Total->Fine.SatThickness /= (NPixels*Map->DMASS*Map->DMASS); 

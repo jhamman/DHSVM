@@ -18,6 +18,7 @@
 
 #include "settings.h"
 #include "Calendar.h"
+#include "channel.h"
 
 typedef struct {
   int N;			/* Northing */
@@ -62,7 +63,6 @@ typedef struct {
 				   for entire basin */
   FILES Balance;		/* File with summed mass balance values
 				   for entire basin */
-
   FILES SedBalance;		/* File with summed mass balance values
 				   for entire basin */
   FILES Stream;
@@ -344,11 +344,18 @@ typedef struct {
 				     the road surface (m) */
   float FlowSlope;               /* Representative road surface slope along the flow
 				    path (m/m) */
+  ChannelClass *RoadClass;       /* Class of road with most area in the pixel */
   float *h;                      /* Infiltration excess on road grid cell (m)*/
   float *startRunoff;            /* Surface water flux from the previus (sub) time 
 				    step. Used for kinematic wave routing.*/
   float *startRunon;             /* Surface water flux from the previus (sub) time 
 				    step. Used for kinematic wave routing.*/
+  float *OldSedIn;               /* Sediment inflow to road cell from previous time 
+				   step (m3/m3). */
+  float *OldSedOut;              /* Sediment outflow from road cell from previous time 
+				   step (m3/m3). */
+  float Erosion;                /* Change in road elevation/call area due to erosion 
+				    (m/timestep). */
 } ROADSTRUCT;
 
 typedef struct {
@@ -575,6 +582,8 @@ typedef struct {
   float CumSedimentToChannel;
   float CumMassDeposition;
   float CumSedimentErosion;
+  float CumRoadErosion;
+  float CumRoadSedHill;
   float CumDebrisInflow;
   float CumSedOverlandInflow;
   float CumCulvertSedToChannel;
@@ -592,12 +601,15 @@ typedef struct {
 
 typedef struct {
   float SedFluxOut;             /* Time step total sediment flux from the 
-				   grid cell (m3/m3). */
+				   grid cell (m3). */
   float OldSedIn;               /* Sediment inflow to grid cell from previous time 
 				   step (m3/m3). */
   float OldSedOut;              /* Sediment outflow from grid cell from previous time 
 				   step (m3/m3). */
-  float Erosion;                /* Change in grid cell elevation due to erosion (m/timestep). */
+  float Erosion;                /* Change in grid cell elevation due to erosion 
+				   (mm/timestep). */
+  float RoadSed;                /* Time step total sediment flux from the 
+				  road surface to hillslope (m3). */
 } SEDPIX;
 
 typedef struct {
@@ -606,7 +618,7 @@ typedef struct {
   STATSTABLE Cohesion;		/* Soil cohesion (kPa)  */
   STATSTABLE Friction;		/* Angle of internal friction  (degrees)*/	
   float SatDensity;	        /* Saturated density for each layer (kg/m3) */
-  float d50;                     /* Median grainsize diameter for surface erosion (um) */ 
+  float d50;                     /* Median grainsize diameter for surface erosion (mm) */ 
 } SEDTABLE;
 
 typedef struct node node;
@@ -668,4 +680,3 @@ typedef struct {
 } AGGREGATED;
 
 #endif
-

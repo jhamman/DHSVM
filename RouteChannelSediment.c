@@ -1,15 +1,13 @@
 /*
  * SUMMARY:      RouteChannelSediment
  * USAGE:        
- *
- * AUTHOR:       Edwin P. Maurer
+ * * AUTHOR:       Edwin P. Maurer
  * ORG:          University of Washington, Department of Civil Engineering
  * E-MAIL:       dhsvm@hydro.washington.edu
  * ORIG-DATE:    Sep-02
  * Last Change:  Thu Jun 19 09:27:02 2003 by Ed Maurer <edm@u.washington.edu>
  * DESCRIPTION:  
  * DESCRIP-END.   
- cd
  * FUNCTIONS:    main()
  * COMMENTS:
  */
@@ -367,31 +365,42 @@ void RouteChannelSediment(Channel * Head, TIMESTRUCT Time,
 *****************************************************************************/
 void RouteCulvertSediment(CHANNEL * ChannelData, MAPSIZE * Map,
 			  TOPOPIX ** TopoMap, SEDPIX ** SedMap, 
-			  AGGREGATED * Total)
+			  AGGREGATED * Total, float *SedDiams)
 {
   int x, y;
   float CulvertSedFlow;   /* culvert flow of sediment, kg */
   int i;
 
   Total->CulvertReturnSedFlow = 0.0;
-  printf("WARNING: RouteCulvertSediment in under development.\n");
 
   for (y = 0; y < Map->NY; y++) {
     for (x = 0; x < Map->NX; x++) {
       if (INBASIN(TopoMap[y][x].Mask)) {
-	
+ 
 	for(i=0; i<NSEDSIZES; i++) {
+	    
+	  CulvertSedFlow = ChannelCulvertSedFlow(y, x, ChannelData, i);
 	  
-	  CulvertSedFlow = ChannelCulvertSedFlow(y, x, ChannelData,i);
-	
 	  if (channel_grid_has_channel(ChannelData->stream_map, x, y)) {
-	    ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[i] += CulvertSedFlow;
-	    Total->CulvertSedToChannel += CulvertSedFlow;
+	    /* Percent delivery to streams is conservative and based on particle size */
+	    if (SedDiams[i] <= 0.063){
+	      ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[i] += CulvertSedFlow;
+	      Total->CulvertSedToChannel += CulvertSedFlow;
+	    }
+	    if ((SedDiams[i] > 0.063) && (SedDiams[i] <= 0.5)){
+	      ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[i] += 0.3*CulvertSedFlow;
+	      Total->CulvertSedToChannel += 0.3*CulvertSedFlow;
+	      Total->CulvertReturnSedFlow += 0.7*CulvertSedFlow;
+	    }
+	    if ((SedDiams[i] > 0.5) && (SedDiams[i] <= 2.)){
+	      ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[i] += 0.1*CulvertSedFlow;
+	      Total->CulvertSedToChannel += 0.1*CulvertSedFlow;
+	      Total->CulvertReturnSedFlow += 0.9*CulvertSedFlow;
+	    }
 	  }
 	  else {
 	    Total->CulvertReturnSedFlow += CulvertSedFlow;
 	  }
-	
 	}
       }
     }

@@ -771,9 +771,9 @@ double channel_grid_sed_outflow(ChannelMapPtr ** map, int col, int row, int i)
    if there is more than one road in a grid cell, the road
    with the greatest surface area is used to calculate the 
    flowlength.
-   This can result in a flolen that is greater than the length
-   of the road in the cell. 
-   ------------------------------------------------------------- */
+   This can result in a flolen that is greater than the 
+   horizontal length of the road in the cell. 
+  ------------------------------------------------------------- */
 double channel_grid_flowlength(ChannelMapPtr ** map, int col, int row, float floslope)
 {
   ChannelMapPtr cell = map[col][row];
@@ -783,6 +783,7 @@ double channel_grid_flowlength(ChannelMapPtr ** map, int col, int row, float flo
 
   while (cell != NULL) {
     area = cell->length * cell->cut_width;
+   /*  printf("%d col(%d) row(%d) area(%f) length(%f) width(%f) crown(%d)\n",cell->channel->id, col, row, area,cell->length,cell->cut_width,cell->channel->class->crown);   */
     if(area > maxarea){
       flolen = cell->cut_width * (floslope/ROADCROWN)*sqrt(1+pow(ROADCROWN,2));
       maxarea = area;
@@ -795,15 +796,16 @@ double channel_grid_flowlength(ChannelMapPtr ** map, int col, int row, float flo
     
     cell = cell->next;
   }
+/*   printf("maxarea(%f) floslope(%f) flolen(%f) \n\n", maxarea, floslope, flolen); */
   return flolen;
 }
 
 /* -------------------------------------------------------------
    channel_grid_flowslope
-   returns the flowlength along a road surface in a channel
+   returns the flowlength along a road surface in a grid cell
    if there is more than one road in a grid cell, the road
    with the greatest surface area is used to calculate the 
-   flowsleop
+   flowslope
    ------------------------------------------------------------- */
 
 double channel_grid_flowslope(ChannelMapPtr ** map, int col, int row)
@@ -822,6 +824,31 @@ double channel_grid_flowslope(ChannelMapPtr ** map, int col, int row)
     cell = cell->next;
   }
   return floslope;
+}
+
+/* -------------------------------------------------------------
+   channel_grid_class
+   returns the erodibility coeffienct of the road surface in a
+   gird cell. if there is more than one road in a grid cell, the road
+   with the greatest surface area is used
+   ------------------------------------------------------------- */
+
+ChannelClass* channel_grid_class(ChannelMapPtr ** map, int col, int row)
+{
+  ChannelMapPtr cell = map[col][row];
+  ChannelClass *pntr;
+  double area;
+  double maxarea = 0.0;
+
+  while (cell != NULL) {
+    area = cell->length * cell->cut_width;
+    if(area > maxarea){
+      pntr = cell->channel->class;
+      maxarea = area;
+    }
+    cell = cell->next;
+  }
+  return pntr;
 }
 
 /* -------------------------------------------------------------

@@ -109,7 +109,7 @@ typedef unsigned int unint;
 enum KEYS {
 /* Options *//* list order must match order in InitConstants.c */
   format = 0, extent, gradient, flow_routing, sensible_heat_flux, sediment,
-  sed_input_file, routing, road_routing, infiltration, interpolation, 
+  sed_input_file, routing, infiltration, interpolation, 
   mm5, qpf, prism, canopy_radatt, 
   shading, snotel, outside, rhoverride, precipitation_source, wind_source, 
   temp_lapse, precip_lapse, cressman_radius, cressman_stations, prism_data_path, 
@@ -177,7 +177,7 @@ enum KEYS {
   graphics_variable = 0,
   /* Sediment oconfiguration file */
   /* Sedoptions */ 
-  mass_wasting = 0, surface_erosion, channel_routing,
+  mass_wasting = 0, surface_erosion, road_erosion, channel_routing,
   /* Parameters */
   mass_spacing, max_iterations, channeld50, channeld90, debrisd50, debrisd90,
   /* Sedtime*/

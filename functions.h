@@ -25,7 +25,7 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
 	       PRECIPPIX **Precip, RADCLASSPIX **RadMap, SNOWPIX **Snow,
 	       SOILPIX **SoilMap, AGGREGATED *Total, VEGTABLE *VType,
 	       ROADSTRUCT **Network, SEDPIX **SedMap, FINEPIX ***FineMap,
-	       CHANNEL *ChannelData);
+	       CHANNEL *ChannelData, float *roadarea);
 
 void Alloc_Chan_Sed_Mem(float ** DummyVar);
 
@@ -95,7 +95,7 @@ void ExecDump(MAPSIZE * Map, DATE * Current, DATE * Start, OPTIONSTRUCT * Option
 unsigned char fequal(float a, float b);
 
 void FinalMassBalance(FILES *Out, AGGREGATED *Total, WATERBALANCE *Mass,
-OPTIONSTRUCT * Options);
+		      OPTIONSTRUCT * Options, float roadarea);
 
 float FindDT(SOILPIX **SoilMap, MAPSIZE *Map, TIMESTRUCT *Time, 
 	     TOPOPIX **TopoMap, SOILTABLE *SType); 
@@ -201,6 +201,7 @@ void InitNewStep(INPUTFILES *InFiles, MAPSIZE *Map, TIMESTRUCT *Time,
 		 float ***MM5Input, float ***WindModel, MAPSIZE *MM5Map);
 
 void InitParameters(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
+		    ROADSTRUCT ***Network, CHANNEL *ChannelData, TOPOPIX **TopoMap,
 		    TIMESTRUCT * Time, float *SedDiams);
 
 int InitPixDump(LISTPTR Input, MAPSIZE *Map, uchar **BasinMask, char *Path,
@@ -306,7 +307,7 @@ PIXMET MakeLocalMetData(int y, int x, MAPSIZE *Map, int DayStep,
 			float SineSolarAltitude);
 
 void MassBalance(DATE *Current, FILES *Out, FILES *SedOut, AGGREGATED *Total,
-		 WATERBALANCE *Mass);
+		 WATERBALANCE *Mass, OPTIONSTRUCT * Options);
 
 void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX, 
 		       float DY, int Dt, int HeatFluxOption, 
@@ -350,7 +351,7 @@ void RouteChannelSediment(Channel * Head, TIMESTRUCT Time,
 
 void RouteCulvertSediment(CHANNEL * ChannelData, MAPSIZE * Map,
 			  TOPOPIX ** TopoMap, SEDPIX ** SedMap, 
-			  AGGREGATED * Total);
+			  AGGREGATED * Total, float *SedDiams);
 
 void RouteDebrisFlow(float *SedimentToChannel, int prevy, 
 		     int prevx, float SlopeAspect, CHANNEL *ChannelData, 
@@ -358,7 +359,8 @@ void RouteDebrisFlow(float *SedimentToChannel, int prevy,
 
 void RouteRoad(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap, 
 	       SOILPIX ** SoilMap, ROADSTRUCT ** Network, SOILTABLE * SType, 
-	       CHANNEL * ChannelData, float *SedDiams); 
+	       CHANNEL * ChannelData, PRECIPPIX ** PrecipMap, SEDPIX **SedMap,
+	       float Tair, float Rh, float *SedDiams); 
 
 void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
 		     VEGTABLE *VType, VEGPIX **VegMap,

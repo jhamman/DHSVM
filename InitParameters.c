@@ -47,13 +47,15 @@
   Comments     :
 *****************************************************************************/
 void InitParameters(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
+		    ROADSTRUCT ***Network, CHANNEL *ChannelData, TOPOPIX **TopoMap,
 		    TIMESTRUCT * Time, float *SedDiams)
 {
-  int i;			/* counter */
-
+  int i, x, y;			/* counter */
+  const char *Routine = "InitParameters";
   STRINIENTRY StrEnv[] = {
     {"SEDOPTIONS", "MASS WASTING", "", ""},
     {"SEDOPTIONS", "SURFACE EROSION", "", ""},
+    {"SEDOPTIONS", "ROAD EROSION", "", ""},
     {"SEDOPTIONS", "CHANNEL ROUTING", "", ""},
     {"PARAMETERS", "MASS WASTING SPACING", "", ""},
     {"PARAMETERS", "MAXIMUM ITERATIONS", "", ""},
@@ -95,7 +97,45 @@ void InitParameters(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   else
     ReportError(StrEnv[surface_erosion].KeyName, 51);
 
-   /* Determine whether channel routing  model should be run */
+ /* Determine whether surface erosion model should be run */
+  if (strncmp(StrEnv[road_erosion].VarStr, "TRUE", 4) == 0){
+    Options->RoadRouting = TRUE;
+    if ((ChannelData->roads) == NULL) {
+      printf("Cannot route the road network without the network files!\n");
+      Options->RoadRouting = FALSE;
+    }
+   }
+  else if (strncmp(StrEnv[road_erosion].VarStr, "FALSE", 5) == 0)
+    Options->RoadRouting = FALSE;
+  else
+    ReportError(StrEnv[road_erosion].KeyName, 51);
+
+  if(Options->RoadRouting){ 
+  printf("Sediment Road Erosion component will be run\n");
+    for (y = 0; y < Map->NY; y++) {
+      for (x = 0; x < Map->NX; x++) {
+	if (INBASIN(TopoMap[y][x].Mask)) {
+	  if (!((*Network)[y][x].h = 
+		(float *) calloc(CELLFACTOR, sizeof(float))))
+	    ReportError((char *) Routine, 1);
+	  if (!((*Network)[y][x].startRunoff =
+		(float *) calloc(CELLFACTOR, sizeof(float))))
+	    ReportError((char *) Routine, 1);
+	  if (!((*Network)[y][x].startRunon =
+		(float *) calloc(CELLFACTOR, sizeof(float))))
+	    ReportError((char *) Routine, 1);
+	  if (!((*Network)[y][x].OldSedIn = 
+		(float *) calloc(CELLFACTOR, sizeof(float))))
+	    ReportError((char *) Routine, 1);
+	  if (!((*Network)[y][x].OldSedOut =
+		(float *) calloc(CELLFACTOR, sizeof(float))))
+	    ReportError((char *) Routine, 1);
+	}
+      }
+    }
+  }
+  
+  /* Determine whether channel routing  model should be run */
   if (strncmp(StrEnv[channel_routing].VarStr, "TRUE", 4) == 0){
     Options->ChannelRouting = TRUE;
     printf("Sediment Channel Routing component will be run\n");
@@ -105,7 +145,7 @@ void InitParameters(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   }
   else
     ReportError(StrEnv[channel_routing].KeyName, 51);
-
+  
   if (!CopyFloat(&(Map->DMASS), StrEnv[mass_spacing].VarStr, 1))
     ReportError(StrEnv[mass_spacing].KeyName, 51);
   

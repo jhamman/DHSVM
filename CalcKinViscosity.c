@@ -31,7 +31,7 @@ float viscosity(float Tair, float Rh)
   
   Tdew =- (14.55+.114*Tair)*X-pow(((2.5+0.007*Tair)*X),3)-
     (15.9+.117*Tair)*pow(X,14)+Tair;
-  
+
   if (Tdew<0.)
     knviscosity=1.792;
   else if (Tdew<4. && Tdew>=0.)

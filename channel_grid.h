@@ -70,6 +70,7 @@ double channel_grid_sed_outflow(ChannelMapPtr ** map, int col, int row, int i);
 double channel_grid_flowlength(ChannelMapPtr ** map, int col, int row, 
 			       float floslope);
 double channel_grid_flowslope(ChannelMapPtr ** map, int col, int row);
+ChannelClass* channel_grid_class(ChannelMapPtr ** map, int col, int row);
 
 				/* clean up */
 

@@ -134,9 +134,12 @@ void UnsaturatedFlow(int Dt, float DX, float DY, float Infiltration,
 
   /* first take care of infiltration through the roadbed/channel, then through the
      remaining surface */
-  /* this assumes RoadbedInfiltration = 0 for Roads. If the code is modified or
-     the road class allows for road infiltration this code (here and after
-     WaterTableDepth is called) should be changed. */
+
+  /* If the Road Erosion Module is running and RoadbedInfiltration > 0,
+     the code (here and possible after WaterTableDepth is called) should be 
+     changed. Currently, if water did infiltrate, but then the water 
+     table is above the road surface, that infiltrated water would
+     get added to Runoff, instead of Network Iexcess. */
   if (*TableDepth <= BankHeight) { /* watertable above road/channel surface */
     *Runoff += RoadbedInfiltration;
   }
@@ -220,8 +223,8 @@ void UnsaturatedFlow(int Dt, float DX, float DY, float Infiltration,
     /*    Moist[NSoilLayers] = FCap[NSoilLayers - 1]; */
    /*  printf("Warning: Deep layer soil moisture is less than field capacity.\n"); */
 
-    if (Moist[NSoilLayers] < 0. )
-      printf("Warning: Deep layer soil moisture is negative.\n");
+  /*   if (Moist[NSoilLayers] < 0. ) */
+/*       printf("Warning: Deep layer soil moisture is negative.\n"); */
   }
   
   /* Calculate the depth of the water table based on the soil moisture 

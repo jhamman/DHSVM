@@ -28,7 +28,7 @@
                  
   Required     :
 
-  Returns      : Sediment diameters (m)
+  Returns      : Sediment diameters (mm)
 
   Modifies     : none
    

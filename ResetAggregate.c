@@ -118,6 +118,8 @@ void ResetAggregate(LAYER * Soil, LAYER * Veg, AGGREGATED * Total,
   if (Options->Sediment) {
     Total->Sediment.Erosion = 0.0; 
     Total->Sediment.SedFluxOut = 0.0; 
+    Total->Road.Erosion = 0.0;
+    Total->Sediment.RoadSed = 0.0;
     Total->DebrisInflow = 0.0;
     Total->SedimentOverlandInflow = 0.0; 
     Total->SedimentOverroadInflow = 0.0;

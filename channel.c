@@ -49,6 +49,8 @@ static ChannelClass *alloc_channel_class(void)
   p->infiltration = 0.0;
   p->crown = CHAN_OUTSLOPED;
   p->erodibility_coeff = 0.0;
+  p->d50_road = 0.0;
+  p->friction_road = 0.0;
   p->next = (ChannelClass *) NULL;
 
   return p;
@@ -87,14 +89,14 @@ static ChannelClass *find_channel_class(ChannelClass * list, ClassID id)
 ChannelClass *channel_read_classes(const char *file, int ChanType, int Sediment)
 {
   ChannelClass *head = NULL, *current = NULL;
-  static const int fields = 7;
+  static const int fields = 9;
   int done;
   int err = 0;
   static char *crown_words[4] = {
     "OUTSLOPED", "CROWNED", "INSLOPED", NULL
   };
 
-  static TableField class_fields[7] = {
+  static TableField class_fields[9] = {
     {"ID", TABLE_INTEGER, TRUE, FALSE, {0}, "", NULL},
     {"Channel Width", TABLE_REAL, TRUE, FALSE, {0.0}, "", NULL},
     {"Bank (stream) or Cut Height (road)", TABLE_REAL, TRUE, FALSE, {0.0}, "",
@@ -104,7 +106,10 @@ ChannelClass *channel_read_classes(const char *file, int ChanType, int Sediment)
     {"Maximum Road Infiltration Rate (m/s)", TABLE_REAL, FALSE, FALSE, {0.0}, 
      "", NULL},
     {"Road Crown Type", TABLE_WORD, FALSE, FALSE, {0}, "", crown_words},
-    {"Road Erodibility Coefficient", TABLE_REAL, FALSE, FALSE, {0.0}, "", NULL}
+    {"Road Erodibility Coefficient", TABLE_REAL, FALSE, FALSE, {0.0}, "", NULL},
+    {"Road d50", TABLE_REAL, FALSE, FALSE, {0.0}, "", NULL},
+    {"Road Friction Coefficient (Manning's n)", TABLE_REAL, FALSE, FALSE, {0.0}, 
+     "", NULL}
   };
 
   // Extra fields are required if we're dealing with a road
@@ -112,9 +117,11 @@ ChannelClass *channel_read_classes(const char *file, int ChanType, int Sediment)
     // max infiltration rate and crown type are required
     class_fields[4].required = TRUE;
     class_fields[5].required = TRUE;
-    // Road erodibility coefficient is required if Sediment == TRUE,
+    // Road erodibility coefficient and d50 are required if Sediment == TRUE,
     if (Sediment) {
       class_fields[6].required = TRUE;
+      class_fields[7].required = TRUE;
+      class_fields[8].required = TRUE;
     }
   }
 
@@ -209,6 +216,12 @@ ChannelClass *channel_read_classes(const char *file, int ChanType, int Sediment)
 	  break;
 	case 6:
 	  current->erodibility_coeff = class_fields[i].value.real;
+          break;
+	case 7:
+	  current->d50_road = class_fields[i].value.real;
+          break;
+	case 8:
+	  current->friction_road = class_fields[i].value.real;
           break;
 	default:
 	  error_handler(ERRHDL_FATAL,

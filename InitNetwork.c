@@ -50,7 +50,6 @@ void InitNetwork(int NY, int NX, float DX, float DY, TOPOPIX **TopoMap,
   int numroadschan;      /* Counter of number of pixels
 			    with a road */
   FILE *inputfile;
-
   /* Allocate memory for network structure */
 
   if (!(*Network = (ROADSTRUCT **) calloc(NY, sizeof(ROADSTRUCT *))))
@@ -68,20 +67,12 @@ void InitNetwork(int NY, int NX, float DX, float DY, TOPOPIX **TopoMap,
 	      (float *) calloc((VType[VegMap[y][x].Veg - 1].NSoilLayers + 1),
 			       sizeof(float))))
 	  ReportError((char *) Routine, 1);
-
+	
 	if (!((*Network)[y][x].PercArea =
 	      (float *) calloc((VType[VegMap[y][x].Veg - 1].NSoilLayers + 1),
 			       sizeof(float))))
 	  ReportError((char *) Routine, 1);
-	if (!((*Network)[y][x].h = 
-	      (float *) calloc(CELLFACTOR, sizeof(float))))
-	  ReportError((char *) Routine, 1);
-	if (!((*Network)[y][x].startRunoff =
-	      (float *) calloc(CELLFACTOR, sizeof(float))))
-	  ReportError((char *) Routine, 1);
-	if (!((*Network)[y][x].startRunon =
-	      (float *) calloc(CELLFACTOR, sizeof(float))))
-	  ReportError((char *) Routine, 1);
+	
       }
     }
   }
@@ -89,30 +80,6 @@ void InitNetwork(int NY, int NX, float DX, float DY, TOPOPIX **TopoMap,
   numroadschan = 0;
   numroads = 0;
 
-  for (y = 0; y < NY; y++) {
-    for (x = 0; x < NX; x++) {
-      if (INBASIN(TopoMap[y][x].Mask)) {
-	if (channel_grid_has_channel(ChannelData->stream_map, x, y)) {
-	  if (channel_grid_has_channel(ChannelData->road_map, x, y))
-	    numroadschan++;
-	}
-	if (channel_grid_has_channel(ChannelData->road_map, x, y))
-	    numroads++;
-      }
-    }
-  }
-
-  if (numroads > 0)
-    printf("There are %d pixels with a road and %d with a road and a channel.\n",
-	    numroads, numroadschan);
-
-  if ((ChannelData->roads) == NULL) {
-    if(Options->RoadRouting){
-      printf("InitNetwork: Cannot route the road network without the network files!\n");
-      Options->RoadRouting = FALSE;
-    }
-  }
-  
   /* If a road/channel Network is imposed on the area, read the Network
      information, and calculate the storage adjustment factors */
   if (Options->HasNetwork) {
@@ -130,10 +97,16 @@ void InitNetwork(int NY, int NX, float DX, float DY, TOPOPIX **TopoMap,
 			&((*Network)[y][x].CutBankZone));
 	  (*Network)[y][x].IExcess = 0.;
 	  if (channel_grid_has_channel(ChannelData->road_map, x, y)) {
+	    numroads++;
+	    if (channel_grid_has_channel(ChannelData->stream_map, x, y)) {
+	      numroadschan++;
+	    }
 	    (*Network)[y][x].fraction =
 	      ChannelFraction(&(TopoMap[y][x]), ChannelData->road_map[x][y]);
 	    (*Network)[y][x].MaxInfiltrationRate = 
 	      MaxRoadInfiltration(ChannelData->road_map, x, y);
+	    (*Network)[y][x].RoadClass = 
+	      channel_grid_class(ChannelData->road_map, x, y);
 	    (*Network)[y][x].FlowSlope = 
 	      channel_grid_flowslope(ChannelData->road_map, x, y);
 	    (*Network)[y][x].FlowLength = 
@@ -142,7 +115,11 @@ void InitNetwork(int NY, int NX, float DX, float DY, TOPOPIX **TopoMap,
 	  }
 	  else {
 	    (*Network)[y][x].MaxInfiltrationRate = DHSVM_HUGE;
+	    (*Network)[y][x].FlowSlope = 0.;
+	    (*Network)[y][x].FlowLength = 0.;
 	    (*Network)[y][x].RoadArea = 0.;
+	    (*Network)[y][x].RoadClass = NULL;
+	    (*Network)[y][x].IExcess = 0.;
 	  }
 	}
       }
@@ -160,13 +137,21 @@ void InitNetwork(int NY, int NX, float DX, float DY, TOPOPIX **TopoMap,
 	    (*Network)[y][x].CutBankZone = NO_CUT;
 	    (*Network)[y][x].MaxInfiltrationRate = 0.;
 	  }
+	  (*Network)[y][x].FlowSlope = 0.;
+	  (*Network)[y][x].FlowLength = 0.;
 	  (*Network)[y][x].RoadArea = 0.;
+	  (*Network)[y][x].RoadClass = NULL;
 	  (*Network)[y][x].IExcess = 0.;
 	}
       }
     }
   }
 
+  if (numroads > 0){
+    printf("There are %d pixels with a road and %d with a road and a channel.\n",
+	    numroads, numroadschan);
+  }
+ 
   /* this all pertains to the impervious surface */
 
   doimpervious = 0;

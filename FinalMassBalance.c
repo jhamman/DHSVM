@@ -35,7 +35,7 @@
   which is executed at the beginning of each time step.
 *****************************************************************************/
 void FinalMassBalance(FILES * Out, AGGREGATED * Total, WATERBALANCE * Mass,
-OPTIONSTRUCT * Options)
+		      OPTIONSTRUCT * Options, float roadarearatio)
 {
   float NewWaterStorage;	/* water storage at the end of the time step */
   float Output;			/* total water flux leaving the basin;  */
@@ -115,9 +115,30 @@ OPTIONSTRUCT * Options)
       fprintf(stderr, " Surface Erosion (mm): %.2e\n", 
 	      Mass->CumSedimentErosion);
       fprintf(stderr, " Surface Erosion (kg/hectare): %.2e\n", 
-	      Mass->CumSedimentErosion*PARTDENSITY*MMTOM/10000.);
+	      Mass->CumSedimentErosion * PARTDENSITY * (float)MMTOM * 10000.);
     }
     
+    if (Options->RoadRouting){
+      fprintf(stderr, " \nBasin Average Road Surface Erosion\n");
+      fprintf(stderr, " Road Surface Erosion (mm): %.2e\n", 
+	      Mass->CumRoadErosion * 1000.);
+      fprintf(stderr, " Road Surface Erosion (kg/hectare): %.2e\n", 
+	      Mass->CumRoadErosion * PARTDENSITY * 10000.);
+      fprintf(stderr, "Road Sediment to Hillslope (mm): %.2e\n", 
+	      Mass->CumRoadSedHill * 1000.);
+
+      /* roadarearatio is used to convert basin average road erosion to 
+	 road erosion averaged over the road surface area */
+
+      fprintf(stderr, " \nAverage Road Surface Erosion\n");
+      fprintf(stderr, " Road Surface Erosion (mm): %.2e\n", 
+	      Mass->CumRoadErosion/roadarearatio * 1000.);
+      fprintf(stderr, " Road Surface Erosion (kg/hectare): %.2e\n", 
+	      Mass->CumRoadErosion/roadarearatio * PARTDENSITY * 10000.);
+      fprintf(stderr, "Road Sediment to Hillslope (mm): %.2e\n", 
+	      Mass->CumRoadSedHill/roadarearatio * 1000.);
+    }
+
     SedInput = Mass->CumDebrisInflow + 
       (Mass->CumSedOverlandInflow - Mass->CumCulvertSedToChannel) + 
       Mass->CumSedOverroadInflow;

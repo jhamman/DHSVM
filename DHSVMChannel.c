@@ -184,7 +184,8 @@ void
 RouteChannel(CHANNEL * ChannelData, TIMESTRUCT * Time, MAPSIZE * Map,
 	    TOPOPIX ** TopoMap, SOILPIX ** SoilMap, AGGREGATED * Total, 
 	     OPTIONSTRUCT *Options, ROADSTRUCT ** Network, 
-	     SOILTABLE * SType, float *SedDiams)
+	     SOILTABLE * SType, PRECIPPIX ** PrecipMap, SEDPIX **SedMap,
+	     float Tair, float Rh, float *SedDiams)
 {
   int x, y;
   int flag;
@@ -209,9 +210,10 @@ RouteChannel(CHANNEL * ChannelData, TIMESTRUCT * Time, MAPSIZE * Map,
   }
   
   if(Options->RoadRouting){
-    RouteRoad(Map, Time, TopoMap, SoilMap, Network, SType, ChannelData, SedDiams); 
+    RouteRoad(Map, Time, TopoMap, SoilMap, Network, SType, ChannelData, 
+	      PrecipMap, SedMap, Tair, Rh, SedDiams);  
   }
-
+ /*  exit(0); */
   /* route the road network and save results */
   SPrintDate(&(Time->Current), buffer);
   flag = IsEqualTime(&(Time->Current), &(Time->Start));

@@ -36,7 +36,7 @@
   which is executed at the beginning of each time step.
 *****************************************************************************/
 void MassBalance(DATE *Current, FILES *Out, FILES *SedOut, AGGREGATED *Total,
-		 WATERBALANCE *Mass)
+		 WATERBALANCE *Mass, OPTIONSTRUCT * Options)
 {
   float NewWaterStorage;	/* water storage at the end of the time step */
   float Output;			/* total water flux leaving the basin;  */
@@ -77,51 +77,64 @@ void MassBalance(DATE *Current, FILES *Out, FILES *SedOut, AGGREGATED *Total,
 	   Mass->OldWaterStorage, Total->CulvertToChannel,
 	   Total->RunoffToChannel, MassError);
 
-  /* Mass Wasting */
-  Mass->CumMassWasting += Total->Fine.MassWasting;
-  Mass->CumSedimentToChannel += Total->Fine.SedimentToChannel;
-  Mass->CumMassDeposition += Total->Fine.MassDeposition;
+  if(Options->Sediment){
 
-  /* Surface Erosion */
-  Mass->CumSedimentErosion += Total->Sediment.Erosion;
-  
-  /* Channel Erosion */
-  Mass->CumDebrisInflow += Total->DebrisInflow;
-
-  Mass->CumSedOverlandInflow += Total->SedimentOverlandInflow;
-  Mass->CumSedOverroadInflow += Total->SedimentOverroadInflow;
-
-  Mass->CumCulvertSedToChannel += Total->CulvertSedToChannel;
-  Mass->CumCulvertReturnSedFlow += Total->CulvertReturnSedFlow;
-  Mass->CumSedimentOutflow += Total->SedimentOutflow;
-
-
-/* Calculate mass errors */
-  MWMMassError = Total->Fine.MassWasting -Total->Fine.SedimentToChannel  - 
-  Total->Fine.MassDeposition ;
-
-  SedInput = Total->DebrisInflow + 
-      (Total->SedimentOverlandInflow -Total->CulvertSedToChannel ) + 
-     Total->SedimentOverroadInflow ;
-
-  SedOutput = Total->SedimentOutflow  - 
-      (Total->CulvertSedToChannel + Total->CulvertReturnSedFlow) ; 
+    /* Calculate sediment mass errors */
+    MWMMassError = Total->Fine.MassWasting -Total->Fine.SedimentToChannel - 
+      Total->Fine.MassDeposition ;
+    
+    SedInput = Total->DebrisInflow + 
+      (Total->SedimentOverlandInflow - Total->CulvertSedToChannel) + 
+      Total->SedimentOverroadInflow ;
+    
+    SedOutput = Total->SedimentOutflow  - 
+      (Total->CulvertSedToChannel + Total->CulvertReturnSedFlow); 
     
     SedMassError = (Total->ChannelSedimentStorage + 
 		    Total->ChannelSuspendedSediment - 
 		    Mass->LastChannelSedimentStorage) + 
       SedOutput - SedInput;
+    
+    /* update */
+    
+    /* Mass Wasting */
+    Mass->CumMassWasting += Total->Fine.MassWasting;
+    Mass->CumSedimentToChannel += Total->Fine.SedimentToChannel;
+    Mass->CumMassDeposition += Total->Fine.MassDeposition;
+    
+    /* Surface Erosion */
+    Mass->CumSedimentErosion += Total->Sediment.Erosion;
+    
+    /* Road Erosion */
+    Mass->CumRoadErosion += Total->Road.Erosion;
+    Mass->CumRoadSedHill += Total->Sediment.RoadSed;
+    
+    /* Channel Erosion */
+    Mass->CumDebrisInflow += Total->DebrisInflow;
+    
+    Mass->CumSedOverlandInflow += Total->SedimentOverlandInflow;
+    Mass->CumSedOverroadInflow += Total->SedimentOverroadInflow;
+    
+    Mass->CumCulvertSedToChannel += Total->CulvertSedToChannel;
+    Mass->CumCulvertReturnSedFlow += Total->CulvertReturnSedFlow;
+    Mass->CumSedimentOutflow += Total->SedimentOutflow;
+    
+    Mass->LastChannelSedimentStorage = Total->ChannelSedimentStorage + 
+      Total->ChannelSuspendedSediment;   
+    
+    PrintDate(Current, SedOut->FilePtr);
+    
+    fprintf(SedOut->FilePtr, "%g %g %g %g %g %g %g %g %g %g %g %g %g \n", 
+	    Total->Fine.MassWasting, Total->Fine.SedimentToChannel, 
+	    Total->Fine.MassDeposition, MWMMassError, Total->Sediment.Erosion, 
+	    Total->DebrisInflow, Total->SedimentOverlandInflow, 
+	    Total->SedimentOverroadInflow, Total->SedimentOutflow, 
+	    Total->CulvertReturnSedFlow, Total->CulvertSedToChannel,
+	    Mass->LastChannelSedimentStorage,SedMassError);
+  } 
+}
 
-   
-
-  PrintDate(Current, SedOut->FilePtr);
-  
-  fprintf(SedOut->FilePtr, "%g %g %g %g %g %g %g %g %g %g %g %g %g %g\n", Total->Fine.MassWasting, Total->Fine.SedimentToChannel, Total->Fine.MassDeposition, MWMMassError, Total->Sediment.Erosion, Total->DebrisInflow, Total->SedimentOverlandInflow, Total->SedimentOverroadInflow, Total->SedimentOutflow, Total->CulvertReturnSedFlow, Total->CulvertSedToChannel,Mass->LastChannelSedimentStorage, Total->ChannelSedimentStorage+Total->ChannelSuspendedSediment,SedMassError);
-
- Mass->LastChannelSedimentStorage=Total->ChannelSedimentStorage + Total->ChannelSuspendedSediment;
-} 
-
-    /*    1.  Total mass wasted (m3) */
+/*        1. Total mass wasted (m3) */
 /*        2. Total mass wasted delivered to channel (m3) */
 /*        3. Total mass deposition (m3) */
 /*        4. Total mass wasting mass error (m3) */
@@ -136,7 +149,6 @@ void MassBalance(DATE *Current, FILES *Out, FILES *SedOut, AGGREGATED *Total,
 /*       13. Total sediment outflow (kg) */
 /*       14. Total culvert return sediment flow (kg) */
 /*       15. Total culvert sediment to channel (kg) */
-/*       16. Total amount of sediment stored in channels - initial (kg) */
-/*       17. Total amount of sediment stored in channels - final (kg) */
-/*       18. Total channel erosion mass balance error for the current time step (kg) */
-
+/*       16. Total amount of sediment stored in channels (kg) */
+/*       17. Total channel erosion mass balance error for the current time step (kg) */
+  

@@ -70,7 +70,6 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
     {"OPTIONS", "SEDIMENT", "", ""},
     {"OPTIONS", "SEDIMENT INPUT FILE", "", ""},
     {"OPTIONS", "OVERLAND ROUTING", "", ""}, 
-    {"OPTIONS", "ROAD ROUTING", "", ""},
     {"OPTIONS", "INFILTRATION", "", ""},
     {"OPTIONS", "INTERPOLATION", "", ""},
     {"OPTIONS", "MM5", "", ""},
@@ -230,37 +229,7 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   else
     ReportError(StrEnv[routing].KeyName, 51);
   
-  /* Determine road flow routing method to use */
-  if (strncmp(StrEnv[road_routing].VarStr, "KINEMATIC", 9) == 0){
-    Options->RoadRouting = TRUE;
-    printf("MODEL IN DEVELOPMENT: Road routing included, but not road erosion.\n");
-  }
-  else if (strncmp(StrEnv[road_routing].VarStr, "CONVENTIONAL", 12) == 0)
-    Options->RoadRouting = FALSE;
-  else
-    ReportError(StrEnv[road_routing].KeyName, 51);
-  
-  
-  /* Check for compatible options. */
-  if(Options->Sediment == TRUE) {
-    /* RoadRouting can only be performed if there are roads. 
-       This check is made in InitNetwork.c */
-    if(!Options->RoadRouting) {
-      printf("WARNING: Sediment model (forest roads component) cannot be run\n");
-      printf("with conventional road flow routing. To run this component, set\n");
-      printf("Road Routing to KINEMATIC. This model run will continue without\n");
-      printf("forest road erosion. \n\n");
-    }  
-  }
-  
-  if(Options->Sediment == FALSE){
-    if(Options->RoadRouting){
-      printf("WARNING: Kinematic road routing is for use in the sediment\n");
-      printf("model. Road Routing being reset to CONVENTIONAL.\n\n");
-      Options->RoadRouting = FALSE;
-    }
-  }
-  
+ 
   /* Determine if the maximum infiltration rate is static or dynamic */
   if (strncmp(StrEnv[infiltration].VarStr, "STATIC", 6) == 0) {
     Options->Infiltration = STATIC;

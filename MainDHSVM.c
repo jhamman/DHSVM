@@ -60,7 +60,8 @@ int main(int argc, char **argv)
   float ***WindModel = NULL;
   int MaxStreamID, MaxRoadID;
   float SedDiams[NSEDSIZES];
-
+  float roadarea;
+  
   int flag;
   int i;
   int j;
@@ -134,8 +135,8 @@ int main(int argc, char **argv)
   VEGPIX **VegMap = NULL;
   VEGTABLE *VType = NULL;
   WATERBALANCE Mass =		/* parameter for mass balance calculations */
-  { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+    { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  
+      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 
 /*****************************************************************************
   Initialization Procedures 
@@ -263,7 +264,8 @@ int main(int argc, char **argv)
 
     ReadInitFile(Options.SedFile, &Input);
 
-    InitParameters(Input, &Options, &Map, &Time, SedDiams);
+    InitParameters(Input, &Options, &Map, &Network, &ChannelData, TopoMap,
+		   &Time, SedDiams);
 
     InitSedimentTables(Time.NDaySteps, Input, &SedType, &SType, &VType, &Soil, &Veg);
 
@@ -294,7 +296,7 @@ int main(int argc, char **argv)
   /* setup for mass balance calculations */
   Aggregate(&Map, &Options, TopoMap, &Soil, &Veg, VegMap, EvapMap, PrecipMap,
 	    RadMap, SnowMap, SoilMap,  &Total, VType, Network, SedMap, FineMap,
-	    &ChannelData); 
+	    &ChannelData, &roadarea); 
 
   Mass.StartWaterStorage =
     Total.Soil.IExcess + Total.CanopyWater + Total.SoilWater + Total.Snow.Swq +
@@ -407,7 +409,8 @@ int main(int argc, char **argv)
 
     if (Options.HasNetwork)
       RouteChannel(&ChannelData, &Time, &Map, TopoMap, SoilMap, &Total, 
-		   &Options, Network, SType, SedDiams);
+		   &Options, Network, SType, PrecipMap, SedMap,
+		   LocalMet.Tair, LocalMet.Rh, SedDiams);
 
     /* Sediment Routing in Channel and output to sediment files */
     if ((Options.HasNetwork) && (Options.Sediment)){
@@ -419,7 +422,8 @@ int main(int argc, char **argv)
 	  channel_save_sed_outflow_text(buffer, ChannelData.roads,
 					ChannelData.sedroadout,
 					ChannelData.sedroadflowout, flag);
-	  RouteCulvertSediment(&ChannelData, &Map, TopoMap, SedMap, &Total);
+	  RouteCulvertSediment(&ChannelData, &Map, TopoMap, SedMap, 
+			       &Total, SedDiams);
 	}
 	RouteChannelSediment(ChannelData.streams, Time, &Dump, &Total, SedDiams);
 	channel_save_sed_outflow_text(buffer, ChannelData.streams,
@@ -456,9 +460,10 @@ int main(int argc, char **argv)
     
     Aggregate(&Map, &Options, TopoMap, &Soil, &Veg, VegMap, EvapMap, PrecipMap,
 	      RadMap, SnowMap, SoilMap, &Total, VType, Network, SedMap, FineMap,
-	      &ChannelData);
+	      &ChannelData, &roadarea);
     
-    MassBalance(&(Time.Current), &(Dump.Balance), &(Dump.SedBalance), &Total, &Mass);
+    MassBalance(&(Time.Current), &(Dump.Balance), &(Dump.SedBalance), &Total, 
+		&Mass, &Options);
     
     ExecDump(&Map, &(Time.Current), &(Time.Start), &Options, &Dump, TopoMap,
 	     EvapMap, PrecipMap, RadMap, SnowMap, MetMap, VegMap, &Veg, SoilMap,
@@ -474,7 +479,7 @@ int main(int argc, char **argv)
 	   SedMap, Network, &ChannelData, FineMap, &Soil, &Total, &HydrographInfo,
 	   Hydrograph);
 
-  FinalMassBalance(&(Dump.Balance), &Total, &Mass, &Options);
+  FinalMassBalance(&(Dump.Balance), &Total, &Mass, &Options, roadarea);
 
 /*****************************************************************************
   Cleanup
