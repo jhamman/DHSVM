@@ -99,7 +99,6 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
   int x;			/* counter */
   int y;			/* counter */
   int i,j;			/* counters for FineMap initialization */
-  int ii, jj, xx, yy;
   float BankHeight;
   float *Adjust;
   float fract_used;
@@ -326,23 +325,6 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
   }
 
   /**********************************************************************/
-  // Initialize the mass wasting variables for this time step
-  for (y = 0; y < Map->NY; y++) {
-    for (x = 0; x < Map->NX; x++) {
-      if (INBASIN(TopoMap[y][x].Mask)) {
-	for(ii=0; ii< Map->DY/Map->DMASS; ii++) { /* Fine resolution counters. */
-	  for(jj=0; jj< Map->DX/Map->DMASS; jj++) {
-	    yy = (int) y*Map->DY/Map->DMASS + ii;
-	    xx = (int) x*Map->DX/Map->DMASS + jj;
-	    (*FineMap[yy][xx]).Probability = 0.0;
-	    (*FineMap[yy][xx]).MassDeposition = 0.0;
-	    (*FineMap[yy][xx]).MassWasting = 0.0;
-	    (*FineMap[yy][xx]).SedimentToChannel = 0.0;
-	  }
-	}
-      }
-    }
-  }
 
   /* Call the mass wasting algorithm; currently not very intelligent */
   
@@ -363,11 +345,10 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
     /* If Greater than SATPERCENT of the pixels have a water table that is at least 85% of 
        soil depth, call the mass wasting model. */
     
-    if((float)count/((float)totalcount) > SATPERCENT) 
-      {
-	MainMWM(SedMap, FineMap, VType, SedType, ChannelData, DumpPath, SoilMap, Time,
-		Map, TopoMap, SType, VegMap, MaxStreamID, SnowMap);
-      }
+    if((float)count/((float)totalcount) > SATPERCENT) {
+      MainMWM(SedMap, FineMap, VType, SedType, ChannelData, DumpPath, SoilMap,
+	      Time, Map, TopoMap, SType, VegMap, MaxStreamID, SnowMap);
+    }
   }
   
   /**********************************************************************/
