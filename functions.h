@@ -378,6 +378,8 @@ void RouteSurface(MAPSIZE *Map, TIMESTRUCT *Time, TOPOPIX **TopoMap,
 
 float SatVaporPressure(float Temperature);
 
+int SaveChannelSedInflow(Channel * Head, AGGREGATED * Total);
+
 int ScanInts(FILE *FilePtr, int *X, int N);
 
 int ScanDoubles(FILE *FilePtr, double *X, int N);

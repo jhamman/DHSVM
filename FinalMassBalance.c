@@ -138,23 +138,25 @@ OPTIONSTRUCT * Options)
     fprintf(stderr, " OverroadInflow (kg): %e\n", 
 	     Mass->CumSedOverroadInflow);
     
-    fprintf(stderr, " \nOutflow %.2e:\n",  SedOutput);
-    fprintf(stderr, " SedimentOutflow (kg): %e\n", Mass->CumSedimentOutflow);
-    fprintf(stderr, " CulvertReturnSedFlow (kg): %e\n", 
-	    Mass->CumCulvertReturnSedFlow); 
-    fprintf(stderr, " CulvertSedToChannel (kg): %e\n", 
-	    Mass->CumCulvertSedToChannel);    
-
-    fprintf(stderr, " \nStorage:\n");
-    fprintf(stderr, " Initial Storage (kg): %e\n", 
-	    Mass->StartChannelSedimentStorage); 
-    fprintf(stderr, " End of Run Storage (kg): %e\n", 
-	    Total->ChannelSedimentStorage + Total->ChannelSuspendedSediment); 
-    fprintf(stderr, " \tFinal Bed Storage (kg): %e\n", 
-	    Total->ChannelSedimentStorage); 
-    fprintf(stderr, " \tFinal Suspended Sediment (kg): %e\n", 
-	    Total->ChannelSuspendedSediment); 
-    fprintf(stderr, " \nMass Error (kg): %e\n", SedMassError); 
+    if (Options->ChannelRouting){
+      fprintf(stderr, " \nOutflow %.2e:\n",  SedOutput);
+      fprintf(stderr, " SedimentOutflow (kg): %e\n", Mass->CumSedimentOutflow);
+      fprintf(stderr, " CulvertReturnSedFlow (kg): %e\n", 
+	      Mass->CumCulvertReturnSedFlow); 
+      fprintf(stderr, " CulvertSedToChannel (kg): %e\n", 
+	      Mass->CumCulvertSedToChannel);    
+      
+      fprintf(stderr, " \nStorage:\n");
+      fprintf(stderr, " Initial Storage (kg): %e\n", 
+	      Mass->StartChannelSedimentStorage); 
+      fprintf(stderr, " End of Run Storage (kg): %e\n", 
+	      Total->ChannelSedimentStorage + Total->ChannelSuspendedSediment); 
+      fprintf(stderr, " \tFinal Bed Storage (kg): %e\n", 
+	      Total->ChannelSedimentStorage); 
+      fprintf(stderr, " \tFinal Suspended Sediment (kg): %e\n", 
+	      Total->ChannelSuspendedSediment); 
+      fprintf(stderr, " \nMass Error (kg): %e\n", SedMassError); 
+    }
   }
 }
 

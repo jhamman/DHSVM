@@ -251,6 +251,8 @@ typedef struct {
 				   or KINEMATIC. */
   int RoadRouting;              /* Road flow routing indicator, either CONVENTIONAL
 				   or KINEMATIC. */
+  int ChannelRouting;           /* Specifies whether sediment should be routed through
+				   the channel network */
   int Infiltration;             /* Specifies static or dynamic maximum infiltration 
 				  rate */
   int FlowGradient;		/* Specifies whether the flow gradient is based

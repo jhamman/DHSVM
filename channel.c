@@ -650,6 +650,27 @@ int channel_step_initialize_network(Channel * net)
 }
 
 /* -------------------------------------------------------------
+   channel_step_initialize_sednetwork
+   currently this isn't used because variables need initialization
+   at different times
+   ------------------------------------------------------------- */
+int channel_step_initialize_sednetwork(Channel * net)
+{
+  int i;
+
+  if (net != NULL) {
+    for(i = 0; i < NSEDSIZES;i++) {
+      net->sediment.debrisinflow[i] = 0.;
+      net->sediment.overlandinflow[i] = 0.;
+      net->sediment.overroadinflow[i] = 0.;
+      net->sediment.inflow[i] = 0.;
+    }
+    channel_step_initialize_sednetwork(net->next);
+  }
+  return (0);
+}
+
+/* -------------------------------------------------------------
    channel_save_outflow
    This routine saves the channel output
    ------------------------------------------------------------- */
@@ -882,14 +903,12 @@ channel_save_sed_outflow_text(char *tstring, Channel * net, FILE * out,
 		  "channel_save_sed_outflow: write error:%s", strerror(errno));
     err++;
   }
-
+  
   for (; net != NULL; net = net->next) {
     if (net->record) {
-		/*if (fprintf(out, "%15s %10d %12.5g %12.5g",
-		  tstring, net->id, net->sediment.totalmass, net->sediment.outflowconc) == EOF) {*/
-		// we add the overlandinflow as an output for now...
-		if (fprintf(out, "%15s %10d %12.5g %12.5g %12.5g",
-		  tstring, net->id, net->sediment.totalmass, net->sediment.outflowconc, net->sediment.overlandinflow[0]*NSEDSIZES) == EOF) {
+      
+      if (fprintf(out, "%15s %10d %12.5g %12.5g",
+		  tstring, net->id, net->sediment.totalmass, net->sediment.outflowconc) == EOF) {
       	error_handler(ERRHDL_ERROR,
 		      "channel_save_sed_outflow: write error:%s", strerror(errno));
 	err++;
@@ -906,7 +925,7 @@ channel_save_sed_outflow_text(char *tstring, Channel * net, FILE * out,
 			strerror(errno));
 	  err++;
 	}
-
+	
       }
       else {
 	if (fprintf(out, "\n") == EOF) {
@@ -923,4 +942,60 @@ channel_save_sed_outflow_text(char *tstring, Channel * net, FILE * out,
   return (err);
 }
 
+/* -------------------------------------------------------------
+   channel_save_sed_inflow_text
+   Saves the channel sediment lateral inflows using a text string as the time field
+   ------------------------------------------------------------- */
+int
+channel_save_sed_inflow_text(char *tstring, Channel * net, FILE * out,
+			     float *SedDiams, int flag)
+{
+  int err = 0;
+  int i, j;
+  int count = 0;
+  
+  /* print header line first time through */
+  if (flag == 1) {
+    fprintf(out, "DATE ");
+    for (; net != NULL; net = net->next) {
+      if (net->record){
+	for(i = 0; i < NSEDSIZES;i++) { 
+	  fprintf(out, "%s ", net->record_name);
+	}
+	count++;
+      }
+    }
+    fprintf(out, "\n");
+    
+    fprintf(out, "SEDDIAMS ");
+    for (j = 0 ; j < count; j++){
+  	for(i = 0; i < NSEDSIZES;i++) { 
+	  fprintf(out, "%f ", SedDiams[i]);
+	}
+    }
+    fprintf(out, "\n");
+  } 
+  
+  if (fprintf(out, "%15s ", tstring) == EOF) {
+    error_handler(ERRHDL_ERROR,
+		  "channel_save_sed_inflow: write error:%s", strerror(errno));
+    err++;
+  }
+  
+  for (; net != NULL; net = net->next) {
+    if (net->record) {
+      for(i = 0; i < NSEDSIZES;i++) { 
+	if (fprintf(out, "%12.5g ", net->sediment.debrisinflow[i] + net->sediment.overlandinflow[i] +
+		    net->sediment.overroadinflow[i]) == EOF) {
+	  error_handler(ERRHDL_ERROR,
+			"channel_save_sed_inflow: write error:%s", strerror(errno));
+	  err++;
+	}
+      }
+    }
+  }
+  fprintf(out, "\n");
+  
+  return (err);
+}
 

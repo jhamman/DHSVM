@@ -60,7 +60,6 @@ int main(int argc, char **argv)
   float ***WindModel = NULL;
   int MaxStreamID, MaxRoadID;
   float SedDiams[NSEDSIZES];
-// float SedDiams;
 
   int flag;
   int i;
@@ -173,8 +172,6 @@ int main(int argc, char **argv)
   CheckOut(Options.CanopyRadAtt, Veg, Soil, VType, SType, &Map, TopoMap, 
 	   VegMap, SoilMap);
 
-    
-
   if (Options.HasNetwork)
     InitChannel(Input, &Map, Time.Dt, &ChannelData, SoilMap, &MaxStreamID, &MaxRoadID, &Options);
   else if (Options.Extent != POINT)
@@ -231,9 +228,6 @@ int main(int argc, char **argv)
     ReadChannelState(Dump.InitStatePath, &(Time.Start), ChannelData.streams);
   }
 
-  if ((Options.HasNetwork) && (Options.Sediment))
-   InitChannelSedimentDump(&ChannelData, Dump.Path); 
-
   InitSnowMap(&Map, &SnowMap);
   InitAggregated(Veg.MaxLayers, Soil.MaxLayers, &Total);
 
@@ -276,11 +270,11 @@ int main(int argc, char **argv)
     InitFineMaps(Input, &Options, &Map, &Soil, &TopoMap, &SoilMap, 
 		  &FineMap);
 
-    if (Options.HasNetwork){
+    if (Options.HasNetwork){ 
       printf("Initializing channel sediment\n\n");
+      InitChannelSedimentDump(&ChannelData, Dump.Path, Options.ChannelRouting); 
       InitChannelSediment(ChannelData.streams, &Total);
-      if(Options.RoadRouting)
-	InitChannelSediment(ChannelData.roads, &Total);
+      InitChannelSediment(ChannelData.roads, &Total);
     }
 
 
@@ -402,10 +396,10 @@ int main(int argc, char **argv)
 #ifndef SNOW_ONLY
 
     /* set sediment inflows to zero - they are incremented elsewhere */
-    if ((Options.HasNetwork) && (Options.Sediment)){
-      InitChannelSedInflow(ChannelData.streams);
-      InitChannelSedInflow(ChannelData.roads);
-    }
+  if ((Options.HasNetwork) && (Options.Sediment)){ 
+    InitChannelSedInflow(ChannelData.streams);
+    InitChannelSedInflow(ChannelData.roads);
+  }
     
     RouteSubSurface(Time.Dt, &Map, TopoMap, VType, VegMap, Network,
 		    SType, SoilMap, &ChannelData, &Time, &Options, Dump.Path,
@@ -419,17 +413,31 @@ int main(int argc, char **argv)
     if ((Options.HasNetwork) && (Options.Sediment)){
       SPrintDate(&(Time.Current), buffer);
       flag = IsEqualTime(&(Time.Current), &(Time.Start));
-      if(Options.RoadRouting){
-	RouteChannelSediment(ChannelData.roads, Time, &Dump, &Total, SedDiams);
-	channel_save_sed_outflow_text(buffer, ChannelData.roads,
-				      ChannelData.sedroadout,
-				      ChannelData.sedroadflowout, flag);
-	RouteCulvertSediment(&ChannelData, &Map, TopoMap, SedMap, &Total);
+      if(Options.ChannelRouting){
+	if (ChannelData.roads != NULL) {
+	  RouteChannelSediment(ChannelData.roads, Time, &Dump, &Total, SedDiams);
+	  channel_save_sed_outflow_text(buffer, ChannelData.roads,
+					ChannelData.sedroadout,
+					ChannelData.sedroadflowout, flag);
+	  RouteCulvertSediment(&ChannelData, &Map, TopoMap, SedMap, &Total);
+	}
+	RouteChannelSediment(ChannelData.streams, Time, &Dump, &Total, SedDiams);
+	channel_save_sed_outflow_text(buffer, ChannelData.streams,
+				      ChannelData.sedstreamout,
+				      ChannelData.sedstreamflowout, flag);
       }
-      RouteChannelSediment(ChannelData.streams, Time, &Dump, &Total, SedDiams);
-      channel_save_sed_outflow_text(buffer, ChannelData.streams,
-				    ChannelData.sedstreamout,
-				    ChannelData.sedstreamflowout, flag);
+      else{
+	if (ChannelData.roads != NULL) {
+	  channel_save_sed_inflow_text(buffer, ChannelData.roads,
+				     ChannelData.sedroadinflow, SedDiams,
+				     flag);
+	}
+	channel_save_sed_inflow_text(buffer, ChannelData.streams,
+				     ChannelData.sedstreaminflow, SedDiams,
+				     flag);
+      }
+      SaveChannelSedInflow(ChannelData.roads, &Total);
+      SaveChannelSedInflow(ChannelData.streams, &Total);
     }
     
     if (Options.Extent == BASIN)

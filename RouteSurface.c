@@ -175,7 +175,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 
       /* estimate kinematic viscosity through interpolation JSL */
       knviscosity=viscosity(Tair, Rh);
- 
+
       /* Must loop through surface routing multiple times within one DHSVM 
 	 model time step. */
       
@@ -365,17 +365,27 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	     smallest particle sizes (first size, index 0) */
 	  /* Note that stream_map and road_map are indexed by [x][y],
 	     unlike the other "map"-type variables. */
-	  
-	  if((Options->SurfaceErosion)&&(SedOut > 0.)&&
-	     (channel_grid_has_channel(ChannelData->stream_map, x, y))) {
+	 
+	  if((Options->SurfaceErosion)&&(SedOut > 0.)){
+	    if (channel_grid_has_channel(ChannelData->stream_map, x, y)) {
+	      
+	      /* Converting SedOut from m3/m3 to kg for channel routing */
+	      ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[0] += 
+		(SedOut*sedoutflow*VariableDT*PARTDENSITY);
+	      SedOut = 0.;
+	      for (i = 1; i < NSEDSIZES; i++)
+		ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[i] = 0.0;
+	    }
 	    
-	    /* Converting SedOut from m3/m3 to kg for channel routing */
-	    ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[0] += 
-	      (SedOut*sedoutflow*VariableDT*PARTDENSITY);
-
-	    for (i = 1; i < NSEDSIZES; i++)
-	      ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[i] = 0.0;	
-	    
+	    if (channel_grid_has_channel(ChannelData->road_map, x, y)) {
+	      
+	      /* Converting SedOut from m3/m3 to kg for channel routing */
+ 	      ChannelData->road_map[x][y]->channel->sediment.overlandinflow[0] += 
+ 		(SedOut*sedoutflow*VariableDT*PARTDENSITY); 
+ 	      SedOut = 0.; 
+	      for (i = 1; i < NSEDSIZES; i++) 
+		ChannelData->road_map[x][y]->channel->sediment.overlandinflow[i] = 0.0;	 
+ 	    } 
 	  }	  
 	  
 	  /* Redistribute surface water to downslope pixels. */
@@ -394,16 +404,17 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 		  
 		  /* No need to distribute sediment if there isn't any*/
 		  
-		  if((Options->SurfaceErosion)&&(SedOut > 0.)) 	
+		  if((Options->SurfaceErosion)&&(SedOut > 0.)){ 	
 		    
 		    SedIn[yn][xn] += SedOut * ((float) TopoMap[y][x].Dir[n] /
 					       (float) TopoMap[y][x].TotalDir);
+		  }
 		  
 		}
 	      }
 	    } /* end loop thru possible flow directions */
 	  }
-	  
+
 	  /* Initialize runon for next timestep. */
 	  Runon[y][x] = 0.0;
 	  /* Initialize SedIn for next timestep. */

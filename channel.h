@@ -122,6 +122,7 @@ Channel *channel_read_network(const char *file, ChannelClass * class_list, int *
 void channel_routing_parameters(Channel * net, int deltat);
 Channel *channel_find_segment(Channel * net, SegmentID id);
 int channel_step_initialize_network(Channel * net);
+int channel_step_initialize_sednetwork(Channel * net);
 int channel_incr_lat_inflow(Channel * segment, float linflow);
 int channel_route_network(Channel * net, int deltat);
 int channel_save_outflow(double time, Channel * net, FILE * file, FILE * file2);
@@ -129,6 +130,8 @@ int channel_save_outflow_text(char *tstring, Channel * net, FILE * out,
 			      FILE * out2, int flag);
 int channel_save_sed_outflow_text(char *tstring, Channel * net, FILE * out,
 			      FILE * out2, int flag);
+int channel_save_sed_inflow_text(char *tstring, Channel * net, FILE * out,
+				 float *SedDiams, int flag);
 void channel_free_network(Channel * net);
 
 				/* Module */

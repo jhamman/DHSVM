@@ -177,7 +177,7 @@ enum KEYS {
   graphics_variable = 0,
   /* Sediment oconfiguration file */
   /* Sedoptions */ 
-  mass_wasting = 0, surface_erosion, 
+  mass_wasting = 0, surface_erosion, channel_routing,
   /* Parameters */
   mass_spacing, max_iterations, channeld50, channeld90, debrisd50, debrisd90,
   /* Sedtime*/

@@ -97,6 +97,33 @@ int InitChannelSedInflow(Channel * Head)
   }
   return (0);
 }
+/*****************************************************************************
+  SaveChannelSedInflow
+  
+  For FinalMassBalance output
+*****************************************************************************/
+int SaveChannelSedInflow(Channel * Head, AGGREGATED * Total)
+{
+  if (Head != NULL){ 
+    Channel *Current = NULL;
+    int i;
+    
+    Current = Head;
+    while (Current) {
+      for(i=0;i<NSEDSIZES;i++) {
+	Total->DebrisInflow += Current->sediment.debrisinflow[i];
+	Current->sediment.debrisinflow[i] = 0.;
+	Total->SedimentOverlandInflow += Current->sediment.overlandinflow[i];
+	Current->sediment.overlandinflow[i] = 0.;
+	Total->SedimentOverroadInflow += Current->sediment.overroadinflow[i];
+	Current->sediment.overroadinflow[i] = 0.;
+      }
+      Current = Current->next;
+    }
+  }
+  return (0);
+}
+
 
 /*****************************************************************************
   RouteChannelSediment()
@@ -291,16 +318,6 @@ void RouteChannelSediment(Channel * Head, TIMESTRUCT Time,
 	  else{
 	    Total->SedimentOutflow += Current->sediment.outflow[i];
 	  }
-	  /* Mass Balance Variables */
-	  Total->DebrisInflow += Current->sediment.debrisinflow[i];
-	  Current->sediment.debrisinflow[i] = 0.;
-	  
-	  Total->SedimentOverlandInflow += Current->sediment.overlandinflow[i];
-	  Current->sediment.overlandinflow[i] = 0.;
-
-	  Total->SedimentOverroadInflow += Current->sediment.overroadinflow[i];
-	  Current->sediment.overroadinflow[i] = 0.;
-	  
 	  Total->ChannelSedimentStorage += Current->sediment.mass[i];
 	} /* close loop for each sediment size */
 	/* the next 7 lines are from channel_route_network -- closes the loop above */

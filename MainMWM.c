@@ -79,7 +79,6 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 				    time step. */
   float SedToDownslope;		/* Sediment wasted from a pixel, awaiting redistribution */
   float SedFromUpslope;		/* Wasted sediment being redistributed */
-  float *SedDiams;
   float FineMapTableDepth;       /* Fine grid water table depth (m) */
   float TableDepth;              /* Coarse grid water table depth (m) */
   float FineMapSatThickness;    /* Fine grid saturated thickness (m) */
@@ -134,9 +133,6 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
   }
 
   if (!(SegmentSediment = (float *)calloc(MaxStreamID, sizeof(float ))))
-    ReportError("MainMWM", 1);
-
-  if (!(SedDiams = (float *)calloc(NSEDSIZES, sizeof(float))))
     ReportError("MainMWM", 1);
 
   if (!(InitialSegmentSediment = (float *)calloc(NSEDSIZES, sizeof(float ))))
@@ -808,7 +804,6 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
   free(SedThickness);
   free(InitialSediment);
   free(SegmentSediment);
-  free(SedDiams);
   free(InitialSegmentSediment);
 }
 

@@ -54,6 +54,7 @@ void InitParameters(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   STRINIENTRY StrEnv[] = {
     {"SEDOPTIONS", "MASS WASTING", "", ""},
     {"SEDOPTIONS", "SURFACE EROSION", "", ""},
+    {"SEDOPTIONS", "CHANNEL ROUTING", "", ""},
     {"PARAMETERS", "MASS WASTING SPACING", "", ""},
     {"PARAMETERS", "MAXIMUM ITERATIONS", "", ""},
     {"PARAMETERS", "CHANNEL PARENT D50", "", ""},
@@ -73,7 +74,7 @@ void InitParameters(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
 
  /* Determine whether mass wasting model should be run */
   if (strncmp(StrEnv[mass_wasting].VarStr, "TRUE", 4) == 0) {
-    printf("Mass Wasting component will be run\n");
+    printf("Sediment Mass Wasting component will be run\n");
     Options->MassWaste = TRUE;
   }
   else if (strncmp(StrEnv[mass_wasting].VarStr, "FALSE", 5) == 0)
@@ -85,7 +86,7 @@ void InitParameters(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   if (strncmp(StrEnv[surface_erosion].VarStr, "TRUE", 4) == 0){
     Options->ErosionPeriod = TRUE;
     Options->SurfaceErosion = TRUE;
-    printf("Surface Erosion component will be run\n");
+    printf("Sediment Surface Erosion component will be run\n");
   }
   else if (strncmp(StrEnv[surface_erosion].VarStr, "FALSE", 5) == 0){
     Options->ErosionPeriod = FALSE;
@@ -93,6 +94,17 @@ void InitParameters(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   }
   else
     ReportError(StrEnv[surface_erosion].KeyName, 51);
+
+   /* Determine whether channel routing  model should be run */
+  if (strncmp(StrEnv[channel_routing].VarStr, "TRUE", 4) == 0){
+    Options->ChannelRouting = TRUE;
+    printf("Sediment Channel Routing component will be run\n");
+  }
+  else if (strncmp(StrEnv[channel_routing].VarStr, "FALSE", 5) == 0){
+    Options->ChannelRouting = FALSE;
+  }
+  else
+    ReportError(StrEnv[channel_routing].KeyName, 51);
 
   if (!CopyFloat(&(Map->DMASS), StrEnv[mass_spacing].VarStr, 1))
     ReportError(StrEnv[mass_spacing].KeyName, 51);
