@@ -33,8 +33,8 @@
 static ChannelMapRec *alloc_channel_map_record(void);
 static ChannelMapPtr **channel_grid_create_map(int cols, int rows);
 Channel *Find_First_Segment(ChannelMapPtr ** map, int col, int row, float SlopeAspect, char *Continue);
-Channel *Find_Next_Segment(ChannelMapPtr ** map, int col, int row, int CurrentID, int NextID, char *Continue, float *SedimentToChannel);
-char channel_grid_has_intersection(ChannelMapPtr ** map, int Currid, int Nextid,  int row, int col);
+Channel *Find_Next_Segment(ChannelMapPtr ** map, int curr_col, int curr_row, int next_col, int next_row, int CurrentID, int NextID, char *Continue, float *SedimentToChannel);
+char channel_grid_has_intersection(ChannelMapPtr ** map, int Currid, int Nextid,  int row, int col, int Flag);
 
 /* -------------------------------------------------------------
    local module variables
@@ -52,7 +52,9 @@ void RouteDebrisFlow(float *SedimentToChannel, int y, int x, float SlopeAspect,
   Channel *CurrentSeg;
   char Continue, Match;
   int SearchRadius, Flag;
-  int i, j, inti, intj;
+  int i, j, curr_inti, curr_intj,next_inti,next_intj;
+  int MaxRadius = 200;
+
 
   /* Find pointer to segment where debris flow enters channel network.
      If multiple segments exist in the current gridcell, the debris flow
@@ -66,44 +68,48 @@ void RouteDebrisFlow(float *SedimentToChannel, int y, int x, float SlopeAspect,
     *SedimentToChannel = 0.0;
   }
 
-  //  fprintf(stdout, "Debris flow enters network at segment %d, row=%d, col=%d\n", CurrentSeg->id, y, x);
+  // fprintf(stdout, "Debris flow enters network at segment %d, row=%d, col=%d\n", CurrentSeg->id, y, x);
   
   /* Continue until basin mouth, or debris flow stops. */
   while (CurrentSeg->outlet != NULL && Continue ) {
 
-    //   fprintf(stdout, "Next segment equals %d\n", CurrentSeg->outlet->id);
+   // fprintf(stdout, "Next segment equals %d\n", CurrentSeg->outlet->id);
 
     /* Find row and column of next intersection; first check current cell. */
+    Flag = 0;
     Match = FALSE;
     Match = channel_grid_has_intersection(ChannelData->stream_map, CurrentSeg->id, 
-    					  CurrentSeg->outlet->id, y, x);
+    					  CurrentSeg->outlet->id, y, x, Flag);
 
     if(Match==TRUE) {
-      inti = y;
-      intj = x;
+      curr_inti = y;
+      curr_intj = x;
+      next_inti = y;
+      next_intj = x;
     }
       
     /* Find row and column of next intersection; search radially outward. */
     SearchRadius = 1;
-    Flag = 0;
-    while(!Match) {
+    while(!Match && Flag!=2) {
       for(i=y-SearchRadius; i<= y+SearchRadius; i++) {
 	 for(j=x-SearchRadius; j<= x+SearchRadius; j++) {
 	   if(i>=0 && j>=0 && i< Map->NY && j<Map->NX) {
 	     if(i == y-SearchRadius || i == y+SearchRadius) {
 	       Match = channel_grid_has_intersection(ChannelData->stream_map, CurrentSeg->id, 
-						     CurrentSeg->outlet->id, i, j);
-	       //    fprintf(stdout, "Looking for intersection in row=%d, col=%d\n",i,j);
+						     CurrentSeg->outlet->id, i, j, Flag);
+	       //fprintf(stdout, "Looking for intersection in row=%d, col=%d\n",i,j);
 	     }
 	     else if(j == x-SearchRadius || j ==  x+SearchRadius) {
 	       Match = channel_grid_has_intersection(ChannelData->stream_map, CurrentSeg->id, 
-						     CurrentSeg->outlet->id, i, j);
-	       //  fprintf(stdout, "Looking for intersection in row=%d, col=%d\n",i,j);
+						     CurrentSeg->outlet->id, i, j, Flag);
+	       //fprintf(stdout, "Looking for intersection in row=%d, col=%d\n",i,j);
 	     }
 	   }
 	   if(Match == TRUE && Flag==0) {
-	     inti = i;
-	     intj = j;
+	     curr_inti = i;
+	     curr_intj = j;
+	     next_inti = i;
+	     next_intj = j;
 	     Flag = 1;
 	   }
 	 }
@@ -111,39 +117,108 @@ void RouteDebrisFlow(float *SedimentToChannel, int y, int x, float SlopeAspect,
       if(Flag==1)
 	Match = TRUE;
       SearchRadius += 1;
+      if(SearchRadius>MaxRadius)  /*if cannot find intersection, just find
+				    nearest cell that contains the next segment*/
+	Flag=2;      
     }
 
-    //    fprintf(stdout, "Intersection found at row %d, col %d\n", inti, intj);
-  
+    /*Repeat the search if MaxRadius was exceeded */
+    SearchRadius = 1;
+    if( Flag == 2 ) { 
+      /*first find the nearest cell in next segment*/
+      while(!Match) {
+	for(i=y-SearchRadius; i<= y+SearchRadius; i++) {
+	  for(j=x-SearchRadius; j<= x+SearchRadius; j++) {
+	    if(i>=0 && j>=0 && i< Map->NY && j<Map->NX) {
+	      if(i == y-SearchRadius || i == y+SearchRadius) {
+		Match = channel_grid_has_intersection(ChannelData->stream_map, CurrentSeg->id, 
+						      CurrentSeg->outlet->id, i, j, Flag);
+		//fprintf(stdout, "Looking for intersection in row=%d, col=%d\n",i,j);
+	      }
+	      else if(j == x-SearchRadius || j ==  x+SearchRadius) {
+		Match = channel_grid_has_intersection(ChannelData->stream_map, CurrentSeg->id, 
+						      CurrentSeg->outlet->id, i, j, Flag);
+		//fprintf(stdout, "Looking for intersection in row=%d, col=%d\n",i,j);
+	      }
+	    }
+	    if(Match == TRUE && Flag==2) {
+	      next_inti = i;
+	      next_intj = j;
+	      Flag = 1;
+	    }
+	  }
+	}
+	if(Flag==1)
+	  Match = TRUE;
+	SearchRadius += 1;
+      }
+      /*now find the nearest cell to that cell in the current segment*/
+      Flag=3;
+      SearchRadius = 1;
+      Match = FALSE;
+      while(!Match) {
+	for(i=next_inti-SearchRadius; i<= next_inti+SearchRadius; i++) {
+	  for(j=next_intj-SearchRadius; j<= next_intj+SearchRadius; j++) {
+	    if(i>=0 && j>=0 && i< Map->NY && j<Map->NX) {
+	      if(i == next_inti-SearchRadius || i == next_inti+SearchRadius) {
+		Match = channel_grid_has_intersection(ChannelData->stream_map, CurrentSeg->id, 
+						      CurrentSeg->outlet->id, i, j, Flag);
+		//fprintf(stdout, "Looking for intersection in row=%d, col=%d\n",i,j);
+	      }
+	      else if(j == next_intj-SearchRadius || j ==  next_intj+SearchRadius) {
+		Match = channel_grid_has_intersection(ChannelData->stream_map, CurrentSeg->id, 
+						      CurrentSeg->outlet->id, i, j, Flag);
+		//fprintf(stdout, "Looking for intersection in row=%d, col=%d\n",i,j);
+	      }
+	    }
+	    if(Match == TRUE && Flag==3) {
+	      curr_inti = i;
+	      curr_intj = j;
+	      Flag = 1;
+	    }
+	  }
+	}
+	if(Flag==1)
+	  Match = TRUE;
+	SearchRadius += 1;
+      }
+    }
+
+//  fprintf(stdout, "Intersection found at row %d, col %d for current seg, at row %d, col %d for next segment\n", curr_inti, curr_intj, next_inti, next_intj);
+    
     /* Now have location of intersection, check channel aspect. */
-    CurrentSeg = Find_Next_Segment(ChannelData->stream_map, intj, inti, CurrentSeg->id, CurrentSeg->outlet->id, &Continue, SedimentToChannel);
+    CurrentSeg = Find_Next_Segment(ChannelData->stream_map, curr_intj, curr_inti, next_intj, next_inti, CurrentSeg->id, CurrentSeg->outlet->id, &Continue, SedimentToChannel);
   }
 
-  //  fprintf(stdout, "Debris flow stopped, Segment = %d\n", CurrentSeg->id);
+//   fprintf(stdout, "Debris flow stopped, Segment = %d\n", CurrentSeg->id);
 }
 
 /* -------------------------------------------------------------
    Find_Next_Segment
    ------------------------------------------------------------- */
 
-Channel *Find_Next_Segment(ChannelMapPtr ** map, int col, int row, int CurrentID, int NextID, char *Continue, float *SedimentToChannel)
+Channel *Find_Next_Segment(ChannelMapPtr ** map, int curr_col, int curr_row, int next_col, int next_row,int CurrentID, int NextID, char *Continue, float *SedimentToChannel)
 {
-  ChannelMapPtr cell = map[col][row];
+  ChannelMapPtr curr_cell = map[curr_col][curr_row];
+  ChannelMapPtr next_cell = map[next_col][next_row];
   float test;
   float CurrentAspect, NextAspect;
   Channel *CurrPtr;
   Channel *NextPtr;
 
-  while (cell != NULL) {
-    if(cell->channel->id == CurrentID) {
-      CurrentAspect = cell->aspect;
-      CurrPtr = cell->channel;
-      NextPtr = cell->channel->outlet;
+  while (curr_cell != NULL) {
+    if(curr_cell->channel->id == CurrentID) {
+      CurrentAspect = curr_cell->aspect;
+      CurrPtr = curr_cell->channel;
+      NextPtr = curr_cell->channel->outlet;
     }
-    if(cell->channel->id == NextID) {
-      NextAspect = cell->aspect;
+    curr_cell = curr_cell->next;
+  }
+  while (next_cell != NULL) {
+    if(next_cell->channel->id == NextID) {
+      NextAspect = next_cell->aspect;
     }
-    cell = cell->next;
+    next_cell = next_cell->next;
   }
 
   test = fabs(CurrentAspect - NextAspect);
@@ -521,23 +596,49 @@ int channel_grid_has_sink(ChannelMapPtr ** map, int col, int row)
 /* -------------------------------------------------------------
    channel_grid_has_intersection
    ------------------------------------------------------------- */
-char channel_grid_has_intersection(ChannelMapPtr ** map, int Currid, int Nextid,  int row, int col)
+char channel_grid_has_intersection(ChannelMapPtr ** map, int Currid, int Nextid,  int row, int col, int Flag)
 {
   ChannelMapPtr cell = map[col][row];
   char Next = FALSE;
   char Current = FALSE;
   char Intersection = FALSE;
-
-  while (cell != NULL) {
-    if(cell->channel->id == Currid)
-      Current = TRUE;
-    if(cell->channel->id == Nextid)
-      Next = TRUE;
-    cell = cell->next;
+  
+  if( Flag < 2) { /* search for intersecting cells given Currid and Nextid
+		      occur in the cell of intersection */
+    while (cell != NULL) {
+      if(cell->channel->id == Currid)
+	Current = TRUE;
+      if(cell->channel->id == Nextid)
+	Next = TRUE;
+      cell = cell->next;
+    }
+    
+    if(Current && Next)
+      Intersection = TRUE;
   }
 
-  if(Current && Next)
-    Intersection = TRUE;
+  else if(Flag == 2) { /* if Flag == 2 , only search for the nearest cell that has id of next
+	    segment */
+    while (cell != NULL) {
+      if(cell->channel->id == Nextid)
+	Next = TRUE;
+      cell = cell->next;
+    }
+    
+    if(Next)
+      Intersection = TRUE;
+  }
+  else { /* if Flag == 3 , only search for the nearest cell that has id of current
+	    segment */
+    while (cell != NULL) {
+      if(cell->channel->id == Currid)
+	Current = TRUE;
+      cell = cell->next;
+    }
+    
+    if(Current)
+      Intersection = TRUE;
+  }
 
   return (Intersection);
 }

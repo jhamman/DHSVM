@@ -122,7 +122,7 @@ void InitFineMaps(LISTPTR Input, OPTIONSTRUCT *Options, MAPSIZE *Map,
 	    yy = (int) y*Map->DY/Map->DMASS + ii; 
  	    xx = (int) x*Map->DX/Map->DMASS + jj; 
             if (!((*FineMap)[yy][xx] = (FINEPIX *) malloc(sizeof(FINEPIX)))) {
-fprintf(stderr,"error allocating FineMap[%d][%d]\n",yy,xx);
+	      fprintf(stderr,"error allocating FineMap[%d][%d]\n",yy,xx);
               ReportError((char *) Routine, 1);
             }
 	  }
@@ -223,11 +223,9 @@ fprintf(stderr,"error allocating FineMap[%d][%d]\n",yy,xx);
   
   /* Create descending list of fine resolution elevations. */
   ElevationSlopeAspectfine(Map, *FineMap, *TopoMap); 
-     printf("Check passing in ElevationSlopeAspect\n");
  
   /* Calculate the topographic index */
   CalcTopoIndex(Map, *FineMap, *TopoMap);
- printf("Check passing in CalcTopoIndex\n");
   
   for (y = 0; y < Map->NY; y++) {
     for (x  = 0; x < Map->NX; x++) {
