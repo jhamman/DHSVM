@@ -168,7 +168,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
       while (Before(&(VariableTime.Current), &(NextTime.Current))) {
 
 	/* Loop thru all of the cells in descending order of elevation */
-	for (k = 0; k < Map->NumCells; k++) {
+	for (k = (Map->NumCells)-1; k >-1;  k--) {
 	  y = Map->OrderedCells[k].y;
 	  x = Map->OrderedCells[k].x;
 	
