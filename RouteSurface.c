@@ -524,10 +524,6 @@ float viscosity(float Tair)
     knviscosity=(.8042-(Tair-30.)/10.*(.8042-.6611));
   else
     knviscosity=(.6611-(Tair-40.)/10.*(.6611-.556));
-  
-  printf("%f  \n", Tair);
-  
-  printf("%f  \n", knviscosity);
-  
+ 
   return knviscosity;
 }
