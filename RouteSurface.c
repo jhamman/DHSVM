@@ -391,8 +391,6 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	      if (sedbin < 0) sedbin = 0;
 	    }
 
-	    printf("bin %d soil %d DS %.2f K %f SedDiams[%.4f][%.4f][%.4f]\n", sedbin, SoilMap[y][x].Soil, SedType[SoilMap[y][x].Soil-1].d50, SedType[SoilMap[y][x].Soil-1].KIndex, SedDiams[0],SedDiams[1], SedDiams[2]); 
-
 	    if (channel_grid_has_channel(ChannelData->stream_map, x, y)) {
 	      /* Converting SedOut from m3/m3 to kg for channel routing */
 	      ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[sedbin] += 
