@@ -363,7 +363,9 @@ void RouteChannelSediment(Channel * Head, TIMESTRUCT Time,
 	  for(i=0;i<NSEDSIZES;i++) {
 	    Current->sediment.mass[i] += Current->sediment.debrisinflow[i] + 
 	      Current->sediment.overlandinflow[i] + Current->sediment.overroadinflow[i];
-	    Total->ChannelSedimentStorage += Current->sediment.mass[i];	  
+	    Total->ChannelSedimentStorage += Current->sediment.mass[i];	 
+	    /* For output */
+	    Current->sediment.totalmass += Current->sediment.mass[i]; 
 	  }
 	}
 	
