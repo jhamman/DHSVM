@@ -1,12 +1,12 @@
 /*
- * SUMMARY:      Bagnold.c - Calculate the total sediment transport capacity
+ * SUMMARY:      CalcBagnold.c - Calculate the total sediment transport capacity
  * USAGE:        Called by MainMWM.c
  *
  * AUTHOR:       Ed Maurer
  * ORG:          University of Washington, Department of Civil Engineering
  * DESCRIPTION:  Calculate the total sediment transport capacity
  * DESCRIP-END.
- * FUNCTIONS:    Bagnold()
+ * FUNCTIONS:    CalcBagnold()
  * COMMENTS:
  */
 
@@ -22,7 +22,7 @@
 #define DEPTHTHRESHOLD 0.030   /* Min. depth below which no transport occurs */
 
 /*****************************************************************************
-  Function name: Bagnold()
+  Function name: CalcBagnold()
 
   Purpose      : Calculate the total sediment transport capacity
  
@@ -39,7 +39,7 @@
                  This uses the simplification for fully turbulent conditions.
                  A check of Reynold's number should eventually be added.
 *****************************************************************************/
-float Bagnold(float DS,TIMESTRUCT * Time, float outflow, float width, float n, float slope)
+float CalcBagnold(float DS,TIMESTRUCT * Time, float outflow, float width, float n, float slope)
 {
 
   float Q, V, flowdepth;

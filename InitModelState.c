@@ -501,7 +501,7 @@ void InitModelState(DATE * Start, MAPSIZE * Map, OPTIONSTRUCT * Options,
   }
   if (remove > 0.0) {
     printf("WARNING:excess water in soil profile is %f m^3 \n", remove);
-    printf("Expect possible large flood wave during first timesteps \n");
+    printf("Expect possible large flood wave during first timesteps \n\n");
   }
 
   /* If the unit hydrograph is used for flow routing, initialize the unit 

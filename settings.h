@@ -91,6 +91,9 @@ typedef unsigned int unint;
 
 #define NDIRS          4	/* Number of directions in which water can 
 				   flow */
+#define NDIRSfine      8 /* Number of directions in which water and 
+			    sediment can flow based on fine grid */
+
 #define NA          -9999	/* Not applicable */
 
 #define N_MM5_MAPS 8

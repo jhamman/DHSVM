@@ -282,12 +282,12 @@ void CalcWeights(METLOCATION * Station, int NStats, int NX, int NY,
   }
   for (i = 0; i <= NStats; i++)
     if (stat[i] > 0)
-      printf("this many pixels %d are linked to %d met stations \n", stat[i],
+      printf("%d pixels are linked to %d met stations \n", stat[i],
 	     i);
 
   for (i = 0; i < NStats; i++)
     if (stationid[i] > 0)
-      printf("Station: %s used in interpolation \n", Station[i].Name);
+      printf("%s station used in interpolation \n", Station[i].Name);
 
   /* Free memory */
 

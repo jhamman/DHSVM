@@ -11,10 +11,13 @@
  *               elevations and another which uses water table elevations.
  * DESCRIP-END.
  * FUNCTIONS:    valid_cell()
+ *               valid_cell_fine()
  *               slope_aspect()
  *               flow_fractions()
  *               ElevationSlopeAspect()
  *               HeadSlopeAspect()
+ *               ElevationSlope()
+ *               ElevationSlopeAspectfine()
  * COMMENTS:
  * $Id$     
  */
@@ -55,6 +58,21 @@ float temp_aspect[NDIRS] = {
 #endif
 };
 
+int xneighborfine[NDIRSfine] = {
+#if NDIRSfine == 4
+  0, 1, 0, -1
+#elif NDIRSfine == 8
+  -1, 0, 1, 1, 1, 0, -1, -1
+#endif
+};
+int yneighborfine[NDIRSfine] = {
+#if NDIRSfine == 4
+  -1, 0, 1, 0
+#elif NDIRSfine == 8
+  1, 1, 1, 0, -1, -1, -1, 0
+#endif
+};
+
 /* -------------------------------------------------------------
    valid_cell
    Checks to see if grid indices, x and y, are within the grid 
@@ -66,7 +84,7 @@ int valid_cell(MAPSIZE * Map, int x, int y)
 }
 
 /******************************************************************************/
-/*   valid_cell                                                               */
+/*   valid_cell_fine                                                          */
 /*   Checks to see if grid indices, x and y, are within the grid              */
 /*   defined by the specified Map                                             */ 
 /******************************************************************************/
@@ -144,7 +162,7 @@ static void slope_aspect(float dx, float dy, float celev, float
     *aspect = atan2(dzdx, dzdy);
   }
 
-  if (*slope>2.0) printf("slope >2 = %g\n",*slope);
+/*  if (*slope>2.0) printf("slope >2 = %g\n",*slope); */
   return;
 }
 
@@ -223,46 +241,46 @@ void ElevationSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap)
   float neighbor_elev[NDIRS];
 
   /* fill neighbor array */
-
+  
   for (x = 0; x < Map->NX; x++) {
     for (y = 0; y < Map->NY; y++) {
       if (TopoMap[y][x].Mask) {
-
-			/* Count the number of cells in the basin.  Need this to allocate memory for
-			the new, smaller Elev[] and Coords[][].  */
-			if (INBASIN(TopoMap[y][x].Mask)) 
-				Map->NumCells++;
-		    
-			for (n = 0; n < NDIRS; n++) {
-				int xn = x + xneighbor[n];
-				int yn = y + yneighbor[n];
-
-				if (valid_cell(Map, xn, yn)) {
-					neighbor_elev[n] = ((TopoMap[yn][xn].Mask) ? TopoMap[yn][xn].Dem : (float) OUTSIDEBASIN);
-				}
-				else {
-					neighbor_elev[n] = OUTSIDEBASIN;
-				}
-			}
-			
-			slope_aspect(Map->DX, Map->DY, TopoMap[y][x].Dem, neighbor_elev,
-					&(TopoMap[y][x].Slope), &(TopoMap[y][x].Aspect));
-			
-			/* fill Dirs in TopoMap too */
-
-			flow_fractions(Map->DX, Map->DY, TopoMap[y][x].Slope,
-					TopoMap[y][x].Aspect,
-					neighbor_elev, &(TopoMap[y][x].FlowGrad),
-					TopoMap[y][x].Dir, &(TopoMap[y][x].TotalDir));
-			
-	  } // end of if statement (TopoMap[y][x].Mask)
+	
+	/* Count the number of cells in the basin.  Need this to allocate memory for
+	   the new, smaller Elev[] and Coords[][].  */
+	if (INBASIN(TopoMap[y][x].Mask)) 
+	  Map->NumCells++;
+	
+	for (n = 0; n < NDIRS; n++) {
+	  int xn = x + xneighbor[n];
+	  int yn = y + yneighbor[n];
 	  
+	  if (valid_cell(Map, xn, yn)) {
+	    neighbor_elev[n] = ((TopoMap[yn][xn].Mask) ? TopoMap[yn][xn].Dem : (float) OUTSIDEBASIN);
+	  }
+	  else {
+	    neighbor_elev[n] = OUTSIDEBASIN;
+	  }
+	}
+	
+	slope_aspect(Map->DX, Map->DY, TopoMap[y][x].Dem, neighbor_elev,
+		     &(TopoMap[y][x].Slope), &(TopoMap[y][x].Aspect));
+	
+	/* fill Dirs in TopoMap too */
+	
+	flow_fractions(Map->DX, Map->DY, TopoMap[y][x].Slope,
+		       TopoMap[y][x].Aspect,
+		       neighbor_elev, &(TopoMap[y][x].FlowGrad),
+		       TopoMap[y][x].Dir, &(TopoMap[y][x].TotalDir));
+	
+      } // end of if statement (TopoMap[y][x].Mask)
+      
     }
   } // end of for loops
-
+  
   /* Create a structure to hold elevations of only those cells
      within the basin and the y,x of those cells.*/
-
+ 
   if (!(Map->OrderedCells = (ITEM *) calloc(Map->NumCells, sizeof(ITEM))))
     ReportError((char *) Routine, 1);
   
@@ -462,4 +480,72 @@ float ElevationSlope(MAPSIZE *Map, FINEPIX ***FineMap, int y, int x, int *nexty,
   //  }
 
   return Slope;
+}
+
+/* -------------------------------------------------------------
+   ElevationSlopeAspectfine
+   ------------------------------------------------------------- */
+void ElevationSlopeAspectfine(MAPSIZE * Map, FINEPIX ** FineMap)
+{
+  const char *Routine = "ElevationSlopeAspectfine";
+  int x;
+  int y;
+  int n;
+  int k;
+  float neighbor_elev[NDIRSfine];
+
+  /* fill neighbor array */
+
+  for (x = 0; x < Map->NXfine; x++) { 
+    for (y = 0; y < Map->NYfine; y++) {
+      if (FineMap[y][x].Mask) { 
+	
+	/* Count the number of cells in the basin.  Need this to allocate memory for
+	   the new, smaller Elev[] and Coords[][].  */
+	if (INBASIN(FineMap[y][x].Mask)) 
+	  Map->NumCellsfine++;
+	    	
+	for (n = 0; n < NDIRSfine; n++) {
+	  int xn = x + xneighborfine[n];
+	  int yn = y + yneighborfine[n];
+	  
+	  if (valid_cell_fine(Map, xn, yn)) {
+	    neighbor_elev[n] = ((FineMap[yn][xn].Mask) ? FineMap[yn][xn].Dem : (float) OUTSIDEBASIN);
+	  }
+	  else {
+	    neighbor_elev[n] = OUTSIDEBASIN;
+	  }
+	}
+	
+	slope_aspect(Map->DMASS, Map->DMASS, FineMap[y][x].Dem, neighbor_elev,
+		     &(FineMap[y][x].Slope), &(FineMap[y][x].Aspect));
+	
+      } /* end of (FineMap[y][x].Mask */
+    }
+  }// end of for loops
+  
+  /* Create a structure to hold elevations of only those cells
+     within the basin and the y,x of those cells.*/
+  
+  if (!(Map->OrderedCellsfine = (ITEM *) calloc(Map->NumCellsfine, sizeof(ITEM))))
+    ReportError((char *) Routine, 1);
+  
+  k = 0;
+  for (y = 0; y < Map->NYfine; y++) {
+    for (x = 0; x < Map->NXfine; x++) {
+      /* Save the elevation, y, and x in the ITEM structure. */
+      if (INBASIN(FineMap[y][x].Mask)) {
+	Map->OrderedCellsfine[k].Rank = FineMap[y][x].Dem;
+	Map->OrderedCellsfine[k].y = y;
+	Map->OrderedCellsfine[k].x = x;
+	k++;
+      }
+    }
+  }
+ 
+  /* Sort Elev in descending order-- Elev.x and Elev.y hold indices. */
+  
+  quick(Map->OrderedCellsfine, Map->NumCellsfine);
+
+  return;
 }

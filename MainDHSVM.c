@@ -148,7 +148,7 @@ int main(int argc, char **argv)
   fprintf(stderr, "%s \n", commandline);
   strcpy(InFiles.Const, argv[1]);
 
-  printf("\nRunning DHSVM version: %s\n", version);
+  printf("\nRunning DHSVM %s\n", version);
   printf("\nSTARTING INITIALIZATION PROCEDURES\n\n");
 
   ReadInitFile(InFiles.Const, &Input);
@@ -415,25 +415,24 @@ int main(int argc, char **argv)
 	   Time.DayStep, Map.NX, Map.NY, NGraphics, which_graphics, VType,
 	   SType, SnowMap, SoilMap, VegMap, TopoMap, PrecipMap, PrismMap,
 	   SkyViewMap, ShadowMap, EvapMap, RadMap, MetMap);
-
-	Aggregate(&Map, &Options, TopoMap, &Soil, &Veg, VegMap, EvapMap, PrecipMap,
-			  RadMap, SnowMap, SoilMap, &Total, VType, Network, SedMap);
-
+    
+    Aggregate(&Map, &Options, TopoMap, &Soil, &Veg, VegMap, EvapMap, PrecipMap,
+	      RadMap, SnowMap, SoilMap, &Total, VType, Network, SedMap);
+    
     MassBalance(&(Time.Current), &(Dump.Balance), &Total, &Mass);
-
-	ExecDump(&Map, &(Time.Current), &(Time.Start), &Options, &Dump, TopoMap,
-			EvapMap, PrecipMap, RadMap, SnowMap, MetMap, VegMap, &Veg,
-			SoilMap, SedMap, &Soil, &Total, &HydrographInfo, ChannelData.streams,
-			Hydrograph);
-
+    
+    ExecDump(&Map, &(Time.Current), &(Time.Start), &Options, &Dump, TopoMap,
+	     EvapMap, PrecipMap, RadMap, SnowMap, MetMap, VegMap, &Veg,
+	     SoilMap, SedMap, &Soil, &Total, &HydrographInfo, ChannelData.streams,
+	     Hydrograph);
+    
     IncreaseTime(&Time);
 
   }
 
-	ExecDump(&Map, &(Time.Current), &(Time.Start), &Options, &Dump, TopoMap,
-			EvapMap, PrecipMap, RadMap, SnowMap, MetMap, VegMap, &Veg, SoilMap,
-			SedMap, &Soil, &Total, &HydrographInfo, ChannelData.streams, Hydrograph);//Nath
-
+  ExecDump(&Map, &(Time.Current), &(Time.Start), &Options, &Dump, TopoMap,
+	   EvapMap, PrecipMap, RadMap, SnowMap, MetMap, VegMap, &Veg, SoilMap,
+	   SedMap, &Soil, &Total, &HydrographInfo, ChannelData.streams, Hydrograph);
 
   FinalMassBalance(&(Dump.Balance), &Total, &Mass);
 

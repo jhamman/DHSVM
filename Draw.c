@@ -1,3 +1,4 @@
+
 /*
  * SUMMARY:      Draw.c
  * USAGE:        Part of DHSVM
@@ -14,6 +15,7 @@
  */
 
 #include <stdio.h>
+#include "constants.h"
 #include "settings.h"
 #include "data.h"
 #include "functions.h"
@@ -65,7 +67,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
   expand = e;
   draw_static_colorbar = 1;
   if (XGetWindowAttributes(display, window, &windowattr) == 0) {
-    printf("failed to get window attriburtes in draw \n");
+    printf("failed to get window attributes in draw \n");
     exit(-1);
   }
 
@@ -118,7 +120,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
 
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SnowMap[j][i].Swq * 1000.0;
 		  if (temp > max)
 		    max = temp;
@@ -138,7 +140,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
 
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SoilMap[j][i].TableDepth * 1000.0;
 		  if (temp > max)
 		    max = temp;
@@ -156,7 +158,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
 
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = TopoMap[j][i].Dem;
 		  if (temp > max)
 		    max = temp;
@@ -174,7 +176,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
 
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = VegMap[j][i].Veg;
 		  if (temp > max)
 		    max = temp;
@@ -192,7 +194,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
 
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SoilMap[j][i].Soil;
 		  if (temp > max)
 		    max = temp;
@@ -210,7 +212,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
 
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SoilMap[j][i].Depth * 1000.;
 		  if (temp > max)
 		    max = temp;
@@ -227,7 +229,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 18;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = PrecipMap[j][i].Precip * 1000.0;
 		  if (temp > max)
 		    max = temp;
@@ -245,7 +247,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 26;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = RadMap[j][i].Beam + RadMap[j][i].Diffuse;
 		  if (temp > max)
 		    max = temp;
@@ -262,7 +264,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 21;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1
+		if (INBASIN(TopoMap[j][i].Mask)
 		    && VType[VegMap[j][i].Veg - 1].OverStory == 1) {
 		  temp = PrecipMap[j][i].IntSnow[0] * 1000.0;;
 		  if (temp > max)
@@ -284,7 +286,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    max = 0.0;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SnowMap[j][i].TSurf;
 		  if (temp > max)
 		    max = temp;
@@ -305,7 +307,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    max = 0.0;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  if (SnowMap[j][i].Swq > MAX_SURFACE_SWE) {
 		    pack_swe = SnowMap[j][i].Swq - MAX_SURFACE_SWE;
 		    surf_swe = SnowMap[j][i].Swq - pack_swe;
@@ -333,7 +335,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 14;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SnowMap[j][i].Melt * 1000.0;
 		  if (temp > max)
 		    max = temp;
@@ -350,7 +352,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 22;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SnowMap[j][i].Outflow * 1000.0;;
 		  if (temp > max)
 		    max = temp;
@@ -369,7 +371,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 30;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SoilMap[j][i].SatFlow * 1000.0;;
 		  if (temp > max)
 		    max = temp;
@@ -388,7 +390,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 18;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SoilMap[j][i].Runoff * 1000.0;
 		  if (temp > max)
 		    max = temp;
@@ -405,7 +407,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 29;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = EvapMap[j][i].ETot * 1000.0;
 		  if (temp > max)
 		    max = temp;
@@ -422,7 +424,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 25;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SnowMap[j][i].VaporMassFlux * 1000.0;
 		  if (temp > max)
 		    max = temp;
@@ -441,7 +443,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 24;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SnowMap[j][i].CanopyVaporMassFlux * 1000.0;
 		  if (temp > max)
 		    max = temp;
@@ -460,7 +462,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 21;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  /*  temp=(SoilMap[j][i].Moist[0]-SType[SoilMap[j][i].Soil-1].FCap[0])/
 		     (SType[SoilMap[j][i].Soil-1].Porosity[0]-
 		     SType[SoilMap[j][i].Soil-1].FCap[0])*100.0; */
@@ -483,7 +485,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 21;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  /*      temp=(SoilMap[j][i].Moist[1]-SType[SoilMap[j][i].Soil-1].FCap[1])/
 		     (SType[SoilMap[j][i].Soil-1].Porosity[1]-
 		     SType[SoilMap[j][i].Soil-1].FCap[1])*100.0; */
@@ -506,7 +508,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 21;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  /*  temp=(SoilMap[j][i].Moist[2]-SType[SoilMap[j][i].Soil-1].FCap[2])/
 		     (SType[SoilMap[j][i].Soil-1].Porosity[2]-
 		     SType[SoilMap[j][i].Soil-1].FCap[2])*100.0; */
@@ -527,7 +529,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 23;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = MetMap[j][i].accum_precip * 1000.0;
 		  if (temp > max)
 		    max = temp;
@@ -545,7 +547,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 20;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = MetMap[j][i].air_temp;
 		  if (temp > max)
 		    max = temp;
@@ -564,7 +566,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 16;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = MetMap[j][i].wind_speed;
 		  if (temp > max)
 		    max = temp;
@@ -581,7 +583,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 2;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = MetMap[j][i].humidity;
 		  if (temp > max)
 		    max = temp;
@@ -599,7 +601,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 17;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = PrismMap[j][i] / 100.0;
 		  if (temp > max)
 		    max = temp;
@@ -618,7 +620,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 26;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 
 		  temp =
 		    SoilMap[j][i].Moist[3] / SType[SoilMap[j][i].Soil -
@@ -638,7 +640,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 20;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = EvapMap[j][i].EAct[0] * 1000.0;
 		  if (temp > max)
 		    max = temp;
@@ -655,7 +657,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 21;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = EvapMap[j][i].EAct[1] * 1000.0;
 		  if (temp > max)
 		    max = temp;
@@ -672,7 +674,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 21;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = EvapMap[j][i].EvapSoil * 1000.0;
 		  if (temp > max)
 		    max = temp;
@@ -689,7 +691,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 23;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = EvapMap[j][i].EInt[0] * 1000.0;
 		  if (temp > max)
 		    max = temp;
@@ -706,7 +708,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 24;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = EvapMap[j][i].EInt[1] * 1000.0;
 		  if (temp > max)
 		    max = temp;
@@ -723,7 +725,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 25;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SoilMap[j][i].ChannelInt * 1000.0;;
 		  if (temp > max)
 		    max = temp;
@@ -742,7 +744,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 24;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SoilMap[j][i].RoadInt * 1000.0;;
 		  if (temp > max)
 		    max = temp;
@@ -761,7 +763,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 19;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SkyViewMap[j][i] * 100.0;
 		  if (temp > max)
 		    max = temp;
@@ -780,7 +782,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 14;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = (float) ShadowMap[DayStep][j][i] / 0.2223191;
 		  if (temp > max)
 		    max = temp;
@@ -799,7 +801,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 24;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = RadMap[j][i].Beam;
 		  if (temp > max)
 		    max = temp;
@@ -816,7 +818,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    length = 25;
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = RadMap[j][i].Diffuse;
 		  if (temp > max)
 		    max = temp;
@@ -834,7 +836,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
 
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = TopoMap[j][i].Aspect * 57.2957;
 		  if (temp > max)
 		    max = temp;
@@ -852,7 +854,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
 
-		if (TopoMap[j][i].Mask == 1) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = TopoMap[j][i].Slope * 100.0;
 		  if (temp > max)
 		    max = temp;
@@ -879,7 +881,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    for (i = 0; i < NX; i++) {
 	      for (j = 0; j < NY; j++) {
 		if (!fequal(temp_array[j][i], -9999.0) && 
-		    TopoMap[j][i].Mask == 1) {
+		    INBASIN(TopoMap[j][i].Mask)) {
 		  index = (int) (scale * (temp_array[j][i] - min));
 		  if (index > 49)
 		    index = 49;
@@ -911,7 +913,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 		  for (ie = 0; ie < (-expand); ie++) {
 		    for (je = 0; je < (-expand); je++) {
 		      if (temp_array[je + jr][ie + ir] != -9999.0
-			  && TopoMap[je + jr][ie + ir].Mask == 1)
+			  && (INBASIN(TopoMap[je + jr][ie + ir].Mask)))
 			temp = temp + temp_array[je + jr][ie + ir];
 		      else
 			skip_it = 1;
@@ -923,7 +925,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 		if (MapNumber < 50 && sample == 1) {
 
 		  if (temp_array[jr][ir] != -9999.0
-		      && TopoMap[jr][ir].Mask == 1)
+		      && (INBASIN(TopoMap[jr][ir].Mask)))
 		    temp = temp_array[jr][ir];
 		  else
 		    skip_it = 1;
@@ -936,7 +938,7 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 		  max_temp = -10000.0;
 		  for (ie = 0; ie < (-expand); ie++) {
 		    for (je = 0; je < (-expand); je++) {
-		      if (TopoMap[je + jr][ie + ir].Mask == 1) {
+		      if (INBASIN(TopoMap[je + jr][ie + ir].Mask)) {
 			if (temp_array[je + jr][ie + ir] > max_temp)
 			  max_temp = temp_array[je + jr][ie + ir];
 		      }

@@ -41,7 +41,7 @@ InitChannel(LISTPTR Input, MAPSIZE * Map, int deltat, CHANNEL * channel,
     {NULL, NULL, "", NULL}
   };
 
-  printf("Initializing Road/Stream Networks\n");
+  printf("\nInitializing Road/Stream Networks\n");
 
   /* Read the key-entry pairs from the ROUTING section in the input file */
   for (i = 0; StrEnv[i].SectionName; i++) {

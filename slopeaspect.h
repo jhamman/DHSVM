@@ -32,5 +32,9 @@ void ElevationSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap);
 void HeadSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap, SOILPIX ** SoilMap);
 int valid_cell(MAPSIZE * Map, int x, int y);
 int valid_cell_fine(MAPSIZE *Map, int x, int y);
-
+float ElevationSlope(MAPSIZE *Map, FINEPIX ***FineMap, int y, int x, int *nexty, 
+		     int *nextx, int prevy, int prevx, float *Aspect);
+void ElevationSlopeAspectfine(MAPSIZE * Map, FINEPIX ** FineMap); 
+void quick(ITEM *OrderedCells, int count);
 #endif
+

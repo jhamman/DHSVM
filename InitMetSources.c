@@ -65,7 +65,7 @@ void InitMetSources(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   const char *Routine = "InitMetSources";
 
   if (Options->Outside == TRUE && Options->MM5 == FALSE) {
-    printf("\nFYI: All met stations in list will be included \n");
+    printf("\nAll met stations in list will be included \n");
     if (Options->Prism == TRUE) {
       printf("WARNING: PRISM Option is also on\n");
       printf("Make sure file .prism files exist\n\n");

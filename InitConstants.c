@@ -420,6 +420,7 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   Map->Y = 0;
   Map->OffsetX = 0;
   Map->OffsetY = 0;
+  Map->NumCells = 0;
 
   if (Options->Extent == POINT) {
 

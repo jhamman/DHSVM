@@ -69,15 +69,15 @@ void CheckOut(int CanopyRadAttOption, LAYER Veg, LAYER Soil,
       }
     }
   }
-  printf("Basin has %d active pixels \n", i);
+  printf("\nBasin has %d active pixels \n", i);
   npixels = i;
 
-  printf("The following VEG types are in the current basin \n");
+  printf("\nThe following VEG types are in the current basin \n");
 
   for (i = 0; i < Veg.NTypes; i++) {
     if (count[i] > 0)
       printf
-	("Input file class # %d of Type: %s has fraction basin area: %5.2f\n",
+	("Class # %d of Type: %s has fraction basin area: %5.3f\n",
 	 i + 1, VType[i].Desc, (float) count[i] / (float) npixels);
     VType[i].TotalDepth = 0.0;
     for (y = 0; y < VType[i].NSoilLayers; y++) {
@@ -89,7 +89,7 @@ void CheckOut(int CanopyRadAttOption, LAYER Veg, LAYER Soil,
   for (i = 0; i < Soil.NTypes; i++)
     if (scount[i] > 0)
       printf
-	("Input file class # %d of Type: %s has fraction basin area: %5.2f\n",
+	("Class # %d of Type: %s has fraction basin area: %5.3f\n",
 	 i + 1, SType[i].Desc, (float) scount[i] / (float) npixels);
 
   printf("\nSome estimates for current vegetation specification\n");
@@ -97,7 +97,7 @@ void CheckOut(int CanopyRadAttOption, LAYER Veg, LAYER Soil,
     if (count[i] > 0) {
 
       printf("\nVegetation Type: %s\n", VType[i].Desc);
-      printf("2meter    wind speed fraction of ref level %f\n", 
+      printf("2meter    wind speed fraction of ref level %1.3f\n", 
 	     VType[i].USnow);
       if (VType[i].OverStory) {
 	for (j = 0; j < 12; j++) {
@@ -106,7 +106,7 @@ void CheckOut(int CanopyRadAttOption, LAYER Veg, LAYER Soil,
 	    exit(-1);
 	  }
 	}
-	printf("Overstory LAI July %f Effective LAI July %f\n",
+	printf("Overstory LAI July %2.3f Effective LAI July %2.3f\n",
 	       VType[i].LAIMonthly[0][6], l);
 	if (CanopyRadAttOption == VARIABLE) {
 	  a = VType[i].LeafAngleA;
@@ -141,7 +141,7 @@ void CheckOut(int CanopyRadAttOption, LAYER Veg, LAYER Soil,
 	if (SoilMap[y][x].Depth <= VType[VegMap[y][x].Veg - 1].TotalDepth) {
 	  printf("Error for class %d of Type %s  \n", VegMap[y][x].Veg,
 		 VType[VegMap[y][x].Veg - 1].Desc);
-	  printf("Soil depth is %f, Root depth is %f \n", SoilMap[y][x].Depth,
+	  printf("%d %d Soil depth is %f, Root depth is %f \n", y,x,SoilMap[y][x].Depth,
 		 VType[VegMap[y][x].Veg].TotalDepth);
 	  exit(-1);
 	}

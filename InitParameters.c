@@ -73,6 +73,7 @@ void InitParameters(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map)
   
   Map->NYfine = Map->NY * (Map->DY/Map->DMASS);
   Map->NXfine = Map->NX * (Map->DY/Map->DMASS);
+  Map->NumCellsfine = 0;
 
   if (!CopyFloat(&MASSITER, StrEnv[max_iterations].VarStr, 1))
   ReportError(StrEnv[max_iterations].KeyName, 51);

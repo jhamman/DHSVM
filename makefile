@@ -4,9 +4,10 @@
 
 #	$Id$	
 
-OBJS = AdjustStorage.o Aggregate.o AggregateRadiation.o	Bagnold.o	 \
+OBJS = AdjustStorage.o Aggregate.o AggregateRadiation.o	CalcBagnold.o	 \
 CalcAerodynamic.o CalcAvailableWater.o CalcDistance.o		     \
-CalcEffectiveKh.o CalcKhDry.o CalcSafetyFactor.o CalcSnowAlbedo.o CalcSolar.o \
+CalcEffectiveKh.o CalcKhDry.o CalcSafetyFactor.o CalcSnowAlbedo.o \
+CalcTopoIndex.o CalcSolar.o \
 CalcTotalWater.o CalcTransmissivity.o CalcWeights.o Calendar.o	     \
 CanopyResistance.o ChannelState.o CheckOut.o CutBankGeometry.o	     \
 DHSVMChannel.o Desorption.o Draw.o EvalExponentIntegral.o	     \
@@ -80,7 +81,7 @@ Aggregate.o: Aggregate.c settings.h data.h Calendar.h DHSVMerror.h \
  constants.h
 AggregateRadiation.o: AggregateRadiation.c settings.h data.h \
  Calendar.h massenergy.h
-Bagnold.o: Bagnold.c DHSVMerror.h settings.h constants.h data.h \
+CalcBagnold.o: CalcBagnold.c DHSVMerror.h settings.h constants.h data.h \
  Calendar.h DHSVMChannel.h getinit.h channel.h channel_grid.h
 CalcAerodynamic.o: CalcAerodynamic.c DHSVMerror.h settings.h \
  constants.h functions.h data.h Calendar.h DHSVMChannel.h getinit.h \
@@ -100,6 +101,8 @@ CalcSnowAlbedo.o: CalcSnowAlbedo.c settings.h constants.h data.h \
  channel_grid.h
 CalcSolar.o: CalcSolar.c constants.h settings.h Calendar.h functions.h \
  data.h DHSVMChannel.h getinit.h channel.h channel_grid.h rad.h
+CalcTopoIndex.o: CalcTopoIndex.c DHSVMerror.h constants.h data.h \
+settings.h slopeaspect.h Calendar.h
 CalcTotalWater.o: CalcTotalWater.c settings.h soilmoisture.h
 CalcTransmissivity.o: CalcTransmissivity.c settings.h functions.h \
  data.h Calendar.h DHSVMChannel.h getinit.h channel.h channel_grid.h

@@ -47,6 +47,7 @@ typedef struct {
 } MAPDUMP;
 
 typedef struct {
+
   COORD Loc;			/* Location for which to dump */
   FILES OutFile;		/* Files in which to dump */
 } PIXDUMP;
@@ -147,8 +148,8 @@ typedef struct {
   char System[BUFSIZE + 1];	/* Coordinate system */
   double Xorig;			/* X coordinate of Northwest corner */
   double Yorig;			/* Y coordinate of Northwest corner */
-  int X;			/* Current x position */
-  int Y;			/* Current y position */
+  int X;			        /* Current x position */
+  int Y;			        /* Current y position */
   int NX;			/* Number of pixels in x direction */
   int NY;			/* Number of pixels in y direction */
   float DX;			/* Pixel spacing in x-direction */
@@ -156,11 +157,20 @@ typedef struct {
   float DXY;			/* Pixel spacing in diagonal */
   int OffsetX;			/* Offset in x-direction compared to basemap */
   int OffsetY;			/* Offset in y-direction compared to basemap */
-  int NumCells;                 /* Number of cells within the basin */
-  int NYfine;
-  int NXfine;
+  int NumCells;                  /* Number of cells within the basin */
+  int NYfine;                    /* Number of pixels for mass wasting algorithm
+				    in x direction */
+  int NXfine;                    /* Number of pixels for mass wasting algorithm 
+				    in y direction */
   float DMASS;			/* Pixel spacing for mass wasting algorithm */
-  ITEM *OrderedCells;           /* Structure array to hold the ranked elevations;  NumCells in size */
+  int NumCellsfine;              /* Number of cells for mass wasting algorithm 
+				    within the basin */
+  int NumFineIn;                 /* Number of fine cells in one coarse cell */  
+  ITEM *OrderedCells;           /* Structure array to hold the ranked elevations;
+				   NumCells in size */
+  ITEM *OrderedCellsfine;       /* Structure array to hold the ranked elevations
+				   for pixel spacing for mass wasting algorithm;
+				   NumCellsfine in size */
 } MAPSIZE;
 
 typedef struct {
@@ -185,7 +195,7 @@ typedef struct {
      replaced by a better method,
      WORK IN PROGRESS */
   float Precip;			/* Rainfall if available (m) */
-  float Tsoil[3];		/* Soil temperature in upper three layers */
+  float Tsoil[3];		        /* Soil temperature in upper three layers */
   float PrecipLapse;		/* Elevation Adjustment Factor for Precip */
 } MET;
 
@@ -216,7 +226,7 @@ typedef struct {
 				   used to interpolate precipitation */
   int PrecipLapse;		/* Whether the precipitation lapse rate is
 				   CONSTANT or VARIABLE */
-  int TempLapse;		/* Whether the temperature lapse rate is
+  int TempLapse;		        /* Whether the temperature lapse rate is
 				   CONSTANT or VARIABLE */
   int CressRadius;
   int CressStations;
@@ -257,17 +267,17 @@ typedef struct {
 
 typedef struct {
   float Precip;			/* Total amount of precipitation at pixel (m) */
-  float RainFall;		/* Amount of rainfall (m) */
-  float SnowFall;		/* Amount of snowfall (m) */
-  float KineticEnergy;          /* Rainfall energy at the ground surface, used for
-				   the sediment model (J/m2*mm). */
+  float RainFall;		        /* Amount of rainfall (m) */
+  float SnowFall;		        /* Amount of snowfall (m) */
+  float KineticEnergy;          /*Rainfall energy at the ground surface, used for
+				   the sediment model (J/m2*mm) */
   float *IntRain;		/* Rain interception by each vegetation layer
 				   (m) */
   float *IntSnow;		/* Snow interception by each vegetation layer
 				   (m) */
   float TempIntStorage;		/* Temporary snow and rain interception storage,
 				   used by MassRelease() */
-} PRECIPPIX;
+ } PRECIPPIX;
 
 typedef struct {
   float Precip;			/* Radar precipitation for current bin */
@@ -298,7 +308,7 @@ typedef struct {
   float *PercArea;		/* Area of percolation zone for each soil
 				   layer, corrected for the road/channel cut,
 				   divided by the grid cell area (0-1)  */
-  float *Adjust;		/* Array with coefficients to correct for
+  float *Adjust;		        /* Array with coefficients to correct for
 				   loss of soil storage due to
 				   channel/road-cut for each soil layer.
 				   Multiplied with RootDepth to give the zone
@@ -318,11 +328,11 @@ typedef struct {
 				   current location */
   float Declination;		/* Solar declination */
   float HalfDayLength;		/* Length of half day in hours */
-  float Sunrise;		/* Hour of sunrise */
+  float Sunrise;		        /* Hour of sunrise */
   float Sunset;			/* Hour of sunset */
   float TimeAdjustment;		/* Time adjustment to be made between center
 				   of study area and standard meridian */
-  float SunEarthDistance;	/* Distance from Sun to Earth */
+  float SunEarthDistance;	        /* Distance from Sun to Earth */
   float SineSolarAltitude;	/* Sine of sun's SolarAltitude  */
   int DayLight;			/* FALSE: measured solar radiation and the
 				   sun is below the horizon.  
@@ -339,7 +349,7 @@ typedef struct {
   unshort LastSnow;		/* Days since last snowfall */
   float Swq;			/* Snow water equivalent */
   float Melt;			/* Snow Melt */
-  float Outflow;		/* Snow pack outflow (m) */
+  float Outflow;		        /* Snow pack outflow (m) */
   float PackWater;		/* Liquid water content of snow pack */
   float TPack;			/* Temperature of snow pack */
   float SurfWater;		/* Liquid water content of surface layer */
@@ -392,10 +402,10 @@ typedef struct {
   int Index;
   int NLayers;			/* Number of soil layers */
   float Albedo;			/* Albedo of the soil surface */
-  float Manning;		/* Manning's roughness of the soil surface. */ 
+  float Manning;		/* Manning's roughness of the soil surface */ 
   float *Porosity;		/* Soil porosity for each layer */
   float *PoreDist;		/* Pore size distribution for each layer */
-  float *Press;			/* Soil bubling pressure for each layer */
+  float *Press;			/* Soil bubbling pressure for each layer */
   float *FCap;			/* Field capacity for each layer  */
   float *WP;			/* Wilting point for each layer */
   float *Dens;			/* Soil density (kg/m^3) */
@@ -435,18 +445,19 @@ typedef struct {
   float Grad;			/* Sum of downslope slope-width products */
   float Slope;			/* Land surface slope */
   float Aspect;			/* Land surface slope direction */
-  float FlowGrad;		/* Magnitude of subsurface flow gradient
+  float FlowGrad;		        /* Magnitude of subsurface flow gradient
 				   slope * width */
-  unsigned char Dir[NDIRS];	/* Fraction of flux moving in each direction
-				 */
-  unsigned int TotalDir;	/* Sum of Dir array */
+  unsigned char Dir[NDIRS];	/* Fraction of flux moving in each direction*/
+  unsigned int TotalDir;	        /* Sum of Dir array */
   int drains_x;			/* x-loc of cell to which this impervious cell drains */
   int drains_y;			/* y-loc of cell to which this impervious cell drains */
+  ITEM *OrderedTopoIndex;       /* Structure array to hold the ranked topoindex
+				   for fine pixels in a coarse pixel */
 } TOPOPIX;
 
 typedef struct {
   int Veg;			/* Vegetation type */
-  float Tcanopy;		/* Canopy temperature (C) */
+  float Tcanopy;		        /* Canopy temperature (C) */
 } VEGPIX;
 
 typedef struct {
@@ -454,14 +465,14 @@ typedef struct {
   int Index;
   int NVegLayers;		/* Number of vegetation layers */
   int NSoilLayers;		/* Number of soil layers */
-  unsigned char OverStory;	/* TRUE if there is an overstory */
+  unsigned char OverStory;	        /* TRUE if there is an overstory */
   unsigned char UnderStory;	/* TRUE if there is an understory */
-  float *Height;		/* Height of vegetation (in m) */
+  float *Height;		        /* Height of vegetation (m) */
   float *Fract;			/* Fractional coverage */
   float *HemiFract;		/* used to calculated longwave radiation balance */
   float *LAI;			/* One Sided Leaf Area Index */
   float **LAIMonthly;		/* Monthly LAI (one-sided) */
-  float *MaxInt;		/* Maximum interception storage (m) */
+  float *MaxInt;		        /* Maximum interception storage (m) */
   float *RsMax;			/* Maximum stomatal resistance */
   float *RsMin;			/* Minimum stomatal resistance */
   float *MoistThres;		/* Soil moisture threshold above which soil 
@@ -536,11 +547,11 @@ typedef struct {
 
 typedef struct {
   char Desc[BUFSIZE + 1];	/* Soil type */
-  float KIndex;                 /* Index of soil detachability via raindrop impact (g/J). */
-  STATSTABLE Cohesion;		/* Soil cohesion (kPa) . */
-  STATSTABLE Friction;		/* Angle of internal friction. */	
+  float KIndex;                  /* Index of soil detachability via raindrop impact (1/J) */
+  STATSTABLE Cohesion;		/* Soil cohesion (kPa)  */
+  STATSTABLE Friction;		/* Angle of internal friction */	
   float SatDensity;	        /* Saturated density for each layer */
-  float d50;
+  float d50;                     /* Median grainsize diameter for landslide material (m) */ 
 } SEDTABLE;
 
 typedef struct node node;
@@ -551,13 +562,20 @@ struct node {
 };
 
 typedef struct {
-  float Dem; 
-  float Slope;
-  float bedrock;
-  float sediment;                /* sediment thickness in m */
+  float Dem;                     /* Elevations */
+  uchar Mask;                   /* Mask for modeled area */
+  float Slope;                   /* Land surface slope */  
+  float Aspect;                  /* This isn't used. Just have it because the way 
+				    the code is setup. */
+  float bedrock;                 /* Bedrock elevation (m) */
+  float sediment;                /* Sediment thickness in m */
   float SatThickness;            /* Water table thickness (m) */
   float DeltaDepth;
   float probability;             /* Pixel failure probability. */
+  float TableDepth;              /* Water table depth (m bgs) */
+  float TopoIndex;               /* Topographic Index used for soil
+				    moisture redistribution from coarse 
+				    grid to dinfe grid */
 } FINEPIX; 
 
 typedef struct {
