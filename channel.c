@@ -48,6 +48,7 @@ static ChannelClass *alloc_channel_class(void)
   p->friction = 0.0;
   p->infiltration = 0.0;
   p->crown = CHAN_OUTSLOPED;
+  p->erodibility_coeff = 0.0;
   p->next = (ChannelClass *) NULL;
 
   return p;
@@ -83,27 +84,39 @@ static ChannelClass *find_channel_class(ChannelClass * list, ClassID id)
    linked list of ChannelClass structs.  If anything goes wrong, NULL
    is returned and any ChannelClass structs are destroyed.
    ------------------------------------------------------------- */
-ChannelClass *channel_read_classes(const char *file)
+ChannelClass *channel_read_classes(const char *file, int ChanType, int Sediment)
 {
   ChannelClass *head = NULL, *current = NULL;
-  static const int fields = 6;
+  static const int fields = 7;
   int done;
   int err = 0;
   static char *crown_words[4] = {
     "OUTSLOPED", "CROWNED", "INSLOPED", NULL
   };
 
-  static TableField class_fields[6] = {
+  static TableField class_fields[7] = {
     {"ID", TABLE_INTEGER, TRUE, FALSE, {0}, "", NULL},
     {"Channel Width", TABLE_REAL, TRUE, FALSE, {0.0}, "", NULL},
     {"Bank (stream) or Cut Height (road)", TABLE_REAL, TRUE, FALSE, {0.0}, "",
      NULL},
     {"Friction Coefficient (Manning's n)", TABLE_REAL, TRUE, FALSE, {0.0}, "",
      NULL},
-    {"Maximum Road Infiltration Rate (m/s)", TABLE_REAL, TRUE, FALSE, {0.0}, 
+    {"Maximum Road Infiltration Rate (m/s)", TABLE_REAL, FALSE, FALSE, {0.0}, 
      "", NULL},
-    {"Road Crown Type", TABLE_WORD, FALSE, FALSE, {0}, "", crown_words}
+    {"Road Crown Type", TABLE_WORD, FALSE, FALSE, {0}, "", crown_words},
+    {"Road Erodibility Coefficient", TABLE_REAL, FALSE, FALSE, {0.0}, "", NULL}
   };
+
+  // Extra fields are required if we're dealing with a road
+  if (ChanType == road_class) {
+    // max infiltration rate and crown type are required
+    class_fields[4].required = TRUE;
+    class_fields[5].required = TRUE;
+    // Road erodibility coefficient is required if Sediment == TRUE,
+    if (Sediment) {
+      class_fields[6].required = TRUE;
+    }
+  }
 
   error_handler(ERRHDL_STATUS,
 		"channel_read_classes: reading file \"%s\"", file);
@@ -194,6 +207,9 @@ ChannelClass *channel_read_classes(const char *file)
 			  "channel_read_classes: this should not happen");
 	  }
 	  break;
+	case 6:
+	  current->erodibility_coeff = class_fields[i].value.real;
+          break;
 	default:
 	  error_handler(ERRHDL_FATAL,
 			"channel_read_classes: this should not happen either");

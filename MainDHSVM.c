@@ -169,7 +169,7 @@ int main(int argc, char **argv)
     
 
   if (Options.HasNetwork)
-    InitChannel(Input, &Map, Time.Dt, &ChannelData, SoilMap, &MaxStreamID, &MaxRoadID);
+    InitChannel(Input, &Map, Time.Dt, &ChannelData, SoilMap, &MaxStreamID, &MaxRoadID, &Options);
   else if (Options.Extent != POINT)
     InitUnitHydrograph(Input, &Map, TopoMap, &UnitHydrograph,
 		       &Hydrograph, &HydrographInfo);

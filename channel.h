@@ -30,12 +30,15 @@ typedef struct _channel_class_rec_ {
   float width;			/* ``channel'' width */
   float bank_height;		/* bank height for streams (or cut height for roads) */
   float friction;		/* Manning's n */
-  float infiltration;		/* infiltration through ditch surface.  Note,
-				   this may not be what you think it is, so be
+  /* The following variables are only used when the channel class is a road network. */
+  float infiltration;		/* infiltration through ditch surface - roads only
+				   Note: this may not be what you think it is, so be
 				   sure to read the documentation before you use
 				   it.  It is ONLY used for road networks and if
 				   the option ROAD INFILTRATION is set to TRUE. */
-  ChannelCrownType crown;
+  ChannelCrownType crown;	/* crown type - roads only */
+  float erodibility_coeff;	/* erodibility coefficient - roads only
+				   Note: this is only used when SEDIMENT is set to TRUE. */
 
   struct _channel_class_rec_ *next;
 
@@ -108,7 +111,7 @@ typedef struct _channel_rec_ Channel, *ChannelPtr;
 
 				/* ChannelClass */
 
-ChannelClass *channel_read_classes(const char *file);
+ChannelClass *channel_read_classes(const char *file, int ChanType, int Sediment);
 void channel_free_classes(ChannelClass * head);
 
 				/* Channel */

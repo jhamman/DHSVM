@@ -28,7 +28,7 @@
    -------------------------------------------------------------------------- */
 void
 InitChannel(LISTPTR Input, MAPSIZE * Map, int deltat, CHANNEL * channel,
-	    SOILPIX ** SoilMap, int *MaxStreamID, int *MaxRoadID)
+	    SOILPIX ** SoilMap, int *MaxStreamID, int *MaxRoadID, OPTIONSTRUCT *Options)
 {
   int i;
   STRINIENTRY StrEnv[] = {
@@ -66,7 +66,8 @@ InitChannel(LISTPTR Input, MAPSIZE * Map, int deltat, CHANNEL * channel,
     printf("\tReading Stream data\n");
 
     if ((channel->stream_class =
-	 channel_read_classes(StrEnv[stream_class].VarStr)) == NULL) {
+	 channel_read_classes(StrEnv[stream_class].VarStr, stream_class,
+	 FALSE)) == NULL) {
       ReportError(StrEnv[stream_class].VarStr, 5);
     }
     if ((channel->streams =
@@ -89,7 +90,8 @@ InitChannel(LISTPTR Input, MAPSIZE * Map, int deltat, CHANNEL * channel,
     printf("\tReading Road data\n");
 
     if ((channel->road_class =
-	 channel_read_classes(StrEnv[road_class].VarStr)) == NULL) {
+	 channel_read_classes(StrEnv[road_class].VarStr, road_class,
+	 Options->Sediment)) == NULL) {
       ReportError(StrEnv[road_class].VarStr, 5);
     }
     if ((channel->roads =

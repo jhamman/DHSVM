@@ -43,7 +43,7 @@ typedef struct {
    available functions
    ------------------------------------------------------------- */
 void InitChannel(LISTPTR Input, MAPSIZE *Map, int deltat, CHANNEL *channel,
-		 SOILPIX **SoilMap, int *MaxStreamID, int *MaxRoadID);
+		 SOILPIX **SoilMap, int *MaxStreamID, int *MaxRoadID, OPTIONSTRUCT *Options);
 void InitChannelDump(CHANNEL *channel, char *DumpPath);
 void InitChannelSedimentDump(CHANNEL *channel, char *DumpPath);
 double ChannelCulvertFlow(int y, int x, CHANNEL *ChannelData);
