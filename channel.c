@@ -335,7 +335,7 @@ void sed_vol_to_distrib_mass(Channel * head, float *volumearray)
   for (; head != NULL; head = head->next) {
     for(i=0;i<NSEDSIZES;i++) {
       head->sediment.debrisinflow[i] = 
-	volumearray[head->id]*(1-bulkporosity)*PARTDENSITY*(1/(float)NSEDSIZES);
+	volumearray[head->id]*(1.-bulkporosity)*PARTDENSITY*(1./(float)NSEDSIZES);
     }
   }
 }

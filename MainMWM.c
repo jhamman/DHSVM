@@ -287,7 +287,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
   if (!(SegmentSediment = (float *)calloc(MaxStreamID, sizeof(float ))))
     ReportError("MainMWM", 1);
   
-  if (!(InitialSegmentSediment = (float *)calloc(NSEDSIZES, sizeof(float ))))
+  if (!(InitialSegmentSediment = (float *)calloc(MaxStreamID, sizeof(float ))))
     ReportError("MainMWM", 1);
   
   /* Initialize arrays. */
@@ -744,7 +744,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
     fprintf(fo,"xllcorner %.1f\n",Map->Xorig);
     fprintf(fo,"yllcorner %.1f\n",Map->Yorig - Map->NY*Map->DY);
     fprintf(fo,"cellsize %.0f\n",Map->DMASS);
-    fprintf(fo,"NODATA_value %.2f\n",-999.);
+    fprintf(fo,"NODATA_value %.2f\n",-99.);
 
     for (i = 0; i < Map->NYfine; i++) {
       for (j  = 0; j < Map->NXfine; j++) {
@@ -754,9 +754,9 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 
 	/* Check to make sure region is in the basin. */
 	if (INBASIN(TopoMap[y][x].Mask)) 		
-	  fprintf(fo, "%.2f ", (*FineMap[i][j]).Probability);
+	  fprintf(fo, "%.3f ", (*FineMap[i][j]).Probability);
 	else
-	  fprintf(fo, "-999. ");
+	  fprintf(fo, "-99. ");
   
       }
       fprintf(fo, "\n");
@@ -774,7 +774,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
     fprintf(fs,"xllcorner %.1f\n",Map->Xorig);
     fprintf(fs,"yllcorner %.1f\n",Map->Yorig - Map->NY*Map->DY);
     fprintf(fs,"cellsize %.0f\n",Map->DMASS);
-    fprintf(fs,"NODATA_value %.2f\n",-999.);
+    fprintf(fs,"NODATA_value %.2f\n",-99.);
 
     for (i = 0; i < Map->NYfine; i++) {
       for (j  = 0; j < Map->NXfine; j++) {
@@ -784,9 +784,9 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 
         /* Check to make sure region is in the basin. */
         if (INBASIN(TopoMap[y][x].Mask)) 		
-	  fprintf(fs, "%.2f ", (*FineMap[i][j]).DeltaDepth);
+	  fprintf(fs, "%.3f ", (*FineMap[i][j]).DeltaDepth);
         else
-	  fprintf(fs, "-999. ");
+	  fprintf(fs, "-99. ");
       }
       fprintf(fs, "\n");
     }

@@ -1597,8 +1597,8 @@ void DumpPix(DATE * Current, int first, FILES * OutFile, FILES * OutFileSediment
 
     // Sediment
     fprintf(OutFileSediment->FilePtr, " %g %g %g %g %g %g %g %g %g %g %g %g\n",
-	    FineMap->SatThickness, FineMap->MassWasting, FineMap->Probability, 
-	    FineMap->DeltaDepth, FineMap->MassDeposition, FineMap->SedimentToChannel,
+	    FineMap->SatThickness, FineMap->DeltaDepth, FineMap->Probability, 
+	    FineMap->MassWasting, FineMap->MassDeposition, FineMap->SedimentToChannel, 
 	    SedMap->Erosion, SedMap->SedFluxOut, SedimentOverlandInflow,
 	    Network->Erosion, SedMap->RoadSed, SedimentOverroadInflow);
     
