@@ -263,7 +263,7 @@ int main(int argc, char **argv)
 
     InitParameters(Input, &Options, &Map);
 
-    InitSedimentTables(Time.NDaySteps, Input, &SedType, &VType, &Soil, &Veg);
+    InitSedimentTables(Time.NDaySteps, Input, &SedType, &SType, &VType, &Soil, &Veg);
 
     InitFineMaps(Input, &Options, &Map, &Soil, &TopoMap, &SoilMap, 
 		  &FineMap);

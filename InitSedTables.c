@@ -1,5 +1,5 @@
 /*
- * SUMMARY:      InitTables.c - Initialize lookup tables
+ * SUMMARY:      InitSedTables.c - Initialize lookup tables
  * USAGE:        Part of DHSVM
  *
  * AUTHOR:       Bart Nijssen
@@ -9,10 +9,9 @@
  * LAST-MOD: Sat Feb  7 17:23:51 1998 by Bart Nijssen <nijssen@u.washington.edu>
  * DESCRIPTION:  Initialize lookup tables
  * DESCRIP-END.
- * FUNCTIONS:    InitTables() 
- *               InitSoilTable() 
- *               InitVegTable() 
- *               InitSnowTable()
+ * FUNCTIONS:    InitSedimentTables() 
+ *               InitSedTable() 
+ *               InitVegStats() 
  * COMMENTS:     
  */
 
@@ -29,20 +28,21 @@
 #include "fileio.h"
 #include "getinit.h"
 
-int InitSedTable(SEDTABLE **SedType, LISTPTR Input);
+int InitSedTable(SEDTABLE **SedType, LISTPTR Input, SOILTABLE **SType);
 int InitVegStats(VEGTABLE **VType, LISTPTR Input);
+float CalcSatDensity(float AveDensity);
 
 /*******************************************************************************/
 /*				  InitTables()                                 */
 /*******************************************************************************/
-void InitSedimentTables(int StepsPerDay, LISTPTR Input, SEDTABLE **SedType, VEGTABLE **VType,
-			LAYER *Soil, LAYER *Veg)
+void InitSedimentTables(int StepsPerDay, LISTPTR Input, SEDTABLE **SedType, SOILTABLE **SType, 
+			VEGTABLE **VType, LAYER *Soil, LAYER *Veg)
 {
   int NSedimentTypes, NVegTypes;
 
-  printf("Initializing tables\n");
+  printf("Initializing sediment tables\n");
 
-  if((NSedimentTypes = InitSedTable(SedType, Input)) == 0)
+  if((NSedimentTypes = InitSedTable(SedType, Input, SType)) == 0)
     ReportError("Input Sediment File", 8);
 
   if(Soil->NTypes != NSedimentTypes)
@@ -73,10 +73,10 @@ void InitSedimentTables(int StepsPerDay, LISTPTR Input, SEDTABLE **SedType, VEGT
 
   Comments     :
 ********************************************************************************/
-int InitSedTable(SEDTABLE **SedType, LISTPTR Input)
+int InitSedTable(SEDTABLE **SedType, LISTPTR Input, SOILTABLE **SType)
 {
   const char *Routine = "InitSedTable";
-  int i;			/* counter */
+  int i;			       /* counter */
   int j;                        /* counter */
   int NSoils;			/* Number of soil types */
   char KeyName[fa_mode+1][BUFSIZE+1];
@@ -100,7 +100,8 @@ int InitSedTable(SEDTABLE **SedType, LISTPTR Input)
   };
   char SectionName[] = "SEDIMENT";
   char VarStr[fa_mode+1][BUFSIZE+1];
-
+  float AveDensity;        /* Average soil density (km/m^3) */
+ 
   /* Get the number of different soil types */
   GetInitString(SectionName, "NUMBER OF SOIL TYPES", "", VarStr[0], 
 		(unsigned long) BUFSIZE, Input);
@@ -128,9 +129,6 @@ int InitSedTable(SEDTABLE **SedType, LISTPTR Input)
     if (IsEmptyStr(VarStr[sed_description]))
       ReportError(KeyName[sed_description], 51);
     strcpy((*SedType)[i].Desc, VarStr[sed_description]);
-
-    if (!CopyFloat(&((*SedType)[i].SatDensity), VarStr[sat_density], 1))
-      ReportError(KeyName[sat_density], 51);
 
     if (!CopyFloat(&((*SedType)[i].KIndex), VarStr[kindex], 1))
       ReportError(KeyName[kindex], 51);
@@ -191,6 +189,15 @@ int InitSedTable(SEDTABLE **SedType, LISTPTR Input)
       if (!CopyFloat(&((*SedType)[i].Friction.mode), VarStr[fa_mode], 1))
 	ReportError(KeyName[fa_mode], 51);
     }
+    
+    /* Calculating the saturated soil density based on average density - this is not a weighted average */
+    AveDensity = 0.0;
+    for (j = 0; j < (*SType)[i].NLayers; j++){
+      AveDensity += (*SType)[i].Dens[j];
+    }
+    AveDensity /= j+1;
+    (*SedType)[i].SatDensity = CalcSatDensity(AveDensity);
+
   }
 
   return NSoils;

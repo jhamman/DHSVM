@@ -27,6 +27,7 @@
 #include "DHSVMerror.h"
 #include "data.h"
 #include "fileio.h"
+#include "functions.h"
 #include "constants.h"
 #include "DHSVMChannel.h"
 #include "slopeaspect.h"
@@ -34,22 +35,8 @@
 #define BUFSIZE      255
 #define empty(s) !(s)
 
-float CalcBagnold(float DS,TIMESTRUCT * Time, float, float, float, float);
-float CalcSafetyFactor(float Slope, int Soil, float SoilDepth, int Veg, 
-		       SEDTABLE *SedType, VEGTABLE *VType, 
-		       float M, SOILTABLE *SType);
 void enqueue(node **head, node **tail, int y, int x);
 void dequeue(node **head, node **tail, int *y, int *x);
-void RouteDebrisFlow(float *SedimentToChannel, int prevy, 
-		     int prevx, float SlopeAspect, CHANNEL *ChannelData, 
-		     MAPSIZE *Map); 
-void InitChannelSediment(Channel * Head);
-void InitChannelSedInflow(Channel * Head);
-void DistributeSedimentDiams(float SedDiams[NSEDSIZES]);
-void OutputChannelSediment(Channel * Head, TIMESTRUCT Time, DUMPSTRUCT *Dump);
-void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, 
-			  DUMPSTRUCT *Dump);
-void Alloc_Chan_Sed_Mem(float ** DummyVar);
 
 /******************************************************************************/
 /*			       MAIN                                    */
@@ -70,24 +57,24 @@ void MainMWM(SEDPIX **SedMap, FINEPIX *** FineMap, VEGTABLE *VType,
   int **failure;
   float factor_safety;
   float LocalSlope;
-  FILE *fs, *fo;          /* File pointers. */
+  FILE *fs, *fo;                  /* File pointers. */
   int numpixels;
   int cells, count;
-  int massitertemp;       /* if massiter is 0, sets the counter to 1 here */
+  int massitertemp;               /* if massiter is 0, sets the counter to 1 here */
   float TotalVolume;
   node *head, *tail;
   float SlopeAspect, SedimentToChannel;
-  float *SegmentSediment;  /* The cumulative sediment content over all stochastic
-			      iterations for each channel segment. */
+  float *SegmentSediment;         /* The cumulative sediment content over all stochastic
+				     iterations for each channel segment. */
   float *InitialSegmentSediment; /* Placeholder of segment sediment load at 
 				    beginning of time step. */
-  float **SedThickness;    /* Cumulative sediment depth over all stochastic
-			      iterations for each pixel.  */
-  float **InitialSediment; /* Place holder of pixel sediment load at beginning of
-			      time step. */
+  float **SedThickness;          /* Cumulative sediment depth over all stochastic
+				    iterations for each pixel.  */
+  float **InitialSediment;       /* Place holder of pixel sediment load at beginning of
+				    time step. */
   float *SedDiams;
-  float TableDepth;         /* Coarse grid water table depth (m) */
-  float FineMapSatThickness;  /* Fine grid saturated thickness (m) */
+  float TableDepth;              /* Coarse grid water table depth (m) */
+  float FineMapSatThickness;    /* Fine grid saturated thickness (m) */
   float **Redistribute, **TopoIndex, **TopoIndexAve;
   head = NULL;
   tail = NULL;
@@ -724,11 +711,9 @@ void dequeue(node **head, node **tail, int *y, int *x)
 *****************************************************************************/
 void Alloc_Chan_Sed_Mem(float ** DummyVar)
 {
-  printf("in sub\n");
-  if (!(*DummyVar = (float *) calloc(NSEDSIZES, sizeof(float))))
-    ReportError("sed_chan_alloc", 1);
-  printf("did it\n");
-}
+   if (!(*DummyVar = (float *) calloc(NSEDSIZES, sizeof(float))))
+    ReportError(" Alloc_Chan_Sed_Mem", 1);
+ }
 /*****************************************************************************
   InitChannelSediment)
 
@@ -768,7 +753,7 @@ void InitChannelSediment(Channel * Head)
 }
 /*****************************************************************************
   InitChannelSedInflow
-
+  
   Assign initial colluvium mass to each unique channel ID (amount
   of storage, kg)
 *****************************************************************************/
@@ -783,36 +768,6 @@ void InitChannelSedInflow(Channel * Head)
       Current->sediment.inflow[i] = 0.0;
     }
     Current = Current->next;
-  }
-}
-/*****************************************************************************
-  DistributeSedimentDiams()
-
-  For new lateral sediment inflow, Find the particle diameters for each portion
-  Assumes a lognormal distribution
-*****************************************************************************/
-void DistributeSedimentDiams(float SedDiams[NSEDSIZES])
-{
-  /* to be consistent with FindValue, use the Tukey (1960) approx to normal
-     CDF -- y is probability, function returns Z(y) */
-#ifndef NORMALDIST
-#define NORMALDIST(mean, stdev, y) (4.91 * stdev * (pow(y,.14) - pow(( 1 - y ),.14)) + mean )
-#endif
-
-  int i;
-  float mn,std,z;
-  float pctfiner;
-
-  /* slope of the lognormal curve, log(d) on y-axis, Z on x-axis, is stdev */
-  mn = log10(DEBRISd50);
-  std = log10(DEBRISd90)-log10(DEBRISd50)/(NORMALDIST(0,1,0.9)-NORMALDIST(0,1,0.5));
-
-  pctfiner = 1.0/(2.0*NSEDSIZES); /* midpoint of finest interval */
-
-  for(i=0;i<NSEDSIZES;i++) {
-    z = NORMALDIST(mn,std,pctfiner);
-    SedDiams[i] = pow(10,mn+std*z);
-    pctfiner += 1.0/NSEDSIZES;
   }
 }
 /*****************************************************************************
@@ -869,8 +824,8 @@ void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, DU
   int order_count;
 
   /* For each of the sediment diameters, calculate the mass balance */
-  DistributeSedimentDiams(SedDiams); /* find diameter for each portion */
-
+  DistributeSedimentDiams(SedDiams);  /* find diameter for each portion */
+ 
   /* the next 5 lines are from channel_route_network - used to order streams */
   for (order = 1;; order += 1) {
     order_count = 0;

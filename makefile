@@ -4,29 +4,29 @@
 
 #	$Id$	
 
-OBJS = AdjustStorage.o Aggregate.o AggregateRadiation.o	CalcBagnold.o	 \
-CalcAerodynamic.o CalcAvailableWater.o CalcDistance.o		     \
-CalcEffectiveKh.o CalcKhDry.o CalcSafetyFactor.o CalcSnowAlbedo.o \
-CalcTopoIndex.o CalcSolar.o \
+OBJS = AdjustStorage.o Aggregate.o AggregateRadiation.o	CalcAerodynamic.o \
+CalcAvailableWater.o CalcBagnold.o CalcDistance.o CalcEffectiveKh.o \
+CalcKhDry.o CalcSafetyFactor.o CalcSatDensity.o CalcSnowAlbedo.o \
+CalcSolar.o CalcTopoIndex.o \
 CalcTotalWater.o CalcTransmissivity.o CalcWeights.o Calendar.o	     \
 CanopyResistance.o ChannelState.o CheckOut.o CutBankGeometry.o	     \
-DHSVMChannel.o Desorption.o Draw.o EvalExponentIntegral.o	     \
+DHSVMChannel.o Desorption.o DistSedDiams.o Draw.o EvalExponentIntegral.o \
 EvapoTranspiration.o ExecDump.o FileIOBin.o FileIONetCDF.o Files.o   \
 FinalMassBalance.o FindValue.o GetInit.o GetMetData.o InArea.o InitAggregated.o  \
 InitArray.o InitConstants.o InitDump.o InitFileIO.o InitFineMaps.o   \
 InitInterpolationWeights.o InitMetMaps.o InitMetSources.o	     \
-InitModelState.o InitNetwork.o InitNewMonth.o InitParameters.o InitSnowMap.o	     \
-InitSedTables.o InitTables.o InitTerrainMaps.o InitUnitHydrograph.o  \
+InitModelState.o InitNetwork.o InitNewMonth.o InitParameters.o InitSedTables.o     \
+InitSnowMap.o InitTables.o InitTerrainMaps.o InitUnitHydrograph.o  \
 InitXGraphics.o InterceptionStorage.o IsStationLocation.o LapseT.o LookupTable.o  \
 MainDHSVM.o MainMWM.o MakeLocalMetData.o MassBalance.o MassEnergyBalance.o     \
 MassRelease.o MaxRoadInfiltration.o NoEvap.o RadiationBalance.o	     \
 ReadMetRecord.o ReadRadarMap.o ReportError.o ResetAggregate.o	     \
 RootBrent.o Round.o RouteSubSurface.o RouteSurface.o		     \
 SatVaporPressure.o SensibleHeatFlux.o SeparateRadiation.o SizeOfNT.o \
-SlopeAspect.o globals.o SnowInterception.o SnowMelt.o SnowPackEnergyBalance.o  \
+SlopeAspect.o SnowInterception.o SnowMelt.o SnowPackEnergyBalance.o  \
 SoilEvaporation.o StabilityCorrection.o StoreModelState.o	     \
 SurfaceEnergyBalance.o UnsaturatedFlow.o VarID.o WaterTableDepth.o   \
-channel.o channel_grid.o equal.o errorhandler.o tableio.o
+channel.o channel_grid.o equal.o errorhandler.o globals.o tableio.o
 
 SRCS = $(OBJS:%.o=%.c)
 
@@ -81,12 +81,12 @@ Aggregate.o: Aggregate.c settings.h data.h Calendar.h DHSVMerror.h \
  constants.h
 AggregateRadiation.o: AggregateRadiation.c settings.h data.h \
  Calendar.h massenergy.h
-CalcBagnold.o: CalcBagnold.c DHSVMerror.h settings.h constants.h data.h \
- Calendar.h DHSVMChannel.h getinit.h channel.h channel_grid.h
 CalcAerodynamic.o: CalcAerodynamic.c DHSVMerror.h settings.h \
  constants.h functions.h data.h Calendar.h DHSVMChannel.h getinit.h \
  channel.h channel_grid.h
 CalcAvailableWater.o: CalcAvailableWater.c settings.h soilmoisture.h
+CalcBagnold.o: CalcBagnold.c DHSVMerror.h settings.h constants.h data.h \
+ Calendar.h DHSVMChannel.h getinit.h channel.h channel_grid.h
 CalcDistance.o: CalcDistance.c settings.h data.h Calendar.h \
  functions.h DHSVMChannel.h getinit.h channel.h channel_grid.h
 CalcEffectiveKh.o: CalcEffectiveKh.c settings.h constants.h \
@@ -96,6 +96,9 @@ CalcKhDry.o: CalcKhDry.c settings.h functions.h data.h Calendar.h \
  DHSVMChannel.h getinit.h channel.h channel_grid.h
 CalcSafetyFactor.o: CalcSafetyFactor.c DHSVMerror.h settings.h \
  constants.h data.h Calendar.h
+CalcSatDensity.o: CalcSatDensity.c settings.h functions.h constants.h
+#data.h Calendar.h \
+# DHSVMChannel.h getinit.h channel.h channel_grid.h
 CalcSnowAlbedo.o: CalcSnowAlbedo.c settings.h constants.h data.h \
  Calendar.h functions.h DHSVMChannel.h getinit.h channel.h \
  channel_grid.h
@@ -125,6 +128,7 @@ DHSVMChannel.o: DHSVMChannel.c constants.h getinit.h DHSVMChannel.h \
  functions.h errorhandler.h fileio.h
 Desorption.o: Desorption.c settings.h massenergy.h data.h Calendar.h \
  constants.h
+DistSedDiams.o: DistSedDiams.c data.h settings.h Calendar.h channel.h constants.h 
 Draw.o: Draw.c settings.h data.h Calendar.h functions.h DHSVMChannel.h \
  getinit.h channel.h channel_grid.h snow.h
 EvalExponentIntegral.o: EvalExponentIntegral.c settings.h data.h \
@@ -187,11 +191,11 @@ InitNewMonth.o: InitNewMonth.c settings.h data.h Calendar.h \
 InitParameters.o: InitParameters.c settings.h data.h Calendar.h \
  fileio.h DHSVMerror.h functions.h DHSVMChannel.h getinit.h channel.h \
  channel_grid.h constants.h rad.h
+InitSedTables.o: InitSedTables.c settings.h DHSVMerror.h Calendar.h \
+ data.h constants.h fileio.h getinit.h
 InitSnowMap.o: InitSnowMap.c settings.h data.h Calendar.h DHSVMerror.h \
  functions.h DHSVMChannel.h getinit.h channel.h channel_grid.h \
  constants.h
-InitSedTables.o: InitSedTables.c settings.h DHSVMerror.h Calendar.h \
- data.h constants.h fileio.h getinit.h
 InitTables.o: InitTables.c settings.h data.h Calendar.h DHSVMerror.h \
  functions.h DHSVMChannel.h getinit.h channel.h channel_grid.h \
  constants.h fileio.h
@@ -261,7 +265,6 @@ SizeOfNT.o: SizeOfNT.c DHSVMerror.h sizeofnt.h
 SlopeAspect.o: SlopeAspect.c constants.h settings.h data.h Calendar.h \
  functions.h DHSVMChannel.h getinit.h channel.h channel_grid.h \
  slopeaspect.h DHSVMerror.h
-globals.o: globals.c
 SnowInterception.o: SnowInterception.c brent.h constants.h settings.h \
  massenergy.h data.h Calendar.h snow.h functions.h DHSVMChannel.h \
  getinit.h channel.h channel_grid.h
@@ -292,6 +295,7 @@ channel_grid.o: channel_grid.c channel_grid.h channel.h settings.h \
 equal.o: equal.c functions.h data.h settings.h Calendar.h \
  DHSVMChannel.h getinit.h channel.h channel_grid.h
 errorhandler.o: errorhandler.c errorhandler.h
+globals.o: globals.c
 tableio.o: tableio.c tableio.h errorhandler.h settings.h
 
 tableio.c: tableio.lex

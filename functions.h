@@ -17,6 +17,7 @@
 #define FUNCTIONS_H
 
 #include "data.h"
+#include "channel.h"
 #include "DHSVMChannel.h"
 
 void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
@@ -25,9 +26,13 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
 	       SOILPIX **SoilMap, AGGREGATED *Total, VEGTABLE *VType,
 	       ROADSTRUCT **Network, SEDPIX **SedMap);
 
+void Alloc_Chan_Sed_Mem(float ** DummyVar);
+
 void CalcAerodynamic(int NVegLayers, unsigned char OverStory,
 		     float n, float *Height, float Trunk, float *U,
 		     float *U2mSnow, float *Ra, float *RaSnow);
+
+float CalcBagnold(float DS,TIMESTRUCT * Time, float, float, float, float);
 
 double CalcDistance(COORD *LocA, COORD *LocB);
 
@@ -36,6 +41,10 @@ float CalcEffectiveKh(int NSoilLayers, float Top, float Bottom,
 		      float *Moisture, float *Porosity, float *TSoil);
 
 float CalcKhDry(float Density);
+
+float CalcSafetyFactor(float Slope, int Soil, float SoilDepth, int Veg, 
+		       SEDTABLE *SedType, VEGTABLE *VType, 
+		       float M, SOILTABLE *SType);
 
 float CalcSnowAlbedo(float TSurf, unsigned short Last, SNOWTABLE *SnowAlbedo);
 
@@ -59,6 +68,8 @@ void draw(DATE *Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  TOPOPIX **TopoMap, PRECIPPIX **PrecipMap, float **PrismMap,
 	  float **SkyViewMap, unsigned char ***ShadowMap, EVAPPIX **EvapMap,
 	  RADCLASSPIX **RadMap, MET_MAP_PIX **MetMap);
+
+void DistributeSedimentDiams(float SedDiams[NSEDSIZES]);
 
 void DumpMap(MAPSIZE *Map, DATE *Current, MAPDUMP *DMap, TOPOPIX **TopoMap,
 	     EVAPPIX **EvapMap, PRECIPPIX **PrecipMap, RADCLASSPIX **RadMap,
@@ -96,6 +107,8 @@ uchar InArea(MAPSIZE *Map, COORD *Loc);
 void InitAggregated(int MaxVegLayers, int MaxSoilLayers, AGGREGATED *Total);
 
 void InitChannelSediment(Channel * Head);
+
+void InitChannelSedInflow(Channel * Head);
 
 void InitCharArray(char *Array, int Size);
 
@@ -191,7 +204,8 @@ void InitPrecipLapseMap(char *PrecipLapseFile, int NY, int NX,
 
 void InitPrismMap(int NY, int NX, float ***PrismMap);
 
-void InitSedimentTables(int StepsPerDay, LISTPTR Input, SEDTABLE **SedType, VEGTABLE **VType, LAYER *Soil, LAYER *Veg);
+void InitSedimentTables(int StepsPerDay, LISTPTR Input, SEDTABLE **SedType, SOILTABLE **SType,
+			VEGTABLE **VType, LAYER *Soil, LAYER *Veg);
 
 void InitShadeMap(OPTIONSTRUCT *Options, int NDaySteps, int NY, int NX,
 		  unsigned char ****ShadowMap, float ***SkyViewMap);
@@ -294,7 +308,10 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
 
 float MaxRoadInfiltration(ChannelMapPtr **map, int col, int row);
 
+void OutputChannelSediment(Channel * Head, TIMESTRUCT Time, DUMPSTRUCT *Dump);
+
 void quick(ITEM *OrderedCells, int count);
+
 void qs(ITEM *OrderedCells, int left, int right);
 
 void ReadChannelState(char *Path, DATE *Current, Channel *Head);
@@ -314,6 +331,13 @@ void ResetAggregate(LAYER *Soil, LAYER *Veg, AGGREGATED *Total);
 void ResetValues(MAPSIZE *Map, SOILPIX **SoilMap);
 
 int Round(double x);
+
+void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, 
+			  DUMPSTRUCT *Dump);
+
+void RouteDebrisFlow(float *SedimentToChannel, int prevy, 
+		     int prevx, float SlopeAspect, CHANNEL *ChannelData, 
+		     MAPSIZE *Map);
 
 void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
 		     VEGTABLE *VType, VEGPIX **VegMap,
