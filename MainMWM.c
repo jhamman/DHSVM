@@ -55,13 +55,13 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
   int numfailures;
   float avgnumfailures;
   float avgpixperfailure;
-  float failure_threshold = 0.5;
+  float failure_threshold = 0.0;
   char buffer[32];
-  char sumoutfile[100], outfile[100];  /* Character arrays to hold file name. */ 
+  char sumoutfile[100];  /* Character array to hold file name. */ 
   int **failure;
   float factor_safety;
   float LocalSlope;
-  FILE *fs, *fo;                  /* File pointers. */
+  FILE *fs;                  /* File pointer. */
   int numpixels;
   int cells, count, checksink;
   int massitertemp;               /* if massiter is 0, sets the counter to 1 here */
@@ -597,21 +597,6 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
     
   }    /* End iteration loop */
 
-  /*************************************************************************/
-  /* Create output files...currently hard-coded, should be moved to dump   */
-  /* functions for user specification. Creates the following files in the  */
-  /* specified output directory:                                           */ 
-  /* failure_summary.txt - for each date that the mwm algorithm is run:    */
-  /*                       ave. no. of failures (strip of pixels           */
-  /*                            originating from a failed pixel)           */
-  /*                       ave. no. of pixles per failure                  */
-  /*                       total number of failed pixels with probability  */
-  /*                            of failure > failure_threshold             */ 
-  /* "date"_failure.txt - map of probability of failure for each pixel     */
-  /* "date"_Deltasoildepth.txt - map of cumulative change in soil depth    */
-  /*                             since beginning of model run.             */
-  /*************************************************************************/
-
   // Normalize mass wasting vars by number of iterations
   numfailedpixels = 0;
   numlikelyfailedpixels = 0;
@@ -662,7 +647,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
     avgpixperfailure = 0.0;
   }
 
-  /*average sediment delivery to each stream segment***************/
+  // Average sediment delivery to each stream segment
   for(i=1; i<MaxStreamID+1; i++) {
     SegmentSediment[i] /= (float)massitertemp;
     if(SegmentSediment[i] < 0.0) SegmentSediment[i]=0.0;
@@ -671,7 +656,17 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
   /* Take new sediment inflow and distribute it by representative diameters*/
   /* and convert to mass */
   sed_vol_to_distrib_mass(ChannelData->streams, SegmentSediment);
-  /* back to map analysis******************************************/
+
+
+  /*************************************************************************/
+  /* Create failure summary file, in the specified output directory:       */
+  /* failure_summary.txt - for each date that the mwm algorithm is run:    */
+  /*                       ave. no. of failures (strip of pixels           */
+  /*                            originating from a failed pixel)           */
+  /*                       ave. no. of pixles per failure                  */
+  /*                       total number of failed pixels with probability  */
+  /*                            of failure > failure_threshold             */ 
+  /*************************************************************************/
 
   sprintf(sumoutfile, "%sfailure_summary.txt", DumpPath);
 
@@ -686,74 +681,6 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
   printf("%.4f failures; %.4f pixels per failure; %d pixels have failure likelihood > %.2f\n",
     avgnumfailures, avgpixperfailure, numlikelyfailedpixels, failure_threshold);
   fclose(fs);
-
-  /* If any pixels failed, output map of failure probabilities & deltasoildepth. 
-     Note: no failures does not mean that the probability of failure is zero. */ 
-     
-  if(numlikelyfailedpixels > 0) {
-    sprintf(outfile, "%s%s_failure.txt", DumpPath, buffer);
-
-    if((fo=fopen(outfile,"w")) == NULL) {
-      printf("Cannot open factor of safety output file.\n");
-      exit(0);
-    }
-	
-    /* Printing header to output file */
-    fprintf(fo,"ncols %11d\n",Map->NXfine);
-    fprintf(fo,"nrows %11d\n",Map->NYfine);
-    fprintf(fo,"xllcorner %.1f\n",Map->Xorig);
-    fprintf(fo,"yllcorner %.1f\n",Map->Yorig - Map->NY*Map->DY);
-    fprintf(fo,"cellsize %.0f\n",Map->DMASS);
-    fprintf(fo,"NODATA_value %.2f\n",-99.);
-
-    for (i = 0; i < Map->NYfine; i++) {
-      for (j  = 0; j < Map->NXfine; j++) {
-      
-	y = (int) floor(i/(Map->DY/Map->DMASS));
-	x = (int) floor(j/(Map->DX/Map->DMASS));
-
-	/* Check to make sure region is in the basin. */
-	if (INBASIN(TopoMap[y][x].Mask)) 		
-	  fprintf(fo, "%.3f ", (*FineMap[i][j]).Probability);
-	else
-	  fprintf(fo, "-99. ");
-  
-      }
-      fprintf(fo, "\n");
-    }
-	
-    sprintf(sumoutfile, "%s%s_Deltasoildepth.txt", DumpPath, buffer);
-    if((fs=fopen(sumoutfile,"w")) == NULL) {
-      printf("Cannot open soil depth output file.\n");
-      exit(0);
-    }
-
-    /* Printing header to output file */
-    fprintf(fs,"ncols %11d\n",Map->NXfine);
-    fprintf(fs,"nrows %11d\n",Map->NYfine);
-    fprintf(fs,"xllcorner %.1f\n",Map->Xorig);
-    fprintf(fs,"yllcorner %.1f\n",Map->Yorig - Map->NY*Map->DY);
-    fprintf(fs,"cellsize %.0f\n",Map->DMASS);
-    fprintf(fs,"NODATA_value %.2f\n",-99.);
-
-    for (i = 0; i < Map->NYfine; i++) {
-      for (j  = 0; j < Map->NXfine; j++) {
-      
-        y = (int) floor(i/(Map->DY/Map->DMASS));
-        x = (int) floor(j/(Map->DX/Map->DMASS));
-
-        /* Check to make sure region is in the basin. */
-        if (INBASIN(TopoMap[y][x].Mask)) 		
-	  fprintf(fs, "%.3f ", (*FineMap[i][j]).DeltaDepth);
-        else
-	  fprintf(fs, "-99. ");
-      }
-      fprintf(fs, "\n");
-    }
-    /* Close files. */
-    fclose(fo);
-    fclose(fs);
-  }
 
   for(i=0; i<Map->NYfine; i++) { 
     free(failure[i]);

@@ -191,6 +191,8 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
   int y;			/* counter */
   int ii, jj, yy, xx; 		/* counters for FineMap variables */
   void *Array;
+  int numPoints;
+  char VarIDStr[4];		/* stores VarID for sending to ReportError */
 
   sprintf(DataLabel, "%02d.%02d.%04d.%02d.%02d.%02d", Current->Month,
 	  Current->Day, Current->Year, Current->Hour, Current->Min,
@@ -202,36 +204,45 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
       break;
   }
 
+  sprintf(VarIDStr, "%d", DMap->ID);
+
+  if(DMap->ID >= 800 && DMap->ID < 900) {
+    numPoints = Map->NX * Map->NY * Map->DX * Map->DY / (Map->DMASS*Map->DMASS);
+  }
+  else {
+    numPoints = Map->NX * Map->NY;
+  }
+
   switch (DMap->NumberType) {
   case NC_BYTE:
-    if (!(Array = calloc(Map->NY * Map->NX, SizeOfNumberType(NC_BYTE))))
+    if (!(Array = calloc(numPoints, SizeOfNumberType(NC_BYTE))))
       ReportError((char *) Routine, 1);
     break;
   case NC_CHAR:
-    if (!(Array = calloc(Map->NY * Map->NX, SizeOfNumberType(NC_CHAR))))
+    if (!(Array = calloc(numPoints, SizeOfNumberType(NC_CHAR))))
       ReportError((char *) Routine, 1);
     break;
   case NC_SHORT:
-    if (!(Array = calloc(Map->NY * Map->NX, SizeOfNumberType(NC_SHORT))))
+    if (!(Array = calloc(numPoints, SizeOfNumberType(NC_SHORT))))
       ReportError((char *) Routine, 1);
     break;
   case NC_INT:
-    if (!(Array = calloc(Map->NY * Map->NX, SizeOfNumberType(NC_INT))))
+    if (!(Array = calloc(numPoints, SizeOfNumberType(NC_INT))))
       ReportError((char *) Routine, 1);
     break;
     /* 8 bit integer not yet implemented in NetCDF 3.4, but anticipated in
        future versions */
     /*   case NC_LONG: */
-    /*     if (!(Array = calloc(Map->NY * Map->NX, SizeOfNumberType(NC_LONG))))
+    /*     if (!(Array = calloc(numPoints, SizeOfNumberType(NC_LONG))))
      */
     /*       ReportError((char *) Routine, 1); */
     /*     break; */
   case NC_FLOAT:
-    if (!(Array = calloc(Map->NY * Map->NX, SizeOfNumberType(NC_FLOAT))))
+    if (!(Array = calloc(numPoints, SizeOfNumberType(NC_FLOAT))))
       ReportError((char *) Routine, 1);
     break;
   case NC_DOUBLE:
-    if (!(Array = calloc(Map->NY * Map->NX, SizeOfNumberType(NC_DOUBLE))))
+    if (!(Array = calloc(numPoints, SizeOfNumberType(NC_DOUBLE))))
       ReportError((char *) Routine, 1);
     break;
   default:
@@ -262,7 +273,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 102:
@@ -313,7 +324,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 103:
@@ -361,7 +372,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 104:
@@ -408,7 +419,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
       }
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 105:
@@ -456,7 +467,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 201:
@@ -477,7 +488,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 202:
@@ -519,7 +530,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 203:
@@ -561,7 +572,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 301:
@@ -581,7 +592,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 302:
@@ -602,7 +613,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 401:
@@ -621,7 +632,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 402:
@@ -642,7 +653,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 403:
@@ -663,7 +674,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 404:
@@ -683,7 +694,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 405:
@@ -703,7 +714,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 406:
@@ -724,7 +735,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 407:
@@ -744,7 +755,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 408:
@@ -765,7 +776,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 409:
@@ -785,7 +796,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 410:
@@ -806,7 +817,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 501:
@@ -848,7 +859,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 502:
@@ -890,7 +901,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 503:
@@ -911,7 +922,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 504:
@@ -932,7 +943,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 505:
@@ -952,7 +963,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 506:
@@ -972,7 +983,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 507:
@@ -992,7 +1003,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 508:
@@ -1012,7 +1023,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 509:
@@ -1032,7 +1043,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 510:
@@ -1052,7 +1063,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 513:
@@ -1072,12 +1083,12 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 514:
     if (Options->Infiltration != DYNAMIC) {
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 67);
     }
     if (DMap->Resolution == MAP_OUTPUT) {
       for (y = 0; y < Map->NY; y++)
@@ -1095,318 +1106,317 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 801:
     if (!Options->MassWaste) {
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 67);
     }
     if (DMap->Resolution == MAP_OUTPUT) {
       for (y = 0; y < Map->NY; y++) {
 	for (x = 0; x < Map->NX; x++) {
 	  if (INBASIN(TopoMap[y][x].Mask)) {
-	    ((float *) Array)[y * Map->NX+ x] = 0.0;
-	    // FineMap quantities must be aggregated to coarse grid
 	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
 	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
 		yy = (int) y*Map->DY/Map->DMASS + ii;
 		xx = (int) x*Map->DX/Map->DMASS + jj;
-		((float *) Array)[y * Map->NX+ x] += (*FineMap[yy][xx]).Dem;
+		((float *) Array)[yy * (int)(Map->NX*Map->DX/Map->DMASS) + xx] = (*FineMap[yy][xx]).Dem;
 	      }
 	    }
 	  }
- 	  else
-	    ((float *) Array)[y * Map->NX + x] = NA;
+ 	  else {
+	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		yy = (int) y*Map->DY/Map->DMASS + ii;
+		xx = (int) x*Map->DX/Map->DMASS + jj;
+		((float *) Array)[yy * (int)(Map->NX*Map->DX/Map->DMASS) + xx] = NA;
+	      }
+	    }
+          }
 	}
       }
-      Write2DMatrix(DMap->FileName, Array, DMap->NumberType, Map->NY, Map->NX,
-		    DMap, Index);
+      Write2DMatrix(DMap->FileName, Array, DMap->NumberType, (int)(Map->NY*Map->DY/Map->DMASS),
+		    (int)(Map->NX*Map->DX/Map->DMASS), DMap, Index);
     }
     else if (DMap->Resolution == IMAGE_OUTPUT) {
       for (y = 0; y < Map->NY; y++) {
 	for (x = 0; x < Map->NX; x++) {
 	  if (INBASIN(TopoMap[y][x].Mask)) {
-	    ((float *) Array)[y * Map->NX+ x] = 0.0;
-	    // FineMap quantities must be aggregated to coarse grid
 	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
 	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
 		yy = (int) y*Map->DY/Map->DMASS + ii;
 		xx = (int) x*Map->DX/Map->DMASS + jj;
-		((unsigned char *) Array)[y * Map->NX+ x] +=
+		((unsigned char *) Array)[yy * (int)(Map->NX*Map->DX/Map->DMASS) + xx] =
 		  (unsigned char) (((*FineMap[yy][xx]).Dem - Offset) / Range * MAXUCHAR);
 	      }
 	    }
 	  }
-	  else
-	    ((float *) Array)[y * Map->NX + x] = NA;
+	  else {
+	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		yy = (int) y*Map->DY/Map->DMASS + ii;
+		xx = (int) x*Map->DX/Map->DMASS + jj;
+		((float *) Array)[yy * (int)(Map->NX*Map->DX/Map->DMASS) + xx] = NA;
+	      }
+	    }
+          }
 	}
       }
-      Write2DMatrix(DMap->FileName, Array, NC_BYTE, Map->NY, Map->NX, DMap,
-		    Index);
+      Write2DMatrix(DMap->FileName, Array, NC_BYTE, (int)(Map->NY*Map->DY/Map->DMASS),
+		    (int)(Map->NX*Map->DX/Map->DMASS), DMap, Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
-
- /*  case 802: */
-/*     if (!Options->MassWaste) { */
-/*       ReportError((char *) Routine, 26); */
-/*     } */
-/*     if (DMap->Resolution == MAP_OUTPUT) { */
-/*       for (y = 0; y < Map->NY; y++) { */
-/* 	for (x = 0; x < Map->NX; x++) { */
-/* 	  if (INBASIN(TopoMap[y][x].Mask)) { */
-/* 	  ((float *) Array)[y * Map->NX+ x] = 0.0; */
-	  // FineMap quantities must be aggregated to coarse grid
-/* 	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) { */
-/* 	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) { */
-/* 	      yy = (int) y*Map->DY/Map->DMASS + ii; */
-/* 	      xx = (int) x*Map->DX/Map->DMASS + jj; */
-/* 	      ((float *) Array)[y * Map->NX+ x] += (*FineMap[yy][xx]).Slope; */
-/* 	    } */
-/* 	  } */
-/* 	  } */
-/* 	  else */
-/* 	    ((float *) Array)[y * Map->NX + x] = NA; */
-/* 	} */
-/*       } */
-/*       Write2DMatrix(DMap->FileName, Array, DMap->NumberType, Map->NY, Map->NX, */
-/* 		    DMap, Index); */
-/*     } */
-/*     else if (DMap->Resolution == IMAGE_OUTPUT) { */
-/*       for (y = 0; y < Map->NY; y++) { */
-/* 	for (x = 0; x < Map->NX; x++) { */
-/*     if (INBASIN(TopoMap[y][x].Mask)) { */
-/* 	  ((float *) Array)[y * Map->NX+ x] = 0.0; */
-	  // FineMap quantities must be aggregated to coarse grid
-/* 	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) { */
-/* 	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) { */
-/* 	      yy = (int) y*Map->DY/Map->DMASS + ii; */
-/* 	      xx = (int) x*Map->DX/Map->DMASS + jj; */
-/* 	      ((unsigned char *) Array)[y * Map->NX+ x] += */
-/* 		(unsigned char) (((*FineMap[yy][xx]).Slope - Offset) / Range * MAXUCHAR); */
-/* 	    } */
-/* 	  } */
-/* 	  } */
-/* 	  else */
-/* 	    ((float *) Array)[y * Map->NX + x] = NA; */
-/* 	} */
-/*       } */
-/*       Write2DMatrix(DMap->FileName, Array, NC_BYTE, Map->NY, Map->NX, DMap, */
-/* 		    Index); */
-/*     } */
-/*     else */
-/*       ReportError((char *) Routine, 26); */
-/*     break; */
 
   case 803:
     if (!Options->MassWaste) {
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 67);
     }
     if (DMap->Resolution == MAP_OUTPUT) {
       for (y = 0; y < Map->NY; y++) {
 	for (x = 0; x < Map->NX; x++) {
 	  if (INBASIN(TopoMap[y][x].Mask)) {
-	    ((float *) Array)[y * Map->NX+ x] = 0.0;
-	    // FineMap quantities must be aggregated to coarse grid
 	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
 	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
 		yy = (int) y*Map->DY/Map->DMASS + ii;
 		xx = (int) x*Map->DX/Map->DMASS + jj;
-		((float *) Array)[y * Map->NX+ x] += (*FineMap[yy][xx]).SatThickness;
+		((float *) Array)[yy * (int)(Map->NX*Map->DX/Map->DMASS) + xx] = (*FineMap[yy][xx]).SatThickness;
 	      }
 	    }
 	  }
-	  else
-	    ((float *) Array)[y * Map->NX + x] = NA;
-	}
-      }
-      Write2DMatrix(DMap->FileName, Array, DMap->NumberType, Map->NY, Map->NX,
-		      DMap, Index);
-      }
-      else if (DMap->Resolution == IMAGE_OUTPUT) {
-	for (y = 0; y < Map->NY; y++) {
-	  for (x = 0; x < Map->NX; x++) {
-	    if (INBASIN(TopoMap[y][x].Mask)) {
-	      ((float *) Array)[y * Map->NX+ x] = 0.0;
-	      // FineMap quantities must be aggregated to coarse grid
-	      for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
-		for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
-		  yy = (int) y*Map->DY/Map->DMASS + ii;
-		  xx = (int) x*Map->DX/Map->DMASS + jj;
-		  ((unsigned char *) Array)[y * Map->NX+ x] +=
-		    (unsigned char) (((*FineMap[yy][xx]).SatThickness - Offset) / Range * MAXUCHAR);
-		}
+ 	  else {
+	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		yy = (int) y*Map->DY/Map->DMASS + ii;
+		xx = (int) x*Map->DX/Map->DMASS + jj;
+		((float *) Array)[yy * (int)(Map->NX*Map->DX/Map->DMASS) + xx] = NA;
 	      }
 	    }
-	    else
-	      ((float *) Array)[y * Map->NX + x] = NA;
-	  }
+          }
 	}
-	Write2DMatrix(DMap->FileName, Array, NC_BYTE, Map->NY, Map->NX, DMap,
-		      Index);
       }
+      Write2DMatrix(DMap->FileName, Array, DMap->NumberType, (int)(Map->NY*Map->DY/Map->DMASS),
+		    (int)(Map->NX*Map->DX/Map->DMASS), DMap, Index);
+    }
+    else if (DMap->Resolution == IMAGE_OUTPUT) {
+      for (y = 0; y < Map->NY; y++) {
+	for (x = 0; x < Map->NX; x++) {
+	  if (INBASIN(TopoMap[y][x].Mask)) {
+	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		yy = (int) y*Map->DY/Map->DMASS + ii;
+		xx = (int) x*Map->DX/Map->DMASS + jj;
+		((unsigned char *) Array)[yy * (int)(Map->NX*Map->DX/Map->DMASS) + xx] =
+		  (unsigned char) (((*FineMap[yy][xx]).SatThickness - Offset) / Range * MAXUCHAR);
+	      }
+	    }
+	  }
+	  else {
+	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		yy = (int) y*Map->DY/Map->DMASS + ii;
+		xx = (int) x*Map->DX/Map->DMASS + jj;
+		((float *) Array)[yy * (int)(Map->NX*Map->DX/Map->DMASS) + xx] = NA;
+	      }
+	    }
+          }
+	}
+      }
+      Write2DMatrix(DMap->FileName, Array, NC_BYTE, (int)(Map->NY*Map->DY/Map->DMASS),
+		    (int)(Map->NX*Map->DX/Map->DMASS), DMap, Index);
+    }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 804:
     if (!Options->MassWaste) {
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 67);
     }
     if (DMap->Resolution == MAP_OUTPUT) {
       for (y = 0; y < Map->NY; y++) {
 	for (x = 0; x < Map->NX; x++) {
 	  if (INBASIN(TopoMap[y][x].Mask)) {
-	    ((float *) Array)[y * Map->NX+ x] = 0.0;
-	    // FineMap quantities must be aggregated to coarse grid
 	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
 	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
 		yy = (int) y*Map->DY/Map->DMASS + ii;
 		xx = (int) x*Map->DX/Map->DMASS + jj;
-		((float *) Array)[y * Map->NX+ x] += (*FineMap[yy][xx]).DeltaDepth;
+		((float *) Array)[yy * (int)(Map->NX*Map->DX/Map->DMASS) + xx] = (*FineMap[yy][xx]).DeltaDepth;
 	      }
 	    }
 	  }
-	  else
-	    ((float *) Array)[y * Map->NX + x] = NA;
+ 	  else {
+	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		yy = (int) y*Map->DY/Map->DMASS + ii;
+		xx = (int) x*Map->DX/Map->DMASS + jj;
+		((float *) Array)[yy * (int)(Map->NX*Map->DX/Map->DMASS) + xx] = NA;
+	      }
+	    }
+          }
 	}
       }
-      Write2DMatrix(DMap->FileName, Array, DMap->NumberType, Map->NY, Map->NX,
-		    DMap, Index);
+      Write2DMatrix(DMap->FileName, Array, DMap->NumberType, (int)(Map->NY*Map->DY/Map->DMASS),
+		    (int)(Map->NX*Map->DX/Map->DMASS), DMap, Index);
     }
     else if (DMap->Resolution == IMAGE_OUTPUT) {
       for (y = 0; y < Map->NY; y++) {
 	for (x = 0; x < Map->NX; x++) {
 	  if (INBASIN(TopoMap[y][x].Mask)) {
-	    ((float *) Array)[y * Map->NX+ x] = 0.0;
-	    // FineMap quantities must be aggregated to coarse grid
 	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
 	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
 		yy = (int) y*Map->DY/Map->DMASS + ii;
 		xx = (int) x*Map->DX/Map->DMASS + jj;
-		((unsigned char *) Array)[y * Map->NX+ x] +=
+		((unsigned char *) Array)[yy * (int)(Map->NX*Map->DX/Map->DMASS) + xx] =
 		  (unsigned char) (((*FineMap[yy][xx]).DeltaDepth - Offset) / Range * MAXUCHAR);
 	      }
 	    }
 	  }
-	  else
-	    ((float *) Array)[y * Map->NX + x] = NA;
+	  else {
+	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		yy = (int) y*Map->DY/Map->DMASS + ii;
+		xx = (int) x*Map->DX/Map->DMASS + jj;
+		((float *) Array)[yy * (int)(Map->NX*Map->DX/Map->DMASS) + xx] = NA;
+	      }
+	    }
+          }
 	}
       }
-      Write2DMatrix(DMap->FileName, Array, NC_BYTE, Map->NY, Map->NX, DMap,
-		    Index);
+      Write2DMatrix(DMap->FileName, Array, NC_BYTE, (int)(Map->NY*Map->DY/Map->DMASS),
+		    (int)(Map->NX*Map->DX/Map->DMASS), DMap, Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 805:
     if (!Options->MassWaste) {
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 67);
     }
     if (DMap->Resolution == MAP_OUTPUT) {
       for (y = 0; y < Map->NY; y++) {
 	for (x = 0; x < Map->NX; x++) {
 	  if (INBASIN(TopoMap[y][x].Mask)) {
-	    ((float *) Array)[y * Map->NX+ x] = 0.0;
-	    // FineMap quantities must be aggregated to coarse grid
 	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
 	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
 		yy = (int) y*Map->DY/Map->DMASS + ii;
 		xx = (int) x*Map->DX/Map->DMASS + jj;
-		((float *) Array)[y * Map->NX+ x] += (*FineMap[yy][xx]).Probability;
+		((float *) Array)[yy * (int)(Map->NX*Map->DX/Map->DMASS) + xx] = (*FineMap[yy][xx]).Probability;
 	      }
 	    }
 	  }
-	  else
-	    ((float *) Array)[y * Map->NX + x] = NA;
+ 	  else {
+	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		yy = (int) y*Map->DY/Map->DMASS + ii;
+		xx = (int) x*Map->DX/Map->DMASS + jj;
+		((float *) Array)[yy * (int)(Map->NX*Map->DX/Map->DMASS) + xx] = NA;
+	      }
+	    }
+          }
 	}
       }
-      Write2DMatrix(DMap->FileName, Array, DMap->NumberType, Map->NY, Map->NX,
-		    DMap, Index);
+      Write2DMatrix(DMap->FileName, Array, DMap->NumberType, (int)(Map->NY*Map->DY/Map->DMASS),
+		    (int)(Map->NX*Map->DX/Map->DMASS), DMap, Index);
     }
     else if (DMap->Resolution == IMAGE_OUTPUT) {
       for (y = 0; y < Map->NY; y++) {
 	for (x = 0; x < Map->NX; x++) {
 	  if (INBASIN(TopoMap[y][x].Mask)) {
-	    ((float *) Array)[y * Map->NX+ x] = 0.0;
-	    // FineMap quantities must be aggregated to coarse grid
 	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
 	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
 		yy = (int) y*Map->DY/Map->DMASS + ii;
 		xx = (int) x*Map->DX/Map->DMASS + jj;
-		((unsigned char *) Array)[y * Map->NX+ x] +=
+		((unsigned char *) Array)[yy * (int)(Map->NX*Map->DX/Map->DMASS) + xx] =
 		  (unsigned char) (((*FineMap[yy][xx]).Probability - Offset) / Range * MAXUCHAR);
 	      }
 	    }
 	  }
-	  else
-	    ((float *) Array)[y * Map->NX + x] = NA;
+	  else {
+	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		yy = (int) y*Map->DY/Map->DMASS + ii;
+		xx = (int) x*Map->DX/Map->DMASS + jj;
+		((float *) Array)[yy * (int)(Map->NX*Map->DX/Map->DMASS) + xx] = NA;
+	      }
+	    }
+          }
 	}
       }
-      Write2DMatrix(DMap->FileName, Array, NC_BYTE, Map->NY, Map->NX, DMap,
-		    Index);
+      Write2DMatrix(DMap->FileName, Array, NC_BYTE, (int)(Map->NY*Map->DY/Map->DMASS),
+		    (int)(Map->NX*Map->DX/Map->DMASS), DMap, Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 806:
     if (!Options->MassWaste) {
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 67);
     }
     if (DMap->Resolution == MAP_OUTPUT) {
       for (y = 0; y < Map->NY; y++) {
 	for (x = 0; x < Map->NX; x++) {
 	  if (INBASIN(TopoMap[y][x].Mask)) {
-	    ((float *) Array)[y * Map->NX+ x] = 0.0;
-	    // FineMap quantities must be aggregated to coarse grid
 	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
 	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
 		yy = (int) y*Map->DY/Map->DMASS + ii;
 		xx = (int) x*Map->DX/Map->DMASS + jj;
-		((float *) Array)[y * Map->NX+ x] += (*FineMap[yy][xx]).SedimentToChannel;
+		((float *) Array)[yy * (int)(Map->NX*Map->DX/Map->DMASS) + xx] = (*FineMap[yy][xx]).SedimentToChannel;
 	      }
 	    }
 	  }
-	  else
-	    ((float *) Array)[y * Map->NX + x] = NA;
+ 	  else {
+	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		yy = (int) y*Map->DY/Map->DMASS + ii;
+		xx = (int) x*Map->DX/Map->DMASS + jj;
+		((float *) Array)[yy * (int)(Map->NX*Map->DX/Map->DMASS) + xx] = NA;
+	      }
+	    }
+          }
 	}
       }
-      Write2DMatrix(DMap->FileName, Array, DMap->NumberType, Map->NY, Map->NX,
-		    DMap, Index);
+      Write2DMatrix(DMap->FileName, Array, DMap->NumberType, (int)(Map->NY*Map->DY/Map->DMASS),
+		    (int)(Map->NX*Map->DX/Map->DMASS), DMap, Index);
     }
     else if (DMap->Resolution == IMAGE_OUTPUT) {
       for (y = 0; y < Map->NY; y++) {
 	for (x = 0; x < Map->NX; x++) {
 	  if (INBASIN(TopoMap[y][x].Mask)) {
-	    ((float *) Array)[y * Map->NX+ x] = 0.0;
-	    // FineMap quantities must be aggregated to coarse grid
 	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
 	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
 		yy = (int) y*Map->DY/Map->DMASS + ii;
 		xx = (int) x*Map->DX/Map->DMASS + jj;
-		((unsigned char *) Array)[y * Map->NX+ x] +=
+		((unsigned char *) Array)[yy * (int)(Map->NX*Map->DX/Map->DMASS) + xx] =
 		  (unsigned char) (((*FineMap[yy][xx]).SedimentToChannel - Offset) / Range * MAXUCHAR);
 	      }
 	    }
 	  }
-	  else
-	    ((float *) Array)[y * Map->NX + x] = NA;
+	  else {
+	    for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	      for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		yy = (int) y*Map->DY/Map->DMASS + ii;
+		xx = (int) x*Map->DX/Map->DMASS + jj;
+		((float *) Array)[yy * (int)(Map->NX*Map->DX/Map->DMASS) + xx] = NA;
+	      }
+	    }
+          }
 	}
       }
-      Write2DMatrix(DMap->FileName, Array, NC_BYTE, Map->NY, Map->NX, DMap,
-		    Index);
+      Write2DMatrix(DMap->FileName, Array, NC_BYTE, (int)(Map->NY*Map->DY/Map->DMASS),
+		    (int)(Map->NX*Map->DX/Map->DMASS), DMap, Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 901:
     if (!Options->InitSedFlag) {
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 67);
     }
     if (DMap->Resolution == MAP_OUTPUT) {
       for (y = 0; y < Map->NY; y++)
@@ -1424,12 +1434,12 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 902:
     if (!Options->InitSedFlag) {
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 67);
     }
     if (DMap->Resolution == MAP_OUTPUT) {
       for (y = 0; y < Map->NY; y++)
@@ -1447,12 +1457,12 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
   case 903:
     if (!Options->RoadRouting) {
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 67);
     }
     if (DMap->Resolution == MAP_OUTPUT) {
       for (y = 0; y < Map->NY; y++)
@@ -1470,12 +1480,12 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 		    Index);
     }
     else
-      ReportError((char *) Routine, 26);
+      ReportError(VarIDStr, 66);
     break;
 
 
   default:
-    ReportError((char *) Routine, 26);
+    ReportError(VarIDStr, 66);
     break;
   }
 

@@ -86,6 +86,8 @@ static char *ErrorMessage[] = {
   "Ran out of data in surface routing file:", /* 63 */
   "Row column mismatch in surface routing file:", /* 64 */
   "Current version does not support this setup:", /* 65 */
+  "Invalid Map->Resolution value for dumping map or image of variable ID:", /* 66 */
+  "The options set in the input file do not support plotting variable ID:", /* 67 */
   NULL
 };
 
