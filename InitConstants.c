@@ -69,6 +69,9 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
     {"OPTIONS", "SENSIBLE HEAT FLUX", "", ""},
     {"OPTIONS", "SEDIMENT", "", ""},
     {"OPTIONS", "SEDIMENT INPUT FILE", "", ""},
+    {"OPTIONS", "EROSION PERIOD", "", ""},
+    {"OPTIONS", "MASS WASTING", "", ""},
+    {"OPTIONS", "SURFACE EROSION", "", ""},
     {"OPTIONS", "OVERLAND ROUTING", "", ""}, 
     {"OPTIONS", "ROAD ROUTING", "", ""},
     {"OPTIONS", "INFILTRATION", "", ""},
@@ -106,6 +109,8 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
     {"TIME", "TIME STEP", "", ""},
     {"TIME", "MODEL START", "", ""},
     {"TIME", "MODEL END", "", ""},
+    {"TIME", "EROSION START", "", ""},
+    {"TIME", "EROSION END", "", ""},
     {"CONSTANTS", "GROUND ROUGHNESS", "", ""},
     {"CONSTANTS", "SNOW ROUGHNESS", "", ""},
     {"CONSTANTS", "RAIN THRESHOLD", "", ""},
@@ -216,6 +221,26 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
     strcpy(Options->SedFile, StrEnv[sed_input_file].VarStr);
   }
 
+ /* Determine whether mass wasting model should be run */
+  if (strncmp(StrEnv[mass_wasting].VarStr, "TRUE", 4) == 0)
+    Options->MassWaste = TRUE;
+  else if (strncmp(StrEnv[mass_wasting].VarStr, "FALSE", 5) == 0)
+    Options->MassWaste = FALSE;
+  else
+    ReportError(StrEnv[mass_wasting].KeyName, 51);
+
+/* Determine whether surface erosion model should be run */
+  if (strncmp(StrEnv[surface_erosion].VarStr, "TRUE", 4) == 0){
+    Options->ErosionPeriod = TRUE;
+    Options->SurfaceErosion = TRUE;
+}
+  else if (strncmp(StrEnv[surface_erosion].VarStr, "FALSE", 5) == 0){
+    Options->ErosionPeriod = FALSE;
+    Options->SurfaceErosion = FALSE;
+}
+  else
+    ReportError(StrEnv[surface_erosion].KeyName, 51);
+
   /* Determine overland flow routing method to use */
   if (strncmp(StrEnv[routing].VarStr, "KINEMATIC", 9) == 0)
     Options->Routing = TRUE;
@@ -235,16 +260,11 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   else
     ReportError(StrEnv[road_routing].KeyName, 51);
 
+
   /* Check for compatible options. */
   if(Options->Sediment == TRUE) {
-    if(!Options->Routing) {
-      fprintf(stderr, 
-	      "WARNING: Sediment model cannot be run with conventional overland\n");
-      fprintf(stderr, 
-	      "flow routing.  Overland Routing being reset to KINEMATIC.\n\n");
-      Options->Routing = TRUE;
-    }
-    /* RoadRouting can only be performd if there are roads. 
+
+    /* RoadRouting can only be performed if there are roads. 
        This check is made in InitNetwork.c */
     if(!Options->RoadRouting) {
       fprintf(stderr, 
@@ -268,6 +288,7 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
     }
   }
  
+
   /* Determine if the maximum infiltration rate is static or dynamic */
   if (strncmp(StrEnv[infiltration].VarStr, "STATIC", 6) == 0) {
     Options->Infiltration = STATIC;
@@ -489,6 +510,14 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
     ReportError(StrEnv[model_end].KeyName, 51);
 
   InitTime(Time, &Start, &End, NULL, NULL, (int) TimeStep);
+
+   /* Determine sediment routing period */
+
+  if (!SScanMonthDay(StrEnv[erosion_start].VarStr, &(Time->StartSed)))
+    ReportError(StrEnv[erosion_start].KeyName, 51);
+  
+  if (!SScanMonthDay(StrEnv[erosion_end].VarStr, &(Time->EndSed)))
+    ReportError(StrEnv[erosion_end].KeyName, 51);
 
   /**************** Determine model constants ****************/
 

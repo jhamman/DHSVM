@@ -107,9 +107,9 @@ typedef unsigned int unint;
 
 enum KEYS {
 /* Options *//* list order must match order in InitConstants.c */
-  format = 0, extent, gradient, flow_routing, sensible_heat_flux, sediment,
-  sed_input_file, routing, road_routing, infiltration,interpolation, mm5, qpf,
-  prism, canopy_radatt, shading, snotel, outside, 
+  format = 0, extent, gradient, flow_routing, sensible_heat_flux, sediment,sed_input_file,
+ erosion_period, mass_wasting,surface_erosion, routing, road_routing, infiltration,
+  interpolation, mm5, qpf, prism, canopy_radatt, shading, snotel, outside, 
   rhoverride, precipitation_source, wind_source, temp_lapse, precip_lapse, 
   cressman_radius, cressman_stations, prism_data_path, prism_data_ext, 
   shading_data_path, shading_data_ext, skyview_data_path, 
@@ -118,7 +118,7 @@ enum KEYS {
   center_longitude, time_zone_meridian, number_of_rows,
   number_of_columns, grid_spacing, point_north, point_east,
   /* Time */
-  time_step, model_start, model_end,
+  time_step, model_start, model_end, erosion_start, erosion_end,
   /* Constants */
   ground_roughness, snow_roughness, rain_threshold, snow_threshold,
   snow_water_capacity, reference_height, rain_lai_multiplier,

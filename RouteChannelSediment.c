@@ -122,20 +122,20 @@ void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, DU
   for (order = 1;; order += 1) {
     order_count = 0;
     Current = Head;
-
+    
     while (Current != NULL) {
       if (Current->order == order) {
-
+	
 	Current->sediment.outflowconc=0.0;
 	CapacityUsed = 0.0;
-
+	
 	if (Current->outlet != NULL)
 	  Current->outlet->sediment.totalmass=0;
-
+	
 	/* rate of inflow and outflow change over model time step*/
 	dIdt = (Current->inflow - Current->last_inflow)/(float) Time.Dt;
 	dOdt = (Current->outflow - Current->last_outflow)/(float) Time.Dt;
-
+	
 	/****************************************/
 	/* Estimate sub-time step for the reach */
 	/****************************************/

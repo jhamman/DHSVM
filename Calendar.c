@@ -611,3 +611,74 @@ int main(int argc, char **argv)
 }
 
 #endif
+/*****************************************************************************
+  SScanMonthDay()
+*****************************************************************************/
+int SScanMonthDay(char *DateStr, DATE * Day)
+{
+  char Str[BUFSIZE + 1];
+  int i;
+  int j;
+  int Length;
+  int Number[6];
+  int DaysPerMonth[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+
+  if (Str == NULL)
+    return FALSE;
+
+  strcpy(Str, DateStr);
+
+  Length = strlen(Str);
+
+  for (i = Length - 1, j = 0; i > 0; i--) {
+    if (!isdigit((int) Str[i])) {
+      Number[j] = atoi(&Str[i + 1]);
+      Str[i] = '\0';
+      j++;
+    }
+  }
+
+  Number[j] = atoi(Str);
+
+  if (j < 1 || j > 5)
+    return FALSE;
+
+  Day->Month = Number[j--];
+  Day->Day = Number[j--];
+  Day->Year = Number[j--];
+  if (j >= 0)
+    Day->Hour = Number[j--];
+  else
+    Day->Hour = 0;
+  if (j >= 0)
+    Day->Min = Number[j--];
+  else
+    Day->Min = 0;
+  if (j >= 0)
+    Day->Sec = Number[j--];
+  else
+    Day->Sec = 0;
+
+  if (IsLeapYear(Day->Year))
+    DaysPerMonth[1] = 29;
+  else
+    DaysPerMonth[1] = 28;
+
+  if (Day->Month < 1 || Day->Month > MONTHPYEAR)
+    return FALSE;
+  if (Day->Day < 1 || Day->Day > DaysPerMonth[Day->Month - 1])
+    return FALSE;
+  if (Day->Hour < 0 || Day->Hour > 23)
+    return FALSE;
+  if (Day->Min < 0 || Day->Min > 59)
+    return FALSE;
+  if (Day->Sec < 0 || Day->Sec > 59)
+    return FALSE;
+
+  Day->JDay = DayOfYear(Day->Year, Day->Month, Day->Day);
+  Day->Julian =
+    GregorianToJulianDay(Day->Year, Day->Month, Day->Day, Day->Hour, Day->Min,
+			 Day->Sec);
+
+  return TRUE;
+}

@@ -240,6 +240,16 @@ typedef struct {
 				   should be calculated, TRUE or FALSE */
   int Sediment;                 /* Specifies whether sediment variables should be output,
 				   TRUE or FALSE. */
+
+  int MassWaste;                 /* Specifies whether mass wasting model should be run
+				    variables should be output, TRUE or FALSE. */
+  int ErosionPeriod;                 /* Specifies dates during erosion model should be run
+				    variables should be output, FULL or PARTIAL. */
+  
+  int OldSedFlag;                 /* Sediment flag from previous timestep; */
+  int OldRouteFlag;               /* Initial routing flag */
+  int SurfaceErosion;            /* Specifies whether surface erosion model should be run
+				       variables should be output, TRUE or FALSE. */
   int Routing;                  /* Overland flow routing indicator, either CONVENTIONAL
 				   or KINEMATIC. */
   int RoadRouting;              /* Road flow routing indicator, either CONVENTIONAL
@@ -398,6 +408,7 @@ typedef struct {
   float SatFlow;		        /* amount of saturated flow generated */
   float IExcess;		        /* amount of surface runoff (m) generated from
 				   HOF and Return flow */
+ 
   float Runoff;                  /* Surface water flux (m) from the grid cell. */
   float ChannelInt;		/* amount of subsurface flow intercepted by
 				   the channel */

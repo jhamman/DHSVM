@@ -273,6 +273,7 @@ int main(int argc, char **argv)
       InitChannelSediment(ChannelData.streams);
     }
 
+
     /* Allocate memory for the sediment grid */
     if (!(SedMap = (SEDPIX **) calloc(Map.NY, sizeof(SEDPIX *))))
       ReportError("MainDHSVM", 1);
@@ -310,6 +311,8 @@ int main(int argc, char **argv)
 		   RadMap, &InFiles, Veg.NTypes, VType, NStats, Stat, 
 		   Dump.InitStatePath);
 
+
+
     if (IsNewDay(Time.DayStep)) {
       InitNewDay(Time.Current.JDay, &SolarGeo);
       PrintDate(&(Time.Current), stdout);
@@ -319,6 +322,9 @@ int main(int argc, char **argv)
 /*	PrintDate(&(Time.Current),stdout);
         printf("\n");*/
 /* uncomment the above line to print the time at every step*/
+
+ SedimentFlag(&Options, &Time);  /* determine surface erosion and routing scheme */
+
 
     InitNewStep(&InFiles, &Map, &Time, Soil.MaxLayers, &Options, NStats, Stat,
 		InFiles.RadarFile, &Radar, RadarMap, &SolarGeo, TopoMap, RadMap,

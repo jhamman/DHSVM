@@ -44,6 +44,8 @@ typedef struct {
   int Dt;			/* Timestep (in sec) */
   DATE Start;			/* Starting date of run */
   DATE End;			/* Ending date of run */
+  DATE StartSed;		/* Starting date of sediment run */
+  DATE EndSed;			/* Ending date of sediment run */
   DATE Current;			/* Current date in run */
   DATE StartRadar;		/* Start radar file */
   DATE StartMM5;		/* Start of MM5 files */
@@ -74,6 +76,7 @@ void PrintDate(DATE * Day, FILE * OutFile);
 void SPrintDate(DATE * Day, char *buffer);
 int ScanDate(FILE * InFile, DATE * Day);
 int SScanDate(char *Str, DATE * Day);
+int SScanMonthDay(char *Str, DATE * Day);
 void JulianDayToGregorian(double jd, int *y, int *m, int *d, int *h, int *mi,
 			  double *sec);
 double GregorianToJulianDay(int year, int mon, int day, int h, int mi,

@@ -337,7 +337,7 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
 
   /* Call the mass wasting algorithm; currently not very intelligent */
   
-  if(Options->Sediment && Time->Current.Hour == 00) {
+  if(Options->MassWaste && Options->Sediment && Time->Current.Hour == 00) {
   
     count =0;
     totalcount = 0;

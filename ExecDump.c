@@ -1488,6 +1488,8 @@ void DumpPix(DATE * Current, int first, FILES * OutFile, FILES * OutFileSediment
   // Sediment Values File
   if (Options->Sediment) {
 
+
+  
     // Date
     PrintDate(Current, OutFileSediment->FilePtr);
 

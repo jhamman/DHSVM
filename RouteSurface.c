@@ -82,8 +82,9 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
   float settling;              /* Settling velocity (m/s) */
   float Fw;                    /* Water depth correction factor */
 
+/* Check to see if calculations for surface erosion should be done */
 
-  if (Options->Sediment) {
+  if (Options->SurfaceErosion) {
     if ((SedIn = (float **) calloc(Map->NY, sizeof(float *))) == NULL) {
       ReportError((char *) Routine, 1);
     }
@@ -109,9 +110,9 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
     /* IExcess in meters/time step */
     if(!Options->Routing) {
       
-      if(Options->Sediment) {
+      if(Options->SurfaceErosion) {
 	fprintf(stderr, 
-		"The sediment model must be run with kinematic wave routing.\n");
+		"The surface erosion model must be run with kinematic wave routing.\n");
 	exit(0);
       }
       
@@ -166,7 +167,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	y = Map->OrderedCells[k].y;
 	x = Map->OrderedCells[k].x;
 	SoilMap[y][x].Runoff = 0.;
-	if(Options->Sediment){
+	if(Options->SurfaceErosion){
 	  SedMap[y][x].SedFluxOut = 0.;
 	  SedMap[y][x].Erosion = 0.;
 	}
@@ -185,7 +186,6 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	for (k = (Map->NumCells)-1; k >-1;  k--) {
 	  y = Map->OrderedCells[k].y;
 	  x = Map->OrderedCells[k].x;
-	
 	  outflow = SoilMap[y][x].startRunoff; 
 	  
 	  slope = TopoMap[y][x].Slope;
@@ -197,7 +197,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	
 	  beta = 3./5.;
 	  alpha = pow(SType[SoilMap[y][x].Soil-1].Manning*pow(Map->DX,2./3.)/sqrt(slope),beta);
-
+	 
 	  /* Calculate discharge (m3/s) from the grid cell using an explicit 
 	     finite difference solution of the linear kinematic wave. */
 	  if(Runon[y][x] > 0.0001 || outflow > 0.0001) {
@@ -220,16 +220,35 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	  sedoutflow = outflow;
 	  h = SoilMap[y][x].IExcess;
 	  
+	  
 	  if (channel_grid_has_channel(ChannelData->stream_map, x, y)  
 	      || (channel_grid_has_channel(ChannelData->road_map, x, y) 
 		  && !channel_grid_has_sink(ChannelData->road_map, x, y))) {
+	    
+	    /*  Recalculate for pixels with channels for sediment erosion  */
+	    
+	    if(Runon[y][x] > 0.0001 || outflow > 0.0001) {
+	      sedoutflow = ((VariableDT/Map->DX)*Runon[y][x] + 
+			    alpha*beta*outflow * pow((outflow+Runon[y][x])/2.0,beta-1.) +
+			    (SoilMap[y][x].IExcess+SoilMap[y][x].IExcessSed)*Map->DX*VariableDT/Time->Dt)/
+		((VariableDT/Map->DX) + alpha*beta*pow((outflow+
+							Runon[y][x])/2.0, beta-1.));
+	    }
+	    else if(SoilMap[y][x].IExcessSed > 0.0)
+	    sedoutflow = SoilMap[y][x].IExcessSed*Map->DX*Map->DY/Time->Dt; 
+	    
+	    else
+	      sedoutflow = 0.0; 
+	    
+	    if(sedoutflow < 0.0) 
+	      sedoutflow = 0.0; 
 	    outflow = 0.0;
-	    h = SoilMap[y][x].IExcessSed;
+	    h = (SoilMap[y][x].IExcessSed+SoilMap[y][x].IExcess);
 	    SoilMap[y][x].IExcessSed = 0.;
 	  }
-
-	   /*Make sure calculated outflow doesn't exceed available water, 
-	     and update surface water storage */
+	  
+	  /*Make sure calculated outflow doesn't exceed available water, 
+	    and update surface water storage */
 	  
 	  if(outflow > (SoilMap[y][x].IExcess*(Map->DX*Map->DY)/Time->Dt + Runon[y][x])) 
 	    outflow = SoilMap[y][x].IExcess*(Map->DX*Map->DY)/Time->Dt + 
@@ -237,21 +256,21 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	  
 	  SoilMap[y][x].IExcess += (Runon[y][x] - outflow)*
 	    VariableDT/(Map->DX*Map->DY);
-	 
+	  
 	  /*************************************************************/
 	  /* PERFORM HILLSLOPE SEDIMENT ROUTING.                       */
 	  /*************************************************************/
 	  
-	  if(Options->Sediment) {
-
+	  if(Options->SurfaceErosion) {
+	    
 	    DS = SedType[SoilMap[y][x].Soil-1].d50/1000000.;
-
+	    
             /* calculate unit streampower = u*S (m/s)  */
 	    streampower = (sedoutflow/Map->DX/h)*slope;
-
+	    
             /* avoid dividing by zero */
 	    if (h <= 0.) streampower = 0.;
-
+	    
 	    /* Only perform sediment routing if there is depth greater than the 
 	       particle diameter, there is outflow, and streampower is greater than 
 	       critical streampower */
@@ -260,7 +279,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	      /* First find potential erosion due to rainfall Morgan et al. (1998). 
 		 Momentum squared of the precip is determined in MassEnergyBalance.c
 		 Converting from (kg/m2*s) to (m3/s*m) */
-
+	      
 	      if (h <= PrecipMap[y][x].Dm)
 		Fw = 1.;
 	      else
@@ -280,7 +299,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	      
 	      /* converting units to m3 m-1 s-1*/
 	      DR = DR/PARTDENSITY * Map->DX;
-
+	      
        	      /* from Julien particle settling velocity */
 	      settling = (8.0*knviscosity/DS) *
 		(sqrt(1.+ ((PARTDENSITY/WATER_DENSITY)-1.)*(G*1000)*DS*DS*DS/
@@ -289,7 +308,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	      /* calculate transport capacity eq. 7 kineros */
 	      TC = 0.05/(DS*pow((PARTDENSITY/WATER_DENSITY-1),2.))*
 		sqrt(slope*h/G)*(streampower-SETTLECRIT);
-
+	      
 	      /* Calculate sediment mass balance. */
 	      term1 = (TIMEWEIGHT/Map->DX);
 	      term2 = alpha/(2.*VariableDT);
@@ -302,13 +321,13 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 					       term3*SoilMap[y][x].startRunon) +
 			DR + Map->DY*settling*TC)/
 		(term2*pow(sedoutflow, beta) + term1*sedoutflow + Map->DY*settling);
-
-
+	      
+	      
 	      if(SedOut >= TC) SedOut = TC;
- 
+	      
 	      SedMap[y][x].OldSedOut = SedOut;
 	      SedMap[y][x].OldSedIn = SedIn[y][x];
-	      SedMap[y][x].SedFluxOut += (SedOut*Runon[y][x]*
+	      SedMap[y][x].SedFluxOut += (SedOut*sedoutflow*
 					  VariableDT);  /* total sediment (m3) */
 	      SedMap[y][x].Erosion += (SedIn[y][x]*Runon[y][x] - SedOut*sedoutflow)*
 		VariableDT/(Map->DX*Map->DY)*1000.;  /* total depth of erosion (mm) */
@@ -319,7 +338,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	      SedMap[y][x].OldSedIn = 0.;
 	      SedOut = 0.;
 	    }	    
-	  } /* end of if Options->Sediment */
+	  } /* end of if Options->SurfaceErosion */
 	  
 	  /* Save sub-timestep runoff for q(i)(t-1) and q(i-1)(t-1) of next time step. */
 	  SoilMap[y][x].startRunoff = outflow;
@@ -327,14 +346,14 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	  
 	  /* Calculate total runoff in m/dhsvm timestep. */
 	  SoilMap[y][x].Runoff += outflow*VariableDT/(Map->DX*Map->DY); 
-
+	  
 	  /* Sediment from pixels with channels goes into the 
 	     channel.  This assumes that all the sediments belong to the smallest  
 	     category of sediment particle sizes (first size, index 0) */
 	  /* Note that stream_map and road_map are indexed by [x][y],
 	     unlike the other "map"-type variables. */
-
-	  if((Options->Sediment)&&(SedOut > 0.)&&
+	  
+	  if((Options->SurfaceErosion)&&(SedOut > 0.)&&
 	     (channel_grid_has_channel(ChannelData->stream_map, x, y))) {
 	    
 	    ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[0] += SedOut; 
@@ -359,21 +378,23 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 					      (float) TopoMap[y][x].TotalDir);
 		  
 		  /* No need to distribute sediment if there isn't any*/
-		  if((Options->Sediment)&&(SedOut > 0.)) 	
-		      SedIn[yn][xn] += SedOut * ((float) TopoMap[y][x].Dir[n] /
-						 (float) TopoMap[y][x].TotalDir);
+		  
+		  if((Options->SurfaceErosion)&&(SedOut > 0.)) 	
 		    
+		    SedIn[yn][xn] += SedOut * ((float) TopoMap[y][x].Dir[n] /
+					       (float) TopoMap[y][x].TotalDir);
+		  
 		}
 	      }
 	    } /* end loop thru possible flow directions */
 	  }
-	 
+	  
 	  /* Initialize runon for next timestep. */
 	  Runon[y][x] = 0.0;
 	  /* Initialize SedIn for next timestep. */
-	  if(Options->Sediment) 
+	  if(Options->SurfaceErosion) 
 	    SedIn[y][x] = 0.0;
-
+	  
 	} /* end loop thru ordered basin cells */
 	
         /* Increases time by VariableDT. */
@@ -385,7 +406,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
       
     }/* End of code added for kinematic wave routing. */
     
-    if(Options->Sediment) {
+    if(Options->SurfaceErosion) {
       for (y = 0; y < Map->NY; y++) {
 	free(SedIn[y]);
       }
@@ -448,8 +469,8 @@ float FindDT(SOILPIX **SoilMap, MAPSIZE *Map, TIMESTRUCT *Time,
 	     TOPOPIX **TopoMap, SOILTABLE *SType)
 {
   int x, y;
-/* JSL: slope is manning's slope; alpha is channel parameter including wetted perimeter, 
-   manning's n, and manning's slope.  Beta is 3/5 */
+  /* JSL: slope is manning's slope; alpha is channel parameter including wetted perimeter, 
+     manning's n, and manning's slope.  Beta is 3/5 */
   float slope, beta, alpha;
   float Ck;
   float DT, minDT;
@@ -500,19 +521,19 @@ float viscosity(float Tair, float Rh)
   float knviscosity=0;               /* kinematic viscosity */
   float Tdew=0;                     /* Dew point temperature */
   float X;                           /* complement of relative humidity, fraction */
-
-
-
+  
+  
+  
 /* estimate kinematic viscosity through interpolation JSL */
-
+  
 /* calculate Dewpoint temperature Eq. 2-7 Linsley */
   X=1.-Rh/100.;
-
-
-  Tdew=-(14.55+.114*Tair)*X-pow(((2.5+0.007*Tair)*X),3)-(15.9+.117*Tair)*pow(X,14)+Tair;
-
   
-
+  
+  Tdew=-(14.55+.114*Tair)*X-pow(((2.5+0.007*Tair)*X),3)-(15.9+.117*Tair)*pow(X,14)+Tair;
+  
+  
+  
   if (Tdew<0.)
     knviscosity=1.792;
   else if (Tdew<4. && Tdew>=0.)
@@ -531,3 +552,53 @@ float viscosity(float Tair, float Rh)
     knviscosity=(.6611-(Tdew-40.)/10.*(.6611-.556));
   return knviscosity;
 }
+
+void SedimentFlag(OPTIONSTRUCT *Options,  TIMESTRUCT * Time){
+  
+  int oldrouting;
+  
+  if ((Options->ErosionPeriod) && (Time->Current.Julian==Time->Start.Julian)){
+    Options->OldSedFlag=1;
+  }
+  
+  oldrouting=Options->Routing;
+  
+  if((Options->Sediment) && (Options->ErosionPeriod)) {
+    
+    if (Time->StartSed.JDay>=Time->EndSed.JDay){
+      if((Time->Current.JDay<=Time->StartSed.JDay && Time->Current.JDay<=Time->EndSed.JDay) || (Time->Current.JDay>=Time->StartSed
+												.JDay && Time->Current.JDay>=Time->EndSed.JDay)) {
+        Options->SurfaceErosion=TRUE;
+      }
+      else Options->SurfaceErosion=FALSE;
+    }
+    else if (Time->Current.JDay>=Time->StartSed.JDay && Time->Current.JDay<=Time->EndSed.JDay){
+      Options->SurfaceErosion=TRUE;
+    }
+    else Options->SurfaceErosion=FALSE;
+  }
+  if ((Options->OldSedFlag != Options->SurfaceErosion) && (Time->Current.Julian!=Time->Start.Julian)) {
+    if (Options->SurfaceErosion==1)
+      fprintf(stderr,"Beginning surface erosion model calculations.\n");
+    else
+      fprintf(stderr,"Ending surface erosion model calculations.\n");
+  }
+  Options->OldSedFlag=Options->SurfaceErosion;
+  
+  if(Options->SurfaceErosion){
+    Options->Routing=TRUE;
+   if (oldrouting!=Options->Routing)
+     fprintf(stderr,"Turning on kinematic routing calculations.\n");
+  }
+  
+  else if (!Options->OldRouteFlag){
+    Options->Routing=FALSE;
+    if (oldrouting!=Options->Routing)
+      fprintf(stderr,"Turning off kinematic routing calculations.\n");
+  }
+}
+
+
+
+
+

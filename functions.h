@@ -375,6 +375,8 @@ int ScanFloats(FILE *FilePtr, float *X, int N);
 
 uchar ScanUChars(FILE *FilePtr, uchar *X, int N);
 
+void SedimentFlag(OPTIONSTRUCT *Options,  TIMESTRUCT * Time);
+
 void SkipHeader(FILES *InFile, int NLines);
 
 void SkipLines(FILES *InFile, int NLines);
