@@ -274,13 +274,13 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
     count =0;
     totalcount = 0;
     for (y = 0; y < Map->NY; y++) {
-      for (x = 0; x < Map->NX; x++) {
-	if (INBASIN(TopoMap[y][x].Mask)) {
-	  mgrid = (SoilMap[y][x].Depth - SoilMap[y][x].TableDepth)/SoilMap[y][x].Depth;
-	  if(mgrid > MTHRESH) count += 1;
-	  totalcount +=1;
-	}
-      }
+		for (x = 0; x < Map->NX; x++) {
+			if (INBASIN(TopoMap[y][x].Mask)) {
+				mgrid = (SoilMap[y][x].Depth - SoilMap[y][x].TableDepth)/SoilMap[y][x].Depth;
+				if(mgrid > MTHRESH) count += 1;
+				totalcount +=1;
+			}
+		}
     }
     
     /* If Greater than SATPERCENT of the pixels have a water table that is at least 85% of 

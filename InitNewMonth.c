@@ -130,6 +130,7 @@ void InitNewMonth(TIMESTRUCT *Time, OPTIONSTRUCT *Options, MAPSIZE *Map,
       VType[i].Taud = 0.0;
     }
   }
+  
 
 }
 

@@ -42,6 +42,8 @@ void InitTerrainMaps(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   InitSoilMap(Input, Map, Soil, *TopoMap, SoilMap);
   InitVegMap(Input, Map, VegMap);
 
+
+
 }
 
 /*****************************************************************************
@@ -109,12 +111,13 @@ void InitTopoMap(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
     for (x = 0; x < Map->NX; x++, i++) 
       (*TopoMap)[y][x].Mask = Mask[i];
   free(Mask);
-
+  
   /* Calculate slope, aspect, magnitude of subsurface flow gradient, and 
      fraction of flow flowing in each direction based on the land surface 
      slope. */
   ElevationSlopeAspect(Map, *TopoMap);
 
+  
   /* After calculating the slopes and aspects for all the points, reset the 
      mask if the model is to be run in point mode */
   if (Options->Extent == POINT) {

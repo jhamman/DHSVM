@@ -392,6 +392,7 @@ typedef struct {
   int Index;
   int NLayers;			/* Number of soil layers */
   float Albedo;			/* Albedo of the soil surface */
+  float Manning;		/* Manning's roughness of the soil surface. */ 
   float *Porosity;		/* Soil porosity for each layer */
   float *PoreDist;		/* Pore size distribution for each layer */
   float *Press;			/* Soil bubling pressure for each layer */
@@ -503,23 +504,7 @@ typedef struct {
   STATSTABLE VegSurcharge;      /* Used for the mass wasting model. */
 } VEGTABLE;
 
-typedef struct {
-  EVAPPIX Evap;
-  PRECIPPIX Precip;
-  PIXRAD Rad;
-  RADCLASSPIX RadClass;
-  SNOWPIX Snow;
-  SOILPIX Soil;
-  float SoilWater;
-  float CanopyWater;
-  float Runoff;
-  float ChannelInt;
-  float RoadInt;
-  unsigned long Saturated;
-  float CulvertReturnFlow;
-  float CulvertToChannel;
-  float RunoffToChannel;
-} AGGREGATED;
+
 
 typedef struct {
   float StartWaterStorage;
@@ -551,7 +536,6 @@ typedef struct {
 
 typedef struct {
   char Desc[BUFSIZE + 1];	/* Soil type */
-  float Manning;                /* Manning's roughness of the soil surface. */
   float KIndex;                 /* Index of soil detachability via raindrop impact (g/J). */
   STATSTABLE Cohesion;		/* Soil cohesion (kPa) . */
   STATSTABLE Friction;		/* Angle of internal friction. */	
@@ -575,6 +559,25 @@ typedef struct {
   float DeltaDepth;
   float probability;             /* Pixel failure probability. */
 } FINEPIX; 
+
+typedef struct {
+  EVAPPIX Evap;
+  PRECIPPIX Precip;
+  PIXRAD Rad;
+  RADCLASSPIX RadClass;
+  SNOWPIX Snow;
+  SOILPIX Soil;
+  SEDPIX Sediment;
+  float SoilWater;
+  float CanopyWater;
+  float Runoff;
+  float ChannelInt;
+  float RoadInt;
+  unsigned long Saturated;
+  float CulvertReturnFlow;
+  float CulvertToChannel;
+  float RunoffToChannel;
+} AGGREGATED;
 
 #endif
 

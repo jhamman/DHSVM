@@ -224,7 +224,11 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
       Options->Routing = TRUE;
     }
   }
+  // Olivier - 2003/07/29 : Kinematic wave routing can now be run without the sediment
+  // as we now read manning's n in the general input file and add it to SOILTABLE instead of
+  // SEDTABLE.
 
+/*
   if(Options->Routing == TRUE) {
     if(!Options->Sediment) {
       fprintf(stderr, "WARNING: Kinematic wave routing cannot be run without the sediment\n");
@@ -232,7 +236,7 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
       fprintf(stderr, "Sediment being reset to TRUE.\n");
       Options->Sediment = TRUE;
     }
-  }
+  }*/
 
   if(Options->Sediment == TRUE) {
     if (IsEmptyStr(StrEnv[sed_input_file].VarStr))

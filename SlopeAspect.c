@@ -86,7 +86,6 @@ static void slope_aspect(float dx, float dy, float celev, float
 {
   int n;
   float dzdx, dzdy;
-
   switch (NDIRS) {
   case 8:
     /* for eight neighbors, this is
@@ -145,6 +144,7 @@ static void slope_aspect(float dx, float dy, float celev, float
     *aspect = atan2(dzdx, dzdy);
   }
 
+  if (*slope>2.0) printf("slope >2 = %g\n",*slope);
   return;
 }
 
@@ -228,37 +228,37 @@ void ElevationSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap)
     for (y = 0; y < Map->NY; y++) {
       if (TopoMap[y][x].Mask) {
 
-	
-	/* Count the number of cells in the basin.  Need this to allocate memory for
-	   the new, smaller Elev[] and Coords[][].  */
-	if (INBASIN(TopoMap[y][x].Mask)) Map->NumCells++;
-    
-	for (n = 0; n < NDIRS; n++) {
-	  int xn = x + xneighbor[n];
-	  int yn = y + yneighbor[n];
+			/* Count the number of cells in the basin.  Need this to allocate memory for
+			the new, smaller Elev[] and Coords[][].  */
+			if (INBASIN(TopoMap[y][x].Mask)) 
+				Map->NumCells++;
+		    
+			for (n = 0; n < NDIRS; n++) {
+				int xn = x + xneighbor[n];
+				int yn = y + yneighbor[n];
 
-	  if (valid_cell(Map, xn, yn)) {
-	    neighbor_elev[n] =
-	      ((TopoMap[yn][xn].Mask) ? TopoMap[yn][xn].
-	       Dem : (float) OUTSIDEBASIN);
-	  }
-	  else {
-	    neighbor_elev[n] = OUTSIDEBASIN;
-	  }
-	}
-	slope_aspect(Map->DX, Map->DY, TopoMap[y][x].Dem, neighbor_elev,
-		     &(TopoMap[y][x].Slope), &(TopoMap[y][x].Aspect));
+				if (valid_cell(Map, xn, yn)) {
+					neighbor_elev[n] = ((TopoMap[yn][xn].Mask) ? TopoMap[yn][xn].Dem : (float) OUTSIDEBASIN);
+				}
+				else {
+					neighbor_elev[n] = OUTSIDEBASIN;
+				}
+			}
+			
+			slope_aspect(Map->DX, Map->DY, TopoMap[y][x].Dem, neighbor_elev,
+					&(TopoMap[y][x].Slope), &(TopoMap[y][x].Aspect));
+			
+			/* fill Dirs in TopoMap too */
 
-	/* fill Dirs in TopoMap too */
-
-	flow_fractions(Map->DX, Map->DY, TopoMap[y][x].Slope,
-		       TopoMap[y][x].Aspect,
-		       neighbor_elev, &(TopoMap[y][x].FlowGrad),
-		       TopoMap[y][x].Dir, &(TopoMap[y][x].TotalDir));
-
-      }
+			flow_fractions(Map->DX, Map->DY, TopoMap[y][x].Slope,
+					TopoMap[y][x].Aspect,
+					neighbor_elev, &(TopoMap[y][x].FlowGrad),
+					TopoMap[y][x].Dir, &(TopoMap[y][x].TotalDir));
+			
+	  } // end of if statement (TopoMap[y][x].Mask)
+	  
     }
-  }
+  } // end of for loops
 
   /* Create a structure to hold elevations of only those cells
      within the basin and the y,x of those cells.*/

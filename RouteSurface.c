@@ -87,7 +87,9 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	ReportError((char *) Routine, 1);
       }
     }
+	
   }
+
 
   if (Options->HasNetwork) {
     if ((Runon = (float **) calloc(Map->NY, sizeof(float *))) == NULL) {
@@ -104,45 +106,46 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
     if(!Options->Routing) {
  
       if(Options->Sediment) {
-	fprintf(stderr, "The sediment model must be run with kinematic wave routing.\n");
-	exit(0);
+		fprintf(stderr, "The sediment model must be run with kinematic wave routing.\n");
+		exit(0);
       }
 
       for (y = 0; y < Map->NY; y++) {
-	for (x = 0; x < Map->NX; x++) {
-	  if (INBASIN(TopoMap[y][x].Mask)) {
-	    SoilMap[y][x].Runoff = SoilMap[y][x].IExcess;
-	    SoilMap[y][x].IExcess = 0.0;
-	  }
-	}
+		for (x = 0; x < Map->NX; x++) {
+			if (INBASIN(TopoMap[y][x].Mask)) {
+				SoilMap[y][x].Runoff = SoilMap[y][x].IExcess;
+				SoilMap[y][x].IExcess = 0.0;
+			}
+		}
       }
   
       for (y = 0; y < Map->NY; y++) {
-	for (x = 0; x < Map->NX; x++) {
-	  if (INBASIN(TopoMap[y][x].Mask)) {
-	    if (VType[VegMap[y][x].Veg - 1].ImpervFrac > 0.0) {
-	      SoilMap[TopoMap[y][x].drains_y][TopoMap[y][x].drains_x].IExcess +=
-		SoilMap[y][x].Runoff;
-	    }
-	    else {
-	      for (n = 0; n < NDIRS; n++) {
-		int xn = x + xneighbor[n];
-		int yn = y + yneighbor[n];
-		if (valid_cell(Map, xn, yn)) {
-		  SoilMap[yn][xn].IExcess +=
-		    SoilMap[y][x].Runoff * ((float) TopoMap[y][x].Dir[n] /
-						  (float) TopoMap[y][x].TotalDir);
+		for (x = 0; x < Map->NX; x++) {
+			if (INBASIN(TopoMap[y][x].Mask)) {
+				if (VType[VegMap[y][x].Veg - 1].ImpervFrac > 0.0) {
+					SoilMap[TopoMap[y][x].drains_y][TopoMap[y][x].drains_x].IExcess +=
+					SoilMap[y][x].Runoff;
+				}
+				else {
+					for (n = 0; n < NDIRS; n++) {
+						int xn = x + xneighbor[n];
+						int yn = y + yneighbor[n];
+						if (valid_cell(Map, xn, yn)) {
+							SoilMap[yn][xn].IExcess +=
+									SoilMap[y][x].Runoff * ((float) TopoMap[y][x].Dir[n] /
+									(float) TopoMap[y][x].TotalDir);
+						}
+					}
+				}
+			}
 		}
-	      }
-	    }
-	  }
-	}
       }
-    }
+    }// end if !Options->routing
 
     /* Begin code for kinematic wave routing. */    
     else { 
 
+		
       NextTime = *Time;
       VariableTime = *Time;
 
@@ -153,43 +156,60 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
       /* Use the Courant condition to find the maximum stable time step (in seconds). */
       /* Must be an even increment of Dt. */
 
-      VariableDT = FindDT(SoilMap, Map, Time, TopoMap, SedType);
+      VariableDT = FindDT(SoilMap, Map, Time, TopoMap, SType); 
       
       //      fprintf(stderr, "VariableDT = %f\n", VariableDT);
 
       for (k = 0; k < Map->NumCells; k++) {
-	y = Map->OrderedCells[k].y;
-	x = Map->OrderedCells[k].x;
-	  SoilMap[y][x].Runoff = 0.0;
-	  if(Options->Sediment)
-	    SedMap[y][x].TotalSediment = 0.0;
+		y = Map->OrderedCells[k].y;
+		x = Map->OrderedCells[k].x;
+		SoilMap[y][x].Runoff = 0.0;
+		if(Options->Sediment)
+			SedMap[y][x].TotalSediment = 0.0;
       }
 
       /* Must loop through surface routing multiple times within one DHSVM model time step. */
 
       while (Before(&(VariableTime.Current), &(NextTime.Current))) {
     
+		  if (Options->Sediment){
+			for (y = 0; y < Map->NY; y++) { 
+				for (x = 0; x< Map->NX; x++) {
+					SedIn[y][x] -= SedMap[y][x].OldSedIn ;
+				}
+			}
+		  }// end Options->Sediment
 	/* Loop thru all of the cells in descending order of elevation */
 	for (k = 0; k < Map->NumCells; k++) {
+	
 	  y = Map->OrderedCells[k].y;
 	  x = Map->OrderedCells[k].x;
 	
 	  outflow = SoilMap[y][x].startRunoff;
 
 	  slope = TopoMap[y][x].Slope; /*large grid cell slope.*/
-          if (slope == 0) slope=0.0001;
+      if (slope == 0) slope=0.0001;
 	  else if (slope < 0) {
 	    printf("negative slope in RouteSurface.c\n");
 	    exit(0);
 	  }
 
+	  // should we add a condition because Manning's expression is only valid in some conditions ?
+	  
+	  /*if (pow(SType[SoilMap[y][x].Soil-1].Manning,6)*sqrt(Map->DX*slope)<1.9e-13)
+			then Manning's equation is not valid
+	  */
 	  beta = 3./5.;
-	  alpha = pow(SedType[SoilMap[y][x].Soil-1].Manning*pow(Map->DX,2/3)/sqrt(slope),beta);
+	  // Olivier 2003/07/30 : Now we use Manning from SOILTABLE (not from SEDTABLE)
+	  alpha = pow(SType[SoilMap[y][x].Soil-1].Manning*pow(Map->DX,2/3)/sqrt(slope),beta);
 	  
 	  /* Calculate discharge from the grid cell using an explicit finite difference
 	     solution of the linear kinematic wave. */
 
-	  if (channel_grid_has_channel(ChannelData->stream_map, x, y) || channel_grid_has_channel(ChannelData->road_map, x, y)) 
+	  if (channel_grid_has_channel(ChannelData->stream_map, x, y)  
+		  || (channel_grid_has_channel(ChannelData->road_map, x, y) 
+				&& !channel_grid_has_sink(ChannelData->road_map, x, y))
+		  ) 
 	    {
 	      outflow = 0.0;
 	    }
@@ -202,9 +222,12 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 		       SoilMap[y][x].IExcess*Map->DX*VariableDT/Time->Dt) / ((VariableDT/Map->DX) +
 									     alpha*beta*pow((outflow+
 											     Runon[y][x])/2.0, beta-1.));
+
 	      }
-	      else if(SoilMap[y][x].IExcess > 0.0)
+		  else if(SoilMap[y][x].IExcess > 0.0){
 		outflow = SoilMap[y][x].IExcess*Map->DX*Map->DY/Time->Dt;
+	
+		  }
 	      else
 		outflow = 0.0;
 	    }
@@ -238,14 +261,18 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 
 	    /* Find transport capacity of the flow out of this grid cell. */
 	    
-		// Olivier - 2003/07/08 : We need to add a condition on h 
+		// Olivier - 2003/07/08 : We need to add a condition on h and outflow
 		// if there is no surface water, there should be no transport capacity
-		// By the way it prevents a division by 0 in the effectivepower calculation
-		if (h!=0)
+		// By the way it prevents a division by 0 in the effectivepower and TC calculations
+		if ((h!=0) && (outflow>0.0))
 		{
+			/* from Everaert equations (5) */
 			streampower= WATER_DENSITY*G*1000.*(outflow/Map->DX)*slope; /* g/s3 */
 
-			effectivepower = sqrt(streampower)/pow(h*100.,2./3.); /* g^1.5 * s^-4.5 * cm^-2/3 */
+			//Nathalie: 2003/07/25: the former version wasn't consistent with the article
+			// effectivepower = sqrt(streampower)/pow(h*100.,2./3.); /* g^1.5 * s^-4.5 * cm^-2/3 */
+
+			effectivepower = pow(streampower,1.5)/pow(h*100.,2./3.); /* g^1.5 * s^-4.5 * cm^-2/3 */
 
 			soliddischarge = (0.000001977) * pow(effectivepower, 1.044) * pow(SedType[SoilMap[y][x].Soil-1].d50, 0.478);  /* g/cm*s */
 
@@ -263,57 +290,63 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
  
 	    term1 = (TIMEWEIGHT/Map->DX);
 	    term2 = alpha/(2.*VariableDT);
-	    term3 = (1.-TIMEWEIGHT/Map->DX);
+		// Olivier - 2003/07/25 : parenthesis was misplaced : "term3 = (1.-TIMEWEIGHT/Map->DX);"
+	    term3 = (1.-TIMEWEIGHT)/Map->DX;
 	
 		// Olivier - 2003/07/08 : we need to add a condition on outflow
-		// To avoid a division by zero, we should add an if statement,
+		// To avoid a division by zero, I added an if statement,
 		// and it makes sense. If there is no outflow, SedOut should be null too.
 		if (outflow > 0.0) {
 
-			SedOut = (SedIn[y][x]*(term1*Runon[y][x]-term2*pow(Runon[y][x], beta)) +
-			SedMap[y][x].OldSedOut*(term2*pow(SoilMap[y][x].startRunoff, beta) -
-						term3*SoilMap[y][x].startRunoff) +
-			SedMap[y][x].OldSedIn*(term2*pow(SoilMap[y][x].startRunon, beta) + 
-						term3*SoilMap[y][x].startRunon) +
-			DR + floweff*Map->DY*settling*TC)/(term2*pow(outflow, beta) + term1*outflow*floweff*Map->DY*settling);
+			// Olivier - 2003/07/25 : last term of denominator was containing an error
+			// I replaced expression "term1*outflow*floweff*Map->DY*settling" with
+			// "term1*outflow + floweff*Map->DY*settling"
 
-			if(SedOut >= TC)
 			SedOut = (SedIn[y][x]*(term1*Runon[y][x]-term2*pow(Runon[y][x], beta)) +
-			SedMap[y][x].OldSedOut*(term2*pow(SoilMap[y][x].startRunoff, beta) -
+				SedMap[y][x].OldSedOut*(term2*pow(SoilMap[y][x].startRunoff, beta) -
 						term3*SoilMap[y][x].startRunoff) +
-			SedMap[y][x].OldSedIn*(term2*pow(SoilMap[y][x].startRunon, beta) + 
+				SedMap[y][x].OldSedIn*(term2*pow(SoilMap[y][x].startRunon, beta) + 
 						term3*SoilMap[y][x].startRunon) +
-			DR + Map->DY*settling*TC)/(term2*pow(outflow, beta) + term1*outflow*Map->DY*settling);
+				DR + floweff*Map->DY*settling*TC)/(term2*pow(outflow, beta) + term1*outflow + floweff*Map->DY*settling);
+
+/*printf("%g || 1=%g, SedIn=%g, || 2=%g  OldSedOut=%g || 3=%g , OldSedIn=%g \n DR = %g, Last term = %g || Corrected dividende = %g\n", 
+	   SedOut, 
+	   term1*Runon[y][x]-term2*pow(Runon[y][x], beta),
+	   SedIn[y][x], 
+	   term2*pow(SoilMap[y][x].startRunoff, beta) -	term3*SoilMap[y][x].startRunoff,
+	   SedMap[y][x].OldSedOut,
+	   term2*pow(SoilMap[y][x].startRunon, beta) + term3*SoilMap[y][x].startRunon,
+	   SedMap[y][x].OldSedIn,
+	   DR,
+	   floweff*Map->DY*settling*TC,
+	  (term2*pow(outflow, beta) + term1*outflow + floweff*Map->DY*settling)
+
+	   );*/
+			
+			if(SedOut >= TC)
+			
+				SedOut = (SedIn[y][x]*(term1*Runon[y][x]-term2*pow(Runon[y][x], beta)) +
+					SedMap[y][x].OldSedOut*(term2*pow(SoilMap[y][x].startRunoff, beta) -
+							term3*SoilMap[y][x].startRunoff) +
+					SedMap[y][x].OldSedIn*(term2*pow(SoilMap[y][x].startRunon, beta) + 
+							term3*SoilMap[y][x].startRunon) +
+					DR + Map->DY*settling*TC)/(term2*pow(outflow, beta) + term1*outflow + Map->DY*settling);
+
 
 	    }
 		else SedOut = 0.0 ;
-	    
 
-	    SedMap[y][x].OldSedOut = SedOut;
+		SedMap[y][x].OldSedOut = SedOut;
 	    SedMap[y][x].OldSedIn = SedIn[y][x];
 	    SedMap[y][x].TotalSediment += SedOut;
-	    SedMap[y][x].erosion = (SedIn[y][x]*Runon[y][x] - SedOut*outflow)*Time->Dt/(Map->DX*Map->DY);;
-
-		// This is a first attempt to determine overland inflow added to the channel
-		// It has to be tested and checked.
-
-		// if grid cell has a channel, sediment is intercepted by the channel
-		if (channel_grid_has_channel(ChannelData->stream_map,x,y))
-		{
-
-			for (particle_size=0; particle_size<NSEDSIZES; particle_size++)
-			{
-				// For now, we suppose that the mass of sediments is uniformely 
-				// distributed between all NSEDSIZES sizes of particles
-				ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[particle_size] += SedMap[y][x].TotalSediment * (1/NSEDSIZES) ;
-			}
-			SedMap[y][x].OldSedOut = 0.0;
-			SedMap[y][x].TotalSediment = 0.0;
-		}
+	    SedMap[y][x].erosion = (SedIn[y][x]*Runon[y][x] - SedOut*outflow)*Time->Dt/(Map->DX*Map->DY);
 
 
-
-	  }
+		// Test Olivier
+		/*if (x==72 && y==114){
+			printf("TotalSediment[%d][%d] = %g || SedIn[x,y]=%g || Sedout=%g\n", y,x,SedMap[y][x].TotalSediment, SedIn[y][x], SedOut);
+		}*/
+	  } // end of if Options->Sediment
 
 	  /* Save sub-timestep runoff for q(i)(t-1) and q(i-1)(t-1) of next time step. */
 	  SoilMap[y][x].startRunoff = outflow;
@@ -326,21 +359,40 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	
 	  /* Redistribute surface water to downslope pixels. */
 	  if(outflow > 0) {  
+		  
 	    for (n = 0; n < NDIRS; n++) {
-	      int xn = x + xneighbor[n];
-	      int yn = y + yneighbor[n];
+			int xn = x + xneighbor[n];
+			int yn = y + yneighbor[n];
 
-	      /* If a channel cell runoff does not go to downslope pixels. */
-	      if (valid_cell(Map, xn, yn)) {
-		Runon[yn][xn] +=
-		  outflow * ((float) TopoMap[y][x].Dir[n] /
-			     (float) TopoMap[y][x].TotalDir);
-
-		if(Options->Sediment)
-		  SedIn[yn][xn] +=
-		    SedOut * ((float) TopoMap[y][x].Dir[n] /
-			     (float) TopoMap[y][x].TotalDir);
-	      }
+			/* If a channel cell runoff does not go to downslope pixels. */
+			/*if (valid_cell(Map, xn, yn)) {*/
+			if (INBASIN(TopoMap[yn][xn].Mask)) {
+				Runon[yn][xn] += outflow * ((float) TopoMap[y][x].Dir[n] /
+								(float) TopoMap[y][x].TotalDir);
+				if(Options->Sediment) {
+					
+					// if grid cell has a channel, sediment is intercepted by the channel
+					if (channel_grid_has_channel(ChannelData->stream_map, xn, yn)  
+					|| (channel_grid_has_channel(ChannelData->road_map, xn, yn) 
+							&& !channel_grid_has_sink(ChannelData->road_map, xn, yn)))
+					{
+						// For now, we assume that all the sediments belong to the smallest  
+						// category of sediment particle sizes (first size, index 0)
+						ChannelData->stream_map[xn][yn]->channel->sediment.overlandinflow[0] += SedOut * ((float) TopoMap[y][x].Dir[n] /
+																								(float) TopoMap[y][x].TotalDir); 
+						for (particle_size=1; particle_size<NSEDSIZES; particle_size++)
+						{
+							ChannelData->stream_map[xn][yn]->channel->sediment.overlandinflow[particle_size] = 0.0;				
+						}
+					}
+					else 
+						SedIn[yn][xn] += SedOut * ((float) TopoMap[y][x].Dir[n] /
+										(float) TopoMap[y][x].TotalDir);
+										
+				}
+			
+			}
+			else SedIn[yn][xn]=0.0;
 	    } /* end loop thru possible flow directions */
 	  }
 	  
@@ -422,7 +474,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 *****************************************************************************/
 
 float FindDT(SOILPIX **SoilMap, MAPSIZE *Map, TIMESTRUCT *Time, 
-	     TOPOPIX **TopoMap, SEDTABLE *SedType)
+	     TOPOPIX **TopoMap, SOILTABLE *SType)
 {
   int x, y;
   float slope, beta, alpha;
@@ -438,8 +490,10 @@ float FindDT(SOILPIX **SoilMap, MAPSIZE *Map, TIMESTRUCT *Time,
     for (x = 0; x < Map->NX; x++) {
 
       slope = TopoMap[y][x].Slope;
+	  //test Nath
+	  if (slope <= 0) slope = 0.0001; //Nath
       beta = 3./5.;
-      alpha = pow(SedType[SoilMap[y][x].Soil-1].Manning*pow(Map->DX,2/3)/sqrt(slope),beta);
+      alpha = pow(SType[SoilMap[y][x].Soil-1].Manning*pow(Map->DX,2/3)/sqrt(slope),beta);
 
       /* Calculate flow velocity from discharge  using manning's equation. */
       Ck = 1./(alpha*beta*pow(SoilMap[y][x].Runoff, beta -1.));

@@ -95,11 +95,12 @@ void InitDump(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   strcpy(Dump->Path, StrEnv[output_path].VarStr);
 
 	// delete any previous failure_summary.txt file
-	sprintf(sumoutfile, "%sfailure_summary.txt", Dump->Path);
+	//sprintf(sumoutfile, "%sfailure_summary.txt", Dump->Path);
+  sprintf(sumoutfile, "%s*.try", Dump->Path);
 	if (remove(sumoutfile) != -1)
 		printf(" - removed old version of failure_summary.txt\n");
 
-  if (IsEmptyStr(StrEnv[initial_state_path].VarStr))
+	if (IsEmptyStr(StrEnv[initial_state_path].VarStr))
     strcpy(Dump->InitStatePath, Dump->Path);
   strcpy(Dump->InitStatePath, StrEnv[initial_state_path].VarStr);
 

@@ -23,7 +23,7 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
 	       LAYER *Soil, LAYER *Veg, VEGPIX **VegMap, EVAPPIX **Evap,
 	       PRECIPPIX **Precip, RADCLASSPIX **RadMap, SNOWPIX **Snow,
 	       SOILPIX **SoilMap, AGGREGATED *Total, VEGTABLE *VType,
-	       ROADSTRUCT **Network);
+	       ROADSTRUCT **Network, SEDPIX **SedMap);
 
 void CalcAerodynamic(int NVegLayers, unsigned char OverStory,
 		     float n, float *Height, float Trunk, float *U,
@@ -67,13 +67,13 @@ void DumpMap(MAPSIZE *Map, DATE *Current, MAPDUMP *DMap, TOPOPIX **TopoMap,
 
 void DumpPix(DATE *Current, int first, FILES *OutFile, EVAPPIX *Evap,
 	     PRECIPPIX *Precip, RADCLASSPIX *Rad, SNOWPIX *Snow,
-	     SOILPIX *Soil, int NSoil, int NVeg);
+	     SOILPIX *Soil, SEDPIX *SedMap, int NSoil, int NVeg); 
 
 void ExecDump(MAPSIZE *Map, DATE *Current, DATE *Start,
 	      OPTIONSTRUCT *Options, DUMPSTRUCT *Dump, TOPOPIX **TopoMap,
 	      EVAPPIX **EvapMap, PRECIPPIX **PrecipMap,
 	      RADCLASSPIX **RadMap, SNOWPIX **SnowMap, MET_MAP_PIX **MetMap,
-	      VEGPIX **VegMap, LAYER *Veg, SOILPIX **SoilMap, LAYER *Soil,
+	      VEGPIX **VegMap, LAYER *Veg, SOILPIX **SoilMap, SEDPIX ** SedMap, LAYER *Soil, 
 	      AGGREGATED *Total, UNITHYDRINFO *HydrographInfo,
 	      Channel *ChannelData, float *Hydrograph);
 
@@ -82,7 +82,7 @@ unsigned char fequal(float a, float b);
 void FinalMassBalance(FILES *Out, AGGREGATED *Total, WATERBALANCE *Mass);
 
 float FindDT(SOILPIX **SoilMap, MAPSIZE *Map, TIMESTRUCT *Time, 
-	     TOPOPIX **TopoMap, SEDTABLE *SedType);
+	     TOPOPIX **TopoMap, SOILTABLE *SType); 
 
 void GenerateScales(MAPSIZE *Map, int NumberType, void **XScale,
 		    void **YScale);

@@ -33,7 +33,7 @@ void ExecDump(MAPSIZE * Map, DATE * Current, DATE * Start,
 	      OPTIONSTRUCT * Options, DUMPSTRUCT * Dump, TOPOPIX ** TopoMap,
 	      EVAPPIX ** EvapMap, PRECIPPIX ** PrecipMap,
 	      RADCLASSPIX ** RadMap, SNOWPIX ** SnowMap, MET_MAP_PIX ** MetMap,
-	      VEGPIX ** VegMap, LAYER * Veg, SOILPIX ** SoilMap, LAYER * Soil,
+	      VEGPIX ** VegMap, LAYER * Veg, SOILPIX ** SoilMap, SEDPIX ** SedMap, LAYER * Soil,
 	      AGGREGATED * Total, UNITHYDRINFO * HydrographInfo,
 	      Channel * ChannelData, float *Hydrograph)
 {
@@ -45,7 +45,7 @@ void ExecDump(MAPSIZE * Map, DATE * Current, DATE * Start,
   /* dump the aggregated basin values for this timestep */
   DumpPix(Current, IsEqualTime(Current, Start), &(Dump->Aggregate),
 	  &(Total->Evap), &(Total->Precip), &(Total->RadClass), &(Total->Snow),
-	  &(Total->Soil), Soil->MaxLayers, Veg->MaxLayers);
+	  &(Total->Soil), &(Total->Sediment), Soil->MaxLayers, Veg->MaxLayers);
   fprintf(Dump->Aggregate.FilePtr, " %lu", Total->Saturated);
   fprintf(Dump->Aggregate.FilePtr, "\n");
 
@@ -78,11 +78,19 @@ void ExecDump(MAPSIZE * Map, DATE * Current, DATE * Start,
     for (i = 0; i < Dump->NPix; i++) {
       y = Dump->Pix[i].Loc.N;
       x = Dump->Pix[i].Loc.E;
-      DumpPix(Current, IsEqualTime(Current, Start), &(Dump->Pix[i].OutFile),
-	      &(EvapMap[y][x]), &(PrecipMap[y][x]), &(RadMap[y][x]),
-	      &(SnowMap[y][x]), &(SoilMap[y][x]),
-	      Soil->NLayers[(SoilMap[y][x].Soil - 1)],
-	      Veg->NLayers[(VegMap[y][x].Veg - 1)]);
+	  // Olivier : If with Sediment Option, SedMap !=0, we dump SedMap
+	  if (SedMap!=0)
+			DumpPix(Current, IsEqualTime(Current, Start), &(Dump->Pix[i].OutFile),
+				&(EvapMap[y][x]), &(PrecipMap[y][x]), &(RadMap[y][x]),
+				&(SnowMap[y][x]), &(SoilMap[y][x]),&(SedMap[y][x]), 
+				Soil->NLayers[(SoilMap[y][x].Soil - 1)],
+				Veg->NLayers[(VegMap[y][x].Veg - 1)]);
+	  else
+		  DumpPix(Current, IsEqualTime(Current, Start), &(Dump->Pix[i].OutFile),
+				&(EvapMap[y][x]), &(PrecipMap[y][x]), &(RadMap[y][x]),
+				&(SnowMap[y][x]), &(SoilMap[y][x]), 0, 
+				Soil->NLayers[(SoilMap[y][x].Soil - 1)],
+				Veg->NLayers[(VegMap[y][x].Veg - 1)]);
 
       fprintf(Dump->Pix[i].OutFile.FilePtr, "\n");
     }
@@ -1000,7 +1008,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 *****************************************************************************/
 void DumpPix(DATE * Current, int first, FILES * OutFile, EVAPPIX * Evap,
 	     PRECIPPIX * Precip, RADCLASSPIX * Rad, SNOWPIX * Snow,
-	     SOILPIX * Soil, int NSoil, int NVeg)
+	     SOILPIX * Soil, SEDPIX * SedMap, int NSoil, int NVeg)
 {
   int i;			/* counter */
   int j;			/* counter */
@@ -1036,7 +1044,7 @@ void DumpPix(DATE * Current, int first, FILES * OutFile, EVAPPIX * Evap,
     for (i = 0; i < NSoil; i++)
       fprintf(OutFile->FilePtr, "Perc%d ", i);
     fprintf(OutFile->FilePtr, "TableDepth SatFlow Runoff ");
-    fprintf(OutFile->FilePtr, "SoilTemp Qnet Qs Qe Qg Qst Ra\n");
+    fprintf(OutFile->FilePtr, "SoilTemp Qnet Qs Qe Qg Qst Ra Sed\n"); 
   }
 
   /* All variables are dumped in the case of a pixel dump */
@@ -1075,7 +1083,16 @@ void DumpPix(DATE * Current, int first, FILES * OutFile, EVAPPIX * Evap,
     fprintf(OutFile->FilePtr, " %g", Soil->Perc[i]);
   fprintf(OutFile->FilePtr, " %g %g %g", Soil->TableDepth,
 	  Soil->SatFlow, Soil->Runoff);
-  fprintf(OutFile->FilePtr, " %g %g %g %g %g %g %g",
-	  Soil->TSurf, Soil->Qnet, Soil->Qs, Soil->Qe, Soil->Qg, Soil->Qst,
-	  Soil->Ra);
+  
+  if (SedMap!= 0)
+  // Olivier : If with Sediment Option, SedMap !=0, we print the TotalSediment Value
+	fprintf(OutFile->FilePtr, " %g %g %g %g %g %g %g %g", 
+		Soil->TSurf, Soil->Qnet, Soil->Qs, Soil->Qe, Soil->Qg, Soil->Qst,
+		Soil->Ra, SedMap->TotalSediment);
+  else
+  // otherwise, we just print 0.0 instead
+	fprintf(OutFile->FilePtr, " %g %g %g %g %g %g %g %g", 
+		Soil->TSurf, Soil->Qnet, Soil->Qs, Soil->Qe, Soil->Qg, Soil->Qst,
+		Soil->Ra, 0.0);
+
 }

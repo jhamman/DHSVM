@@ -39,7 +39,7 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
 	       LAYER *Soil, LAYER * Veg, VEGPIX **VegMap, EVAPPIX **Evap,
 	       PRECIPPIX **Precip, RADCLASSPIX **RadMap, SNOWPIX **Snow,
 	       SOILPIX **SoilMap, AGGREGATED *Total, VEGTABLE *VType,
-	       ROADSTRUCT **Network)
+	       ROADSTRUCT **Network, SEDPIX **SedMap)
 {
   int NPixels;			/* Number of pixels in the basin */
   int NSoilL;			/* Number of soil layers for current pixel */
@@ -146,6 +146,10 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
 	SoilMap[y][x].ChannelInt = 0.0;
 	Total->RoadInt += SoilMap[y][x].RoadInt;
 	SoilMap[y][x].RoadInt = 0.0;
+	// if Options->Sediment, SedMap !=0
+	if (SedMap!=0)
+		Total->Sediment.TotalSediment += SedMap[y][x].TotalSediment; 
+	else Total->Sediment.TotalSediment = 0 ;
       }
     }
   }
@@ -225,4 +229,5 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
   Total->CulvertReturnFlow /= NPixels;
   Total->CulvertToChannel /= NPixels;
   Total->RunoffToChannel /= NPixels;
+  Total->Sediment.TotalSediment /= NPixels; 
 }

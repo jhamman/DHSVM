@@ -110,4 +110,5 @@ void ResetAggregate(LAYER * Soil, LAYER * Veg, AGGREGATED * Total)
   Total->CulvertReturnFlow = 0;
   Total->CulvertToChannel = 0;
   Total->RunoffToChannel = 0;
+  Total->Sediment.TotalSediment = 0; 
 }

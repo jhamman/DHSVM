@@ -83,7 +83,6 @@ int InitSedTable(SEDTABLE **SedType, LISTPTR Input)
   char *KeyStr[] = {
     "SOIL DESCRIPTION",
     "SATURATED SOIL DENSITY",
-    "MANNINGS N",
     "KINDEX",
     "D50", 
     "SOIL COHESION DISTRIBUTION",
@@ -132,9 +131,6 @@ int InitSedTable(SEDTABLE **SedType, LISTPTR Input)
 
     if (!CopyFloat(&((*SedType)[i].SatDensity), VarStr[sat_density], 1))
       ReportError(KeyName[sat_density], 51);
-
-    if (!CopyFloat(&((*SedType)[i].Manning), VarStr[manning], 1))
-      ReportError(KeyName[manning], 51);
 
     if (!CopyFloat(&((*SedType)[i].KIndex), VarStr[kindex], 1))
       ReportError(KeyName[kindex], 51);

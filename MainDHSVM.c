@@ -85,6 +85,7 @@ int main(int argc, char **argv)
      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},	/* SNOWPIX */
     {0, 0.0, NULL, NULL, NULL, 0.0, 0.0, 0.0, 0.0,
      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},	/*SOILPIX */
+	{ 0.0, 0.0, 0.0, 0.0}, /*SEDPIX */ //Nath
     0.0, 0.0, 0.0, 0.0, 0.0, 0l
   };
   CHANNEL ChannelData = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
@@ -163,6 +164,8 @@ int main(int argc, char **argv)
   CheckOut(Options.CanopyRadAtt, Veg, Soil, VType, SType, &Map, TopoMap, 
 	   VegMap, SoilMap);
 
+    
+
   if (Options.HasNetwork)
     InitChannel(Input, &Map, Time.Dt, &ChannelData, SoilMap, &MaxStreamID, &MaxRoadID);
   else if (Options.Extent != POINT)
@@ -206,6 +209,8 @@ int main(int argc, char **argv)
 	      &ShadowMap, &SkyViewMap, &EvapMap, &PrecipMap,
 	      &RadarMap, &RadMap, SoilMap, &Soil, VegMap, &Veg, TopoMap,
 	      &MM5Input, &WindModel);
+
+
 
   InitInterpolationWeights(&Map, &Options, TopoMap, &MetWeights, Stat, NStats);
 
@@ -265,6 +270,8 @@ int main(int argc, char **argv)
 
     InitChannelSediment(ChannelData.streams);
 
+
+
     /* Allocate memory for the sediment grid */
     if (!(SedMap = (SEDPIX **) calloc(Map.NY, sizeof(SEDPIX *))))
       ReportError("MainDHSVM", 1);
@@ -276,15 +283,18 @@ int main(int argc, char **argv)
     /* Done with initialization, delete the list with input strings */
     DeleteList(Input);
   }
+  
 
   /* setup for mass balance calculations */
   Aggregate(&Map, &Options, TopoMap, &Soil, &Veg, VegMap, EvapMap, PrecipMap,
-	    RadMap, SnowMap, SoilMap, &Total, VType, Network);
+	    RadMap, SnowMap, SoilMap,  &Total, VType, Network, SedMap); 
+
   Mass.StartWaterStorage =
     Total.Runoff + Total.CanopyWater + Total.SoilWater + Total.Snow.Swq +
     Total.Soil.SatFlow;
   Mass.OldWaterStorage = Mass.StartWaterStorage;
 
+  	
 /*****************************************************************************
   Perform Calculations 
 *****************************************************************************/
@@ -356,7 +366,8 @@ int main(int argc, char **argv)
 	      SoilMap[y][x].Temp[i] = LocalMet.Tair;
 	  }
 
-	  MassEnergyBalance(y, x, SolarGeo.SineSolarAltitude, Map.DX, Map.DY, 
+	  
+  	  MassEnergyBalance(y, x, SolarGeo.SineSolarAltitude, Map.DX, Map.DY, 
 			    Time.Dt, Options.HeatFlux, Options.CanopyRadAtt, 
 			    Veg.MaxLayers, &LocalMet, &(Network[y][x]), 
 			    &(PrecipMap[y][x]), &(VType[VegMap[y][x].Veg-1]),
@@ -405,23 +416,24 @@ int main(int argc, char **argv)
 	   SType, SnowMap, SoilMap, VegMap, TopoMap, PrecipMap, PrismMap,
 	   SkyViewMap, ShadowMap, EvapMap, RadMap, MetMap);
 
-    Aggregate(&Map, &Options, TopoMap, &Soil, &Veg, VegMap, EvapMap, PrecipMap,
-	      RadMap, SnowMap, SoilMap, &Total, VType, Network);
+	Aggregate(&Map, &Options, TopoMap, &Soil, &Veg, VegMap, EvapMap, PrecipMap,
+			  RadMap, SnowMap, SoilMap, &Total, VType, Network, SedMap);
 
     MassBalance(&(Time.Current), &(Dump.Balance), &Total, &Mass);
 
-    ExecDump(&Map, &(Time.Current), &(Time.Start), &Options, &Dump, TopoMap,
-	     EvapMap, PrecipMap, RadMap, SnowMap, MetMap, VegMap, &Veg,
-	     SoilMap, &Soil, &Total, &HydrographInfo, ChannelData.streams,
-	     Hydrograph);
+	ExecDump(&Map, &(Time.Current), &(Time.Start), &Options, &Dump, TopoMap,
+			EvapMap, PrecipMap, RadMap, SnowMap, MetMap, VegMap, &Veg,
+			SoilMap, SedMap, &Soil, &Total, &HydrographInfo, ChannelData.streams,
+			Hydrograph);
 
     IncreaseTime(&Time);
 
   }
 
-  ExecDump(&Map, &(Time.Current), &(Time.Start), &Options, &Dump, TopoMap,
-	   EvapMap, PrecipMap, RadMap, SnowMap, MetMap, VegMap, &Veg, SoilMap,
-	   &Soil, &Total, &HydrographInfo, ChannelData.streams, Hydrograph);
+	ExecDump(&Map, &(Time.Current), &(Time.Start), &Options, &Dump, TopoMap,
+			EvapMap, PrecipMap, RadMap, SnowMap, MetMap, VegMap, &Veg, SoilMap,
+			SedMap, &Soil, &Total, &HydrographInfo, ChannelData.streams, Hydrograph);//Nath
+
 
   FinalMassBalance(&(Dump.Balance), &Total, &Mass);
 

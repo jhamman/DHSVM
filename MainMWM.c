@@ -409,7 +409,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX *** FineMap, VEGTABLE *VType, SEDTABLE *Se
   /* back to map analysis******************************************/
 
   sprintf(sumoutfile, "%sfailure_summary.txt", DumpPath);
-printf("Here we try to write in failure_summary.txt");
+
   if((fs=fopen(sumoutfile,"a")) == NULL)
     {
       fprintf(stderr,"Cannot open factor of safety summary output file.\n");
