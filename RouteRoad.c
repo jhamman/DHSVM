@@ -244,9 +244,9 @@ void RouteRoad(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 		/* Calculate unit streampower = u*S (m/s) */
 		streampower = (outflow /(h * dx)) * slope;
 
-		if (streampower > SETTLECRIT){
+		if (streampower > 0.0004){
 		  Cmx = 0.05/(DS*pow((PARTDENSITY/WATER_DENSITY-1.),2.))*pow((slope*h/G),0.5) * 
-		    (streampower - SETTLECRIT);
+		    (streampower - 0.0004);
 
 		  /* Calculate sediment mass balance. */
 		  term1 = (TIMEWEIGHT/dx);
