@@ -68,6 +68,8 @@ void InitDump(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
 				   dump maps */
   int temp_count;
   uchar **BasinMask;
+  char sumoutfile[100];
+  FILE *fs ;
 
   STRINIENTRY StrEnv[] = {
     {"OUTPUT", "OUTPUT DIRECTORY", "", ""},
@@ -91,6 +93,11 @@ void InitDump(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   if (IsEmptyStr(StrEnv[output_path].VarStr))
     ReportError(StrEnv[output_path].KeyName, 51);
   strcpy(Dump->Path, StrEnv[output_path].VarStr);
+
+	// delete any previous failure_summary.txt file
+	sprintf(sumoutfile, "%sfailure_summary.txt", Dump->Path);
+	if (remove(sumoutfile) != -1)
+		printf(" - removed old version of failure_summary.txt\n");
 
   if (IsEmptyStr(StrEnv[initial_state_path].VarStr))
     strcpy(Dump->InitStatePath, Dump->Path);
