@@ -24,7 +24,8 @@
 
   Set all the area averages to zero
 *****************************************************************************/
-void ResetAggregate(LAYER * Soil, LAYER * Veg, AGGREGATED * Total)
+void ResetAggregate(LAYER * Soil, LAYER * Veg, AGGREGATED * Total,
+                    OPTIONSTRUCT *Options)
 {
   int i;			/* counter */
   int j;			/* counter */
@@ -101,6 +102,9 @@ void ResetAggregate(LAYER * Soil, LAYER * Veg, AGGREGATED * Total)
   Total->Soil.Qe = 0.0;
   Total->Soil.Qg = 0.0;
   Total->Soil.Qst = 0.0;
+  Total->Soil.IExcess = 0.0;
+  if (Options->Infiltration == DYNAMIC)
+    Total->Soil.InfiltAcc = 0.0;
   Total->SoilWater = 0.0;
   Total->CanopyWater = 0.0;
   Total->Runoff = 0.0;
@@ -110,5 +114,9 @@ void ResetAggregate(LAYER * Soil, LAYER * Veg, AGGREGATED * Total)
   Total->CulvertReturnFlow = 0;
   Total->CulvertToChannel = 0;
   Total->RunoffToChannel = 0;
-  Total->Sediment.TotalSediment = 0; 
+  if (Options->Sediment) {
+    Total->Sediment.Erosion = 0.0; 
+    Total->Sediment.TotalSediment = 0.0; 
+    Total->SedimentOverlandInflow = 0.0; 
+  }
 }

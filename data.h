@@ -50,6 +50,7 @@ typedef struct {
 
   COORD Loc;			/* Location for which to dump */
   FILES OutFile;		/* Files in which to dump */
+  FILES OutFileSediment;	/* Files in which to dump - Sediment values */
 } PIXDUMP;
 
 typedef struct {
@@ -57,7 +58,10 @@ typedef struct {
   char InitStatePath[BUFSIZE + 1];	/* Path for initial state */
   FILES Aggregate;		/* File with aggregated values for entire
 				   basin */
-  FILES Balance;
+  FILES AggregateSediment;	/* File with aggregated sediment values
+				   for entire basin */
+  FILES Balance;		/* File with summed mass balance values
+				   for entire basin */
   FILES Stream;
   int NStates;			/* Number of model state dumps */
   DATE *DState;			/* Array with dates on which to dump state */
@@ -531,7 +535,7 @@ typedef struct {
   float OldWaterStorage;
   float CumPrecipIn;
   float CumET;
-  float CumRunoff;
+  float CumIExcess;
   float CumChannelInt;
   float CumRoadInt;
   float CumSnowVaporFlux;
@@ -598,6 +602,7 @@ typedef struct {
   SNOWPIX Snow;
   SOILPIX Soil;
   SEDPIX Sediment;
+  float SedimentOverlandInflow;
   float SoilWater;
   float CanopyWater;
   float Runoff;

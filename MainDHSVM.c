@@ -287,7 +287,7 @@ int main(int argc, char **argv)
 
   /* setup for mass balance calculations */
   Aggregate(&Map, &Options, TopoMap, &Soil, &Veg, VegMap, EvapMap, PrecipMap,
-	    RadMap, SnowMap, SoilMap,  &Total, VType, Network, SedMap); 
+	    RadMap, SnowMap, SoilMap,  &Total, VType, Network, SedMap, &ChannelData); 
 
   Mass.StartWaterStorage =
     Total.Runoff + Total.CanopyWater + Total.SoilWater + Total.Snow.Swq +
@@ -301,7 +301,7 @@ int main(int argc, char **argv)
 
   while (Before(&(Time.Current), &(Time.End)) ||
 	 IsEqualTime(&(Time.Current), &(Time.End))) {
-    ResetAggregate(&Soil, &Veg, &Total);
+    ResetAggregate(&Soil, &Veg, &Total, &Options);
 
     if (IsNewMonth(&(Time.Current), Time.Dt))
       InitNewMonth(&Time, &Options, &Map, TopoMap, PrismMap, ShadowMap,
@@ -413,17 +413,17 @@ int main(int argc, char **argv)
     if (NGraphics > 0)
       draw(&(Time.Current), IsEqualTime(&(Time.Current), &(Time.Start)),
 	   Time.DayStep, Map.NX, Map.NY, NGraphics, which_graphics, VType,
-	   SType, SnowMap, SoilMap, VegMap, TopoMap, PrecipMap, PrismMap,
-	   SkyViewMap, ShadowMap, EvapMap, RadMap, MetMap);
+	   SType, SnowMap, SoilMap, SedMap, VegMap, TopoMap, PrecipMap, PrismMap,
+	   SkyViewMap, ShadowMap, EvapMap, RadMap, MetMap, &Options);
     
     Aggregate(&Map, &Options, TopoMap, &Soil, &Veg, VegMap, EvapMap, PrecipMap,
-	      RadMap, SnowMap, SoilMap, &Total, VType, Network, SedMap);
+	      RadMap, SnowMap, SoilMap, &Total, VType, Network, SedMap, &ChannelData);
     
     MassBalance(&(Time.Current), &(Dump.Balance), &Total, &Mass);
     
     ExecDump(&Map, &(Time.Current), &(Time.Start), &Options, &Dump, TopoMap,
 	     EvapMap, PrecipMap, RadMap, SnowMap, MetMap, VegMap, &Veg,
-	     SoilMap, SedMap, &Soil, &Total, &HydrographInfo, ChannelData.streams,
+	     SoilMap, SedMap, &ChannelData, &Soil, &Total, &HydrographInfo,
 	     Hydrograph);
     
     IncreaseTime(&Time);
@@ -432,7 +432,8 @@ int main(int argc, char **argv)
 
   ExecDump(&Map, &(Time.Current), &(Time.Start), &Options, &Dump, TopoMap,
 	   EvapMap, PrecipMap, RadMap, SnowMap, MetMap, VegMap, &Veg, SoilMap,
-	   SedMap, &Soil, &Total, &HydrographInfo, ChannelData.streams, Hydrograph);
+	   SedMap, &ChannelData, &Soil, &Total, &HydrographInfo,
+	   Hydrograph);
 
   FinalMassBalance(&(Dump.Balance), &Total, &Mass);
 

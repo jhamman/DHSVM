@@ -42,7 +42,7 @@ void MassBalance(DATE *Current, FILES *Out, AGGREGATED *Total,
   float Output;			/* total water flux leaving the basin;  */
   float MassError;		/* mass balance error m  */
 
-  NewWaterStorage = Total->Runoff + Total->CanopyWater + Total->SoilWater +
+  NewWaterStorage = Total->Soil.IExcess + Total->CanopyWater + Total->SoilWater +
     Total->Snow.Swq + Total->Soil.SatFlow;
 
   Output = Total->ChannelInt + Total->RoadInt + Total->Evap.ETot;
@@ -54,7 +54,7 @@ void MassBalance(DATE *Current, FILES *Out, AGGREGATED *Total,
   /* update */
   Mass->OldWaterStorage = NewWaterStorage;
   Mass->CumPrecipIn += Total->Precip.Precip;
-  Mass->CumRunoff += Total->Runoff;
+  Mass->CumIExcess += Total->Soil.IExcess;
   Mass->CumChannelInt += Total->ChannelInt;
   Mass->CumRoadInt += Total->RoadInt;
   Mass->CumET += Total->Evap.ETot;
@@ -67,7 +67,7 @@ void MassBalance(DATE *Current, FILES *Out, AGGREGATED *Total,
   PrintDate(Current, Out->FilePtr);
 
   fprintf(Out->FilePtr, " %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n",
-	  Total->Runoff, Total->CanopyWater, Total->SoilWater, Total->Snow.Swq,
+	  Total->Soil.IExcess, Total->CanopyWater, Total->SoilWater, Total->Snow.Swq,
 	  Total->Soil.SatFlow, Total->ChannelInt, Total->RoadInt,
 	  Total->CulvertReturnFlow, Total->Evap.ETot, Total->Precip.Precip,
 	  Total->Snow.VaporMassFlux, Total->Snow.CanopyVaporMassFlux,

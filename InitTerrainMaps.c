@@ -39,7 +39,7 @@ void InitTerrainMaps(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   printf("Initializing terrain maps\n");
 
   InitTopoMap(Input, Options, Map, TopoMap);
-  InitSoilMap(Input, Map, Soil, *TopoMap, SoilMap);
+  InitSoilMap(Input, Options, Map, Soil, *TopoMap, SoilMap);
   InitVegMap(Input, Map, VegMap);
 
 
@@ -131,8 +131,8 @@ void InitTopoMap(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
 /*****************************************************************************
   InitSoilMap()
 *****************************************************************************/
-void InitSoilMap(LISTPTR Input, MAPSIZE * Map, LAYER * Soil,
-		 TOPOPIX ** TopoMap, SOILPIX *** SoilMap)
+void InitSoilMap(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
+		 LAYER * Soil, TOPOPIX ** TopoMap, SOILPIX *** SoilMap)
 {
   const char *Routine = "InitSoilMap";
   char VarName[BUFSIZE + 1];	/* Variable name */
@@ -189,7 +189,8 @@ void InitSoilMap(LISTPTR Input, MAPSIZE * Map, LAYER * Soil,
 	ReportError(StrEnv[soiltype_file].VarStr, 32);
       (*SoilMap)[y][x].Soil = Type[i];
       (*SoilMap)[y][x].Depth = Depth[i];
-      (*SoilMap)[y][x].InfiltAcc = 0.; 
+      if (Options->Infiltration == DYNAMIC)
+        (*SoilMap)[y][x].InfiltAcc = 0.; 
       (*SoilMap)[y][x].MoistInit = 0.; 
 
       /* allocate memory for the number of root layers, plus an additional 

@@ -188,6 +188,14 @@ struct {
   512, "Soil.Runoff",
       "Surface Ponding", "%.4g",
       "m", "Surface Ponding", NC_FLOAT, FALSE, FALSE, FALSE, 0}, {
+  513, "SoilMap.IExcess",
+      "Surface runoff from HOF and Return Flow", "%.4g",
+      "m", "Surface runoff from HOF and Return Flow",
+       NC_FLOAT, FALSE, FALSE, FALSE, 0}, {
+  514, "SoilMap.InfiltAcc",
+      "Infiltration Accumulation", "%.4g",
+      "m", "Accumulated water in top layer",
+      NC_FLOAT, FALSE, FALSE, FALSE, 0}, {
   601, "WindModel",
       "Wind Direction Multiplier", "%.5f",
       "", "Wind Direction Multiplier", NC_FLOAT, FALSE, FALSE, FALSE, 0}, {
@@ -208,6 +216,14 @@ struct {
       "m/s", "Windspeed", NC_INT, FALSE, FALSE, FALSE, 0}, {
   704, "MetMap.humidity",
       "humidity", "%.2f", "", "humidity", NC_INT, FALSE, FALSE, FALSE, 0}, {
+  901, "SedMap.TotalSediment",
+      "Total Sediment", "%.4g",
+      "(m3/m3)/timestep", "Total sediment flux from grid cell",
+      NC_FLOAT, FALSE, FALSE, FALSE, 0}, {
+  902, "SedMap.Erosion",
+      "Erosion", "%.4g",
+      "m/timestep", "Change in grid cell elevation due to erosion",
+      NC_FLOAT, FALSE, FALSE, FALSE, 0}, {
   ENDOFLIST, "", "", "", "", "",
       ENDOFLIST, ENDOFLIST, ENDOFLIST, ENDOFLIST, ENDOFLIST}
 };

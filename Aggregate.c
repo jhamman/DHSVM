@@ -39,7 +39,7 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
 	       LAYER *Soil, LAYER * Veg, VEGPIX **VegMap, EVAPPIX **Evap,
 	       PRECIPPIX **Precip, RADCLASSPIX **RadMap, SNOWPIX **Snow,
 	       SOILPIX **SoilMap, AGGREGATED *Total, VEGTABLE *VType,
-	       ROADSTRUCT **Network, SEDPIX **SedMap)
+	       ROADSTRUCT **Network, SEDPIX **SedMap, CHANNEL *ChannelData)
 {
   int NPixels;			/* Number of pixels in the basin */
   int NSoilL;			/* Number of soil layers for current pixel */
@@ -141,15 +141,21 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
 	Total->Soil.Qe += SoilMap[y][x].Qe;
 	Total->Soil.Qg += SoilMap[y][x].Qg;
 	Total->Soil.Qst += SoilMap[y][x].Qst;
-	Total->Runoff += SoilMap[y][x].IExcess;
+	Total->Soil.IExcess += SoilMap[y][x].IExcess;
+        if (Options->Infiltration == DYNAMIC)
+	  Total->Soil.InfiltAcc += SoilMap[y][x].InfiltAcc;
+	Total->Runoff += SoilMap[y][x].Runoff;
 	Total->ChannelInt += SoilMap[y][x].ChannelInt;
 	SoilMap[y][x].ChannelInt = 0.0;
 	Total->RoadInt += SoilMap[y][x].RoadInt;
 	SoilMap[y][x].RoadInt = 0.0;
-	// if Options->Sediment, SedMap !=0
-	if (SedMap!=0)
-		Total->Sediment.TotalSediment += SedMap[y][x].TotalSediment; 
-	else Total->Sediment.TotalSediment = 0 ;
+	if (Options->Sediment) {
+	  Total->Sediment.Erosion += SedMap[y][x].Erosion; 
+	  Total->Sediment.TotalSediment += SedMap[y][x].TotalSediment; 
+          if (ChannelData->stream_map[x][y] != NULL) {
+	    Total->SedimentOverlandInflow += ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[0];
+          }
+	}
       }
     }
   }
@@ -222,6 +228,9 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
   Total->Soil.Qe /= NPixels;
   Total->Soil.Qg /= NPixels;
   Total->Soil.Qst /= NPixels;
+  Total->Soil.IExcess /= NPixels;
+  if (Options->Infiltration == DYNAMIC)
+    Total->Soil.InfiltAcc /= NPixels;
   Total->SoilWater /= NPixels;
   Total->Runoff /= NPixels;
   Total->ChannelInt /= NPixels;
@@ -229,5 +238,9 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
   Total->CulvertReturnFlow /= NPixels;
   Total->CulvertToChannel /= NPixels;
   Total->RunoffToChannel /= NPixels;
-  Total->Sediment.TotalSediment /= NPixels; 
+  if (Options->Sediment) {
+    Total->Sediment.Erosion /= NPixels; 
+    Total->Sediment.TotalSediment /= NPixels; 
+    Total->SedimentOverlandInflow /= NPixels; 
+  }
 }

@@ -135,15 +135,17 @@ void InitDump(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
 
   Dump->NMaps = NMapVars + NImageVars;
 
-  /* The aggregated values for the entire basin are always written out at 
-     every timestep */
-
+  // Open file for recording aggregated values for entire basin
   sprintf(Dump->Aggregate.FileName, "%sAggregated.Values", Dump->Path);
   OpenFile(&(Dump->Aggregate.FilePtr), Dump->Aggregate.FileName, "w", TRUE);
 
-  /* The mass balance for the entire basin is always written at every
-     time step */
+  // If specified, open file for recording aggregated sediment values for entire basin
+  if (Options->Sediment) {
+    sprintf(Dump->AggregateSediment.FileName, "%sAggregatedSediment.Values", Dump->Path);
+    OpenFile(&(Dump->AggregateSediment.FilePtr), Dump->AggregateSediment.FileName, "w", TRUE);
+  }
 
+  // Open file for recording mass balance for entire basin
   sprintf(Dump->Balance.FileName, "%sMass.Balance", Dump->Path);
   OpenFile(&(Dump->Balance.FilePtr), Dump->Balance.FileName, "w", TRUE);
 
@@ -169,7 +171,7 @@ void InitDump(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
 
     if (Dump->NPix > 0) {
       temp_count = InitPixDump(Input, Map, BasinMask, Dump->Path, Dump->NPix,
-			       &(Dump->Pix));
+			       &(Dump->Pix), Options);
 
       if (temp_count == 0) {
 	Dump->NPix = 0;
@@ -510,6 +512,7 @@ void InitMapDump(LISTPTR Input, MAPSIZE * Map, int MaxSoilLayers,
     char *Path            - Directory to write output to
     int NPix              - Number of pixels to dump 
     PIXDUMP **Pix         - Array of pixels to dump
+    OPTIONSTRUCT *Options - Mode options; affects whether sediment files are initialized
 
   Returns      : number of accepted dump pixels (i.e. in the mask, etc)
 
@@ -518,7 +521,7 @@ void InitMapDump(LISTPTR Input, MAPSIZE * Map, int MaxSoilLayers,
   Comments     :
 *******************************************************************************/
 int InitPixDump(LISTPTR Input, MAPSIZE * Map, uchar ** BasinMask, char *Path,
-		int NPix, PIXDUMP ** Pix)
+		int NPix, PIXDUMP ** Pix, OPTIONSTRUCT *Options)
 {
   char *Routine = "InitPixDump";
   char Str[BUFSIZE + 1];
@@ -574,10 +577,13 @@ int InitPixDump(LISTPTR Input, MAPSIZE * Map, uchar ** BasinMask, char *Path,
       printf("Accepting dump command for pixel named %s \n", temp_name);
       sprintf(Str, "%s", temp_name);
       sprintf((*Pix)[ok].OutFile.FileName, "%sPixel.%s", Path, Str);
+      if (Options->Sediment)
+        sprintf((*Pix)[ok].OutFileSediment.FileName, "%sPixelSediment.%s", Path, Str);
       (*Pix)[ok].Loc.N = (*Pix)[i].Loc.N;
       (*Pix)[ok].Loc.E = (*Pix)[i].Loc.E;
-      OpenFile(&((*Pix)[ok].OutFile.FilePtr), (*Pix)[ok].OutFile.FileName,
-	       "w", TRUE);
+      OpenFile(&((*Pix)[ok].OutFile.FilePtr), (*Pix)[ok].OutFile.FileName, "w", TRUE);
+      if (Options->Sediment)
+        OpenFile(&((*Pix)[ok].OutFileSediment.FilePtr), (*Pix)[ok].OutFileSediment.FileName, "w", TRUE);
       ok++;
     }
   }

@@ -24,7 +24,7 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
 	       LAYER *Soil, LAYER *Veg, VEGPIX **VegMap, EVAPPIX **Evap,
 	       PRECIPPIX **Precip, RADCLASSPIX **RadMap, SNOWPIX **Snow,
 	       SOILPIX **SoilMap, AGGREGATED *Total, VEGTABLE *VType,
-	       ROADSTRUCT **Network, SEDPIX **SedMap);
+	       ROADSTRUCT **Network, SEDPIX **SedMap, CHANNEL *ChannelData);
 
 void Alloc_Chan_Sed_Mem(float ** DummyVar);
 
@@ -64,29 +64,30 @@ unsigned char dequal(double a, double b);
 void draw(DATE *Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  int *which_graphics,
 	  VEGTABLE *VType, SOILTABLE *SType,
-	  SNOWPIX **SnowMap, SOILPIX **SoilMap, VEGPIX **VegMap,
+	  SNOWPIX **SnowMap, SOILPIX **SoilMap, SEDPIX **Sedmap, VEGPIX **VegMap,
 	  TOPOPIX **TopoMap, PRECIPPIX **PrecipMap, float **PrismMap,
 	  float **SkyViewMap, unsigned char ***ShadowMap, EVAPPIX **EvapMap,
-	  RADCLASSPIX **RadMap, MET_MAP_PIX **MetMap);
+	  RADCLASSPIX **RadMap, MET_MAP_PIX **MetMap, OPTIONSTRUCT *Options);
 
 void DistributeSedimentDiams(float SedDiams[NSEDSIZES]);
 
 void DumpMap(MAPSIZE *Map, DATE *Current, MAPDUMP *DMap, TOPOPIX **TopoMap,
 	     EVAPPIX **EvapMap, PRECIPPIX **PrecipMap, RADCLASSPIX **RadMap,
-	     SNOWPIX **Snowap, SOILPIX **SoilMap, LAYER *Soil,
-	     VEGPIX **VegMap, LAYER *Veg);
+	     SNOWPIX **Snowap, SOILPIX **SoilMap, SEDPIX **SedMap, LAYER *Soil,
+	     VEGPIX **VegMap, LAYER *Veg, OPTIONSTRUCT *Options);
 
-void DumpPix(DATE *Current, int first, FILES *OutFile, EVAPPIX *Evap,
-	     PRECIPPIX *Precip, RADCLASSPIX *Rad, SNOWPIX *Snow,
-	     SOILPIX *Soil, SEDPIX *SedMap, int NSoil, int NVeg); 
+void DumpPix(DATE *Current, int first, FILES *OutFile, FILES *OutFileSediment,
+	     EVAPPIX *Evap, PRECIPPIX *Precip, RADCLASSPIX *Rad, SNOWPIX *Snow,
+	     SOILPIX *Soil, SEDPIX *SedMap, float SedimentOverlandInflow,
+	     int NSoil, int NVeg, OPTIONSTRUCT *Options); 
 
 void ExecDump(MAPSIZE *Map, DATE *Current, DATE *Start,
 	      OPTIONSTRUCT *Options, DUMPSTRUCT *Dump, TOPOPIX **TopoMap,
 	      EVAPPIX **EvapMap, PRECIPPIX **PrecipMap,
 	      RADCLASSPIX **RadMap, SNOWPIX **SnowMap, MET_MAP_PIX **MetMap,
-	      VEGPIX **VegMap, LAYER *Veg, SOILPIX **SoilMap, SEDPIX ** SedMap, LAYER *Soil, 
-	      AGGREGATED *Total, UNITHYDRINFO *HydrographInfo,
-	      Channel *ChannelData, float *Hydrograph);
+	      VEGPIX **VegMap, LAYER *Veg, SOILPIX **SoilMap, SEDPIX ** SedMap,
+	      CHANNEL *ChannelData, LAYER *Soil, AGGREGATED *Total,
+	      UNITHYDRINFO *HydrographInfo, float *Hydrograph);
 
 unsigned char fequal(float a, float b);
 
@@ -195,7 +196,7 @@ void InitNewStep(INPUTFILES *InFiles, MAPSIZE *Map, TIMESTRUCT *Time,
 void InitParameters(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map);
 
 int InitPixDump(LISTPTR Input, MAPSIZE *Map, uchar **BasinMask, char *Path,
-		int NPix, PIXDUMP **Pix);
+		int NPix, PIXDUMP **Pix, OPTIONSTRUCT *Options);
 
 void InitPrecipLapse(LISTPTR Input, INPUTFILES *InFiles);
 
@@ -224,8 +225,8 @@ void InitSatVaporTable(void);
 
 void InitSnowMap(MAPSIZE *Map, SNOWPIX ***SnowMap);
 
-void InitSoilMap(LISTPTR Input, MAPSIZE *Map, LAYER *Soil,
-		 TOPOPIX **TopoMap, SOILPIX ***SoilMap);
+void InitSoilMap(LISTPTR Input, OPTIONSTRUCT *Options, MAPSIZE *Map,
+		 LAYER *Soil, TOPOPIX **TopoMap, SOILPIX ***SoilMap);
 
 int InitSoilTable(SOILTABLE **SType, LISTPTR Input, LAYER *Soil);
 
@@ -326,7 +327,8 @@ void ReadRadarMap(DATE *Current, DATE *StartRadar, int Dt, MAPSIZE *Radar,
 void ReadPRISMMap(DATE *Current, DATE *StartRadar, int Dt, MAPSIZE *Radar,
 		  RADARPIX **RadarMap, char *HDFFileName);
 
-void ResetAggregate(LAYER *Soil, LAYER *Veg, AGGREGATED *Total);
+void ResetAggregate(LAYER *Soil, LAYER *Veg, AGGREGATED *Total,
+                    OPTIONSTRUCT *Options);
 
 void ResetValues(MAPSIZE *Map, SOILPIX **SoilMap);
 

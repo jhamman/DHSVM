@@ -39,10 +39,10 @@ extern int e, ndx;
 
 void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  int *which_graphics, VEGTABLE * VType, SOILTABLE * SType,
-	  SNOWPIX ** SnowMap, SOILPIX ** SoilMap, VEGPIX ** VegMap,
+	  SNOWPIX ** SnowMap, SOILPIX ** SoilMap, SEDPIX ** SedMap, VEGPIX ** VegMap,
 	  TOPOPIX ** TopoMap, PRECIPPIX ** PrecipMap, float **PrismMap,
 	  float **SkyViewMap, unsigned char ***ShadowMap, EVAPPIX ** EvapMap,
-	  RADCLASSPIX ** RadMap, MET_MAP_PIX ** MetMap)
+	  RADCLASSPIX ** RadMap, MET_MAP_PIX ** MetMap, OPTIONSTRUCT * Options)
 {				/*begin */
   int i, j, k, ie, je, ir, jr;
   int PX, PY;
@@ -635,6 +635,42 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    }
 	  }
 
+	  if (MapNumber == 28) {
+	    text = "Surface runoff from HOF and Return Flow (mm)";
+	    length = 22;
+	    for (i = 0; i < NX; i++) {
+	      for (j = 0; j < NY; j++) {
+
+		if (INBASIN(TopoMap[j][i].Mask)) {
+		  temp = SoilMap[j][i].IExcess * 1000.0;
+		  if (temp > max)
+		    max = temp;
+		  if (temp < min)
+		    min = temp;
+		}
+		temp_array[j][i] = temp;
+	      }
+	    }
+	  }
+
+	  if (MapNumber == 29 && Options->Infiltration == DYNAMIC) {
+	    text = "Infiltration Accumulation (mm)";
+	    length = 22;
+	    for (i = 0; i < NX; i++) {
+	      for (j = 0; j < NY; j++) {
+
+		if (INBASIN(TopoMap[j][i].Mask)) {
+		  temp = SoilMap[j][i].TableDepth * 1000.0;
+		  if (temp > max)
+		    max = temp;
+		  if (temp < min)
+		    min = temp;
+		}
+		temp_array[j][i] = temp;
+	      }
+	    }
+	  }
+
 	  if (MapNumber == 31) {
 	    text = "Overstory Trans (mm)";
 	    length = 20;
@@ -716,44 +752,6 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 		    min = temp;
 		}
 		temp_array[j][i] = temp;
-	      }
-	    }
-	  }
-
-	  if (MapNumber == 50) {
-	    text = "Channel Sub Surf Int (mm)";
-	    length = 25;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
-		if (INBASIN(TopoMap[j][i].Mask)) {
-		  temp = SoilMap[j][i].ChannelInt * 1000.0;;
-		  if (temp > max)
-		    max = temp;
-		  if (temp < min)
-		    min = temp;
-		}
-		temp_array[j][i] = temp;
-		if (fequal(temp_array[j][i], 0.0))
-		  temp_array[j][i] = -9999.0;
-	      }
-	    }
-	  }
-
-	  if (MapNumber == 51) {
-	    text = "Road Sub Surf Inter (mm)";
-	    length = 24;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
-		if (INBASIN(TopoMap[j][i].Mask)) {
-		  temp = SoilMap[j][i].RoadInt * 1000.0;;
-		  if (temp > max)
-		    max = temp;
-		  if (temp < min)
-		    min = temp;
-		}
-		temp_array[j][i] = temp;
-		if (fequal(temp_array[j][i], 0.0))
-		  temp_array[j][i] = -9999.0;
 	      }
 	    }
 	  }
@@ -862,6 +860,80 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 		    min = temp;
 		}
 		temp_array[j][i] = temp;
+	      }
+	    }
+	  }
+
+	  if (MapNumber == 47 && Options->Sediment) {
+	    text = "Total Sediment (m3/m3)";
+	    length = 22;
+	    for (i = 0; i < NX; i++) {
+	      for (j = 0; j < NY; j++) {
+
+		if (INBASIN(TopoMap[j][i].Mask)) {
+		  temp = SedMap[j][i].TotalSediment;
+		  if (temp > max)
+		    max = temp;
+		  if (temp < min)
+		    min = temp;
+		}
+		temp_array[j][i] = temp;
+	      }
+	    }
+	  }
+
+	  if (MapNumber == 48 && Options->Sediment) {
+	    text = "Erosion (m)";
+	    length = 22;
+	    for (i = 0; i < NX; i++) {
+	      for (j = 0; j < NY; j++) {
+
+		if (INBASIN(TopoMap[j][i].Mask)) {
+		  temp = SedMap[j][i].Erosion;
+		  if (temp > max)
+		    max = temp;
+		  if (temp < min)
+		    min = temp;
+		}
+		temp_array[j][i] = temp;
+	      }
+	    }
+	  }
+
+	  if (MapNumber == 50) {
+	    text = "Channel Sub Surf Int (mm)";
+	    length = 25;
+	    for (i = 0; i < NX; i++) {
+	      for (j = 0; j < NY; j++) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
+		  temp = SoilMap[j][i].ChannelInt * 1000.0;;
+		  if (temp > max)
+		    max = temp;
+		  if (temp < min)
+		    min = temp;
+		}
+		temp_array[j][i] = temp;
+		if (fequal(temp_array[j][i], 0.0))
+		  temp_array[j][i] = -9999.0;
+	      }
+	    }
+	  }
+
+	  if (MapNumber == 51) {
+	    text = "Road Sub Surf Inter (mm)";
+	    length = 24;
+	    for (i = 0; i < NX; i++) {
+	      for (j = 0; j < NY; j++) {
+		if (INBASIN(TopoMap[j][i].Mask)) {
+		  temp = SoilMap[j][i].RoadInt * 1000.0;;
+		  if (temp > max)
+		    max = temp;
+		  if (temp < min)
+		    min = temp;
+		}
+		temp_array[j][i] = temp;
+		if (fequal(temp_array[j][i], 0.0))
+		  temp_array[j][i] = -9999.0;
 	      }
 	    }
 	  }
