@@ -140,7 +140,7 @@ void RouteChannelSediment(Channel * Head, TIMESTRUCT Time,
 {
   Channel *Current = NULL;
   float DS,DT_sed,numinc;
-  float flowdepth,Qavg,V,dIdt,dOdt,dMdt,Vsed,Vshear,Vshearcrit;
+  float flowdepth,Qavg,V,dIdt,dOdt,dMdt;
   float minDT_sed,TotalCapacityUp,TotalCapacityDown;
   float lateral_sed_inflow_rate;
   float TotalCapacity, CapacityUsed;
