@@ -130,24 +130,23 @@ void InitChannelDump(CHANNEL * channel, char *DumpPath)
   }
 }
 /* -------------------------------------------------------------
-   InitSedimentDump
+   InitChannelSedimentDump
    ------------------------------------------------------------- */
-void InitSedimentDump(CHANNEL * channel, char *DumpPath)
+void InitChannelSedimentDump(CHANNEL * channel, char *DumpPath)
 {
   char buffer[NAMESIZE];
-
+ 
   if (channel->streams != NULL) {
-    sprintf(buffer, "%sSediment.Flow", DumpPath);
-    OpenFile(&(channel->sedimentout), buffer, "w", TRUE);
-    sprintf(buffer, "%sSedimentflow.Only", DumpPath);
-    OpenFile(&(channel->sedimentflowout), buffer, "w", TRUE);
+    sprintf(buffer, "%sSed.Stream.Flow", DumpPath);
+    OpenFile(&(channel->sedstreamout), buffer, "w", TRUE);
+    sprintf(buffer, "%sSed.Streamflow.Only", DumpPath);
+    OpenFile(&(channel->sedstreamflowout), buffer, "w", TRUE);
   }
   if (channel->roads != NULL) {
-    sprintf(buffer, "%sRoadSediment.Flow", DumpPath);
-    OpenFile(&(channel->roadout), buffer, "w", TRUE);
-    sprintf(buffer, "%sRoadSedimentflow.Only", DumpPath);
-    OpenFile(&(channel->roadflowout), buffer, "w", TRUE);
-
+    sprintf(buffer, "%sSed.Road.Flow", DumpPath);
+    OpenFile(&(channel->sedroadout), buffer, "w", TRUE);
+    sprintf(buffer, "%sSed.Roadflow.Only", DumpPath);
+    OpenFile(&(channel->sedroadflowout), buffer, "w", TRUE);
   }
 }
 

@@ -21,8 +21,8 @@ InitXGraphics.o InterceptionStorage.o IsStationLocation.o LapseT.o LookupTable.o
 MainDHSVM.o MainMWM.o MakeLocalMetData.o MassBalance.o MassEnergyBalance.o     \
 MassRelease.o MaxRoadInfiltration.o NoEvap.o RadiationBalance.o	     \
 ReadMetRecord.o ReadRadarMap.o ReportError.o ResetAggregate.o	     \
-RootBrent.o Round.o RouteRoad.o  RouteSubSurface.o RouteSurface.o    \
-SatVaporPressure.o SensibleHeatFlux.o SeparateRadiation.o SizeOfNT.o \
+RootBrent.o Round.o RouteChannelSediment.o RouteRoad.o  RouteSubSurface.o   \
+RouteSurface.o SatVaporPressure.o SensibleHeatFlux.o SeparateRadiation.o SizeOfNT.o \
 SlopeAspect.o SnowInterception.o SnowMelt.o SnowPackEnergyBalance.o  \
 SoilEvaporation.o StabilityCorrection.o StoreModelState.o	     \
 SurfaceEnergyBalance.o UnsaturatedFlow.o VarID.o WaterTableDepth.o   \
@@ -248,6 +248,8 @@ RootBrent.o: RootBrent.c settings.h brent.h massenergy.h data.h \
  channel_grid.h DHSVMerror.h
 Round.o: Round.c functions.h data.h settings.h Calendar.h \
  DHSVMChannel.h getinit.h channel.h channel_grid.h DHSVMerror.h
+RouteChannelSediment.o: data.h settings.h Calendar.h functions.h channel.h \
+ constants.h DHSVMChannel.h getinit.h channel_grid.h DHSVMerror.h
 RouteRoad.o: RouteRoad.c data.h settings.h Calendar.h DHSVMerror.h \
  functions.h channel.h DHSVMChannel.h constants.h channel_grid.h
 RouteSubSurface.o: RouteSubSurface.c settings.h data.h Calendar.h \

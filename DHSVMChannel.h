@@ -33,8 +33,10 @@ typedef struct {
   FILE *roadout;
   FILE *streamflowout;
   FILE *roadflowout;
-  FILE *sedimentout;
-  FILE *sedimentflowout;
+  FILE *sedstreamout;
+  FILE *sedroadout;
+  FILE *sedstreamflowout;
+  FILE *sedroadflowout;
 } CHANNEL;
 
 /* -------------------------------------------------------------
@@ -43,7 +45,7 @@ typedef struct {
 void InitChannel(LISTPTR Input, MAPSIZE *Map, int deltat, CHANNEL *channel,
 		 SOILPIX **SoilMap, int *MaxStreamID, int *MaxRoadID);
 void InitChannelDump(CHANNEL *channel, char *DumpPath);
-void InitSedimentDump(CHANNEL *channel, char *DumpPath);
+void InitChannelSedimentDump(CHANNEL *channel, char *DumpPath);
 double ChannelCulvertFlow(int y, int x, CHANNEL *ChannelData);
 void RouteChannel(CHANNEL * ChannelData, TIMESTRUCT * Time, MAPSIZE * Map,
 		  TOPOPIX ** TopoMap, SOILPIX ** SoilMap, AGGREGATED * Total, 

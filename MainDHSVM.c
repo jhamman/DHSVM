@@ -224,9 +224,8 @@ int main(int argc, char **argv)
     ReadChannelState(Dump.InitStatePath, &(Time.Start), ChannelData.streams);
   }
 
-  if (Options.Sediment) {
-    InitSedimentDump(&ChannelData, Dump.Path);
-  }
+  if ((Options.HasNetwork) && (Options.Sediment))
+   InitChannelSedimentDump(&ChannelData, Dump.Path); 
 
   InitSnowMap(&Map, &SnowMap);
   InitAggregated(Veg.MaxLayers, Soil.MaxLayers, &Total);
@@ -270,9 +269,9 @@ int main(int argc, char **argv)
     InitFineMaps(Input, &Options, &Map, &Soil, &TopoMap, &SoilMap, 
 		  &FineMap);
 
-    InitChannelSediment(ChannelData.streams);
-
-
+    if (Options.HasNetwork){
+      InitChannelSediment(ChannelData.streams);
+    }
 
     /* Allocate memory for the sediment grid */
     if (!(SedMap = (SEDPIX **) calloc(Map.NY, sizeof(SEDPIX *))))
@@ -384,8 +383,10 @@ int main(int argc, char **argv)
 #ifndef SNOW_ONLY
 
     /* set sediment inflows to zero - they are incremented elsewhere */
-    if(Options.Sediment) InitChannelSedInflow(ChannelData.streams);
-
+    if ((Options.HasNetwork) && (Options.Sediment)){
+      InitChannelSedInflow(ChannelData.streams);
+    }
+    
     RouteSubSurface(Time.Dt, &Map, TopoMap, VType, VegMap, Network,
 		    SType, SoilMap, &ChannelData, &Time, &Options, Dump.Path,
 		    SedMap, &FineMap, SedType, MaxStreamID, SnowMap);
@@ -395,17 +396,16 @@ int main(int argc, char **argv)
 		   &Options, Network, SType);
 
     /* Sediment Routing in Channel and output to sediment files */
-    if(Options.Sediment) {
-      RouteChannelSediment(ChannelData.streams, ChannelData.roads, Time, &Dump);
+    if ((Options.HasNetwork) && (Options.Sediment)){
       SPrintDate(&(Time.Current), buffer);
       flag = IsEqualTime(&(Time.Current), &(Time.Start));
+      RouteChannelSediment(ChannelData.streams, ChannelData.roads,
+			   Time, &Dump);
       channel_save_sed_outflow_text(buffer, ChannelData.streams,
-			      ChannelData.sedimentout,
-			      ChannelData.sedimentflowout, flag);
-
-      /* OutputChannelSediment(ChannelData.streams, Time, &Dump; */
+				    ChannelData.sedstreamout,
+				    ChannelData.sedstreamflowout, flag);
     }
-
+    
     if (Options.Extent == BASIN)
       RouteSurface(&Map, &Time, TopoMap, SoilMap, &Options,
 		   UnitHydrograph, &HydrographInfo, Hydrograph,
