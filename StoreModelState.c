@@ -476,7 +476,7 @@ void StoreModelState(char *Path, DATE * Current, MAPSIZE * Map,
   for (y = 0; y < Map->NY; y++) {
     for (x = 0; x < Map->NX; x++) {
       if (INBASIN(TopoMap[y][x].Mask))
-	((float *) Array)[y * Map->NX + x] = SoilMap[y][x].Runoff;
+	((float *) Array)[y * Map->NX + x] = SoilMap[y][x].IExcess;
       else
 	((float *) Array)[y * Map->NX + x] = NA;
     }

@@ -233,14 +233,12 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	   /*Make sure calculated outflow doesn't exceed available water, 
 	     and update surface water storage */
 	  
-	  if(outflow > (SoilMap[y][x].IExcess*(Map->DX*Map->DY)/Time->Dt + Runon[y][x])) {
+	  if(outflow > (SoilMap[y][x].IExcess*(Map->DX*Map->DY)/Time->Dt + Runon[y][x])) 
 	    outflow = SoilMap[y][x].IExcess*(Map->DX*Map->DY)/Time->Dt + 
 	      (Runon[y][x]);
-	    SoilMap[y][x].IExcess = 0.0;
-	  }
-	  else
-	    SoilMap[y][x].IExcess += (Runon[y][x] - outflow)*
-	      VariableDT/(Map->DX*Map->DY);
+	  
+	  SoilMap[y][x].IExcess += (Runon[y][x] - outflow)*
+	    VariableDT/(Map->DX*Map->DY);
 	 
 	  /*************************************************************/
 	  /* PERFORM HILLSLOPE SEDIMENT ROUTING.                       */

@@ -292,7 +292,7 @@ int main(int argc, char **argv)
 	    &ChannelData); 
 
   Mass.StartWaterStorage =
-    Total.Runoff + Total.CanopyWater + Total.SoilWater + Total.Snow.Swq +
+    Total.Soil.IExcess + Total.CanopyWater + Total.SoilWater + Total.Snow.Swq +
     Total.Soil.SatFlow;
   Mass.OldWaterStorage = Mass.StartWaterStorage;
 
