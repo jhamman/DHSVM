@@ -87,7 +87,7 @@ int main(int argc, char **argv)
      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},	/*SOILPIX */
     { 0.0, 0.0, 0.0, 0.0}, /*SEDPIX */ //Nath
     { 0.0, NULL, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, /*FINEPIX */
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0l, 0.0, 0.0, 0.0, 0.0
+    0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0l, 0.0, 0.0, 0.0
   };
   CHANNEL ChannelData = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
   DUMPSTRUCT Dump;
