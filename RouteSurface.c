@@ -82,8 +82,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
   float settling;              /* Settling velocity (m/s) */
   float Fw;                    /* Water depth correction factor */
 
-/* Check to see if calculations for surface erosion should be done */
-
+  /* Check to see if calculations for surface erosion should be done */
   if (Options->SurfaceErosion) {
     if ((SedIn = (float **) calloc(Map->NY, sizeof(float *))) == NULL) {
       ReportError((char *) Routine, 1);
@@ -246,8 +245,15 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 
 	    outflow = 0.0;
 
-	    h = (SoilMap[y][x].IExcessSed+SoilMap[y][x].IExcess);
-	    SoilMap[y][x].IExcessSed = 0.;
+	    h = SoilMap[y][x].IExcessSed;
+
+	    if(sedoutflow > (SoilMap[y][x].IExcessSed*(Map->DX*Map->DY)/Time->Dt + Runon[y][x])) 
+	      sedoutflow = SoilMap[y][x].IExcessSed*(Map->DX*Map->DY)/Time->Dt + 
+	      (Runon[y][x]);
+	    
+	    SoilMap[y][x].IExcessSed += (Runon[y][x] - sedoutflow)*
+	      VariableDT/(Map->DX*Map->DY);
+
 	  }
 	  
 	  /*Make sure calculated outflow doesn't exceed available water, 
@@ -348,11 +354,16 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	  SoilMap[y][x].startRunon = Runon[y][x];
 	  
 	  /* Calculate total runoff in m/dhsvm timestep. */
-	  SoilMap[y][x].Runoff += outflow*VariableDT/(Map->DX*Map->DY); 
+	  /* This is serving the purpose of holding this value for 
+	     Cournat condition calculation. It does not trully repreent
+	     the Runoff, because if there is a channel there is no outflow.
+	     Instead, IExcess is updated based on Runon in the same manner
+	     of the original DHSVM */
+	  SoilMap[y][x].Runoff += sedoutflow*VariableDT/(Map->DX*Map->DY); 
 	  
 	  /* Sediment from pixels with channels goes into the 
-	     channel.  This assumes that all the sediments belong to the smallest  
-	     category of sediment particle sizes (first size, index 0) */
+	     channel.  This assumes that all surface erosion is of the
+	     smallest particle sizes (first size, index 0) */
 	  /* Note that stream_map and road_map are indexed by [x][y],
 	     unlike the other "map"-type variables. */
 	  
@@ -521,23 +532,23 @@ float FindDT(SOILPIX **SoilMap, MAPSIZE *Map, TIMESTRUCT *Time,
   return DT;
 }
 
+
+/*****************************************************************************
+  viscosity()
+  estimate kinematic viscosity through interpolation
+*****************************************************************************/
+
 float viscosity(float Tair, float Rh)
 {
-  float knviscosity=0;               /* kinematic viscosity */
+  float knviscosity=0;              /* kinematic viscosity */
   float Tdew=0;                     /* Dew point temperature */
-  float X;                           /* complement of relative humidity, fraction */
+  float X;                          /* complement of relative humidity, fraction */
   
+  /* calculate Dewpoint temperature Eq. 2-7 Linsley */
+  X = 1.-Rh/100.;
   
-  
-/* estimate kinematic viscosity through interpolation JSL */
-  
-/* calculate Dewpoint temperature Eq. 2-7 Linsley */
-  X=1.-Rh/100.;
-  
-  
-  Tdew=-(14.55+.114*Tair)*X-pow(((2.5+0.007*Tair)*X),3)-(15.9+.117*Tair)*pow(X,14)+Tair;
-  
-  
+  Tdew =- (14.55+.114*Tair)*X-pow(((2.5+0.007*Tair)*X),3)-
+    (15.9+.117*Tair)*pow(X,14)+Tair;
   
   if (Tdew<0.)
     knviscosity=1.792;
@@ -558,26 +569,35 @@ float viscosity(float Tair, float Rh)
   return knviscosity;
 }
 
-void SedimentFlag(OPTIONSTRUCT *Options,  TIMESTRUCT * Time){
-  
+/*****************************************************************************
+  SedimentFlag()
+  To determine when the surface erosion and kinematic routing will be 
+  performed
+*****************************************************************************/
+void SedimentFlag(OPTIONSTRUCT *Options,  TIMESTRUCT * Time)
+{
   int oldrouting;
   
   if ((Options->ErosionPeriod) && (Time->Current.Julian==Time->Start.Julian)){
-    Options->OldSedFlag=1;
-  }
-
-  if ((Options->Routing) && (Time->Current.Julian==Time->Start.Julian)){
-    Options->OldRouteFlag=1;
+    Options->OldSedFlag = 1;
   }
   
-  oldrouting=Options->Routing;
+  if ((Options->Routing) && (Time->Current.Julian==Time->Start.Julian)){
+    Options->OldRouteFlag = 1;
+  }
+  
+  oldrouting = Options->Routing;
   
   if((Options->Sediment) && (Options->ErosionPeriod)) {
     
     if (Time->StartSed.JDay>=Time->EndSed.JDay){
-      if((Time->Current.JDay<=Time->StartSed.JDay && Time->Current.JDay<=Time->EndSed.JDay) || (Time->Current.JDay>=Time->StartSed
-												.JDay && Time->Current.JDay>=Time->EndSed.JDay)) {
-        Options->SurfaceErosion=TRUE;
+      if((Time->Current.JDay<=Time->StartSed.JDay && 
+	  Time->Current.JDay<=Time->EndSed.JDay) || 
+	 (Time->Current.JDay>=Time->StartSed.JDay && 
+	  Time->Current.JDay>=Time->EndSed.JDay)) {
+
+        Options->SurfaceErosion = TRUE;
+	
       }
       else Options->SurfaceErosion=FALSE;
     }
@@ -596,8 +616,8 @@ void SedimentFlag(OPTIONSTRUCT *Options,  TIMESTRUCT * Time){
   
   if(Options->SurfaceErosion){
     Options->Routing=TRUE;
-   if (oldrouting!=Options->Routing)
-     fprintf(stderr,"Turning on kinematic routing calculations.\n");
+    if (oldrouting!=Options->Routing)
+      fprintf(stderr,"Turning on kinematic routing calculations.\n");
   }
   
   else if (!Options->OldRouteFlag){
