@@ -274,7 +274,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX *** FineMap, VEGTABLE *VType,
       }
     }
   }	      
-	  
+	 
  for(i=0; i<Map->NY; i++) { 
     free(Redistribute[i]);
     free(TopoIndex[i]);
@@ -676,12 +676,17 @@ void MainMWM(SEDPIX **SedMap, FINEPIX *** FineMap, VEGTABLE *VType,
   void enqueue(node **head, node **tail, int y, int x)
 {
   node *new;
+
+  // Allocate and initialize a new node
   new = (node *) malloc(sizeof(node));
   new->x = x;
   new->y = y;
   new->next = NULL;
 
   if(empty(*head)) {
+  
+    // If *head is empty, the queue is empty and we're inserting the first node;
+    // therefore this node is both the header and the tail
     *head = new;
     *tail = new;
   }
@@ -690,14 +695,21 @@ void MainMWM(SEDPIX **SedMap, FINEPIX *** FineMap, VEGTABLE *VType,
     //   fprintf(stderr,"New node is not at end of queue\n");
     //  exit(0);
     //   }
+
+    // Point the tail node's "next" to the new node
     (*tail)->next = new;
+
+    // Now this new node is the tail, so point "tail" to this new node
     *tail = new;
   }
-  free(new);
+
 }
 
 void dequeue(node **head, node **tail, int *y, int *x)
 {
+ 
+  node *temp;
+
   //  if(!empty(*head))
   //    {
   //      fprintf(stderr,"Node is not at head of queue\n");
@@ -705,8 +717,16 @@ void dequeue(node **head, node **tail, int *y, int *x)
   //      }
   *y = (*head)->y;
   *x = (*head)->x;
+
+  // Point temp to the header node so we still have a reference to it
+  temp = *head;
+
+  // Point *head to the next node; this is the new header node
   *head = (*head)->next;
   if(head == NULL) tail = NULL;
+
+  // De-allocate the old header node, now that we're no longer using it
+  free(temp);
 }
 
 /*****************************************************************************

@@ -62,10 +62,12 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 
   /* Kinematic wave routing: */
 
-/* JSL: slope is manning's slope; alpha is channel parameter including wetted perimeter, manning's n, and manning's slope.  Beta is 3/5 */
+  /* JSL: slope is manning's slope; alpha is channel parameter including wetted perimeter,
+     manning's n, and manning's slope.  Beta is 3/5 */
   float knviscosity;           /* kinematic viscosity JSL */  
   double slope, alpha, beta;    
-  double outflow;              /* Outflow of water from a pixel during a sub-time step */    
+  double outflow;              /* Outflow of water from a pixel during a sub-time 
+				  step (m3/s)*/    
   float VariableDT;            /* Maximum stable time step (s) */  
   float **SedIn, SedOut;       /* (m3/m3) */  
   float DR;                    /* Potential erosion due to leaf drip */ 
@@ -163,11 +165,12 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	if(Options->Sediment){
 	  SedMap[y][x].TotalSediment = 0.;
 	  SedMap[y][x].Erosion = 0.;
+	  SedOut=0.; /*COD*/
 	}
       }
       
 
-/* estimate kinematic viscosity through interpolation JSL */
+      /* estimate kinematic viscosity through interpolation JSL */
 
       knviscosity=viscosity(Tair);
 
@@ -182,7 +185,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	  y = Map->OrderedCells[k].y;
 	  x = Map->OrderedCells[k].x;
 	
-	  outflow = SoilMap[y][x].startRunoff; /* (m) */
+	  outflow = SoilMap[y][x].startRunoff; 
 	  
 	  slope = TopoMap[y][x].Slope;
 	  if (slope == 0) slope=0.0001;
@@ -193,14 +196,11 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	  
 	
 	  beta = 3./5.;
-
 	  alpha = pow(SType[SoilMap[y][x].Soil-1].Manning*pow(Map->DX,2./3.)/sqrt(slope),beta);
 
-	  /* calculate unit flow area h according to Kineros */
 
-	  h=((outflow+Runon[y][x])/2.0);
-
-	  /* Calculate discharge (m3/s) from the grid cell using an explicit finite difference solution of the linear kinematic wave. */
+	  /* Calculate discharge (m3/s) from the grid cell using an explicit 
+	     finite difference solution of the linear kinematic wave. */
 	  
 	  if (channel_grid_has_channel(ChannelData->stream_map, x, y)  
 	      || (channel_grid_has_channel(ChannelData->road_map, x, y) 
@@ -211,9 +211,10 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	 
 	      if(Runon[y][x] > 0.0001 || outflow > 0.0001) {
 		outflow = ((VariableDT/Map->DX)*Runon[y][x] + 
-			   alpha*beta*outflow * pow(h,beta-1.) +
+			   alpha*beta*outflow * pow((outflow+Runon[y][x])/2.0,beta-1.) +
 			   SoilMap[y][x].IExcess*Map->DX*VariableDT/Time->Dt)/
-		  ((VariableDT/Map->DX) + alpha*beta*pow(h, beta-1.));
+		  ((VariableDT/Map->DX) + alpha*beta*pow((outflow+
+							Runon[y][x])/2.0, beta-1.));
 	      }
 	      else if(SoilMap[y][x].IExcess > 0.0)
 		outflow = SoilMap[y][x].IExcess*Map->DX*Map->DY/Time->Dt; 
@@ -223,8 +224,11 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	    }
 	  
 	  if(outflow < 0.0) 
-	    outflow = 0.0; /* (m3/s) */
+	    outflow = 0.0; 
 	  
+	  /* Save flow depth for sediment routing */
+	  h = SoilMap[y][x].IExcess;
+
 	   /*Make sure calculated outflow doesn't exceed available water, 
 	     and update surface water storage */
 	  
@@ -250,9 +254,11 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 
             /* avoid dividing by zero */
 
-	    if (h<=0) streampower=0;
+	    if (h<=0.) streampower=0.;
 
-	    /* Only perform sediment routing if there is depth greater than the particle diameter, there is outflow, and streampower is greater than critical streampower */
+	    /* Only perform sediment routing if there is depth greater than the 
+	       particle diameter, there is outflow, and streampower is greater than 
+	       critical streampower */
 	    if((outflow > 0.) && (h > DS ) && (streampower>SETTLECRIT)){
 	      
 	      /* First find potential erosion due to rainfall Morgan et al. (1998). 
@@ -266,7 +272,6 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	      
 	      /* If there is an understory, it is assumed to cover the entire
 		 grid cell. Fract = 1 and DR = 0. */
-
 	      if (VType->OverStory == TRUE) 
 		/* Then (1-VType->Fract[1]) is the fraction of understory */
 		DR = SedType->KIndex * Fw * (1-VType->Fract[1]) *
@@ -281,15 +286,17 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	      DR = DR/PARTDENSITY * Map->DX;
 
        	      /* from Julien particle settling velocity */
-
 	      settling = (8.0*knviscosity/DS) *
 		(sqrt(1.+ ((PARTDENSITY/WATER_DENSITY)-1.)*(G*1000)*DS*DS*DS/
 		      (72.*knviscosity*knviscosity)) - 1.0)/1000.;
 	      
 	      /* calculate transport capacity eq. 7 kineros */
-	      
-	      TC=0.05/(DS*pow((PARTDENSITY/WATER_DENSITY-1),2.))*sqrt(slope*h/G)*(streampower-SETTLECRIT);
+	      TC = 0.05/(DS*pow((PARTDENSITY/WATER_DENSITY-1),2.))*
+		sqrt(slope*h/G)*(streampower-SETTLECRIT);
 
+	      /* Find erosion due to overland flow after Morgan et al. (1998). */
+	      floweff = 0.79*exp(-0.85*SedType[SoilMap[y][x].Soil-1].Cohesion.mean);
+	      
 	      /* Calculate sediment mass balance. */
 	      term1 = (TIMEWEIGHT/Map->DX);
 	      term2 = alpha/(2.*VariableDT);
@@ -345,7 +352,9 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	      if (INBASIN(TopoMap[yn][xn].Mask)) {
 		Runon[yn][xn] += outflow * ((float) TopoMap[y][x].Dir[n] /
 					    (float) TopoMap[y][x].TotalDir);
-		if(Options->Sediment) {
+	
+		/* No need to distribute sediment if there isn't any*/
+		if((Options->Sediment)&&(SedOut > 0.)) {	
 		  
 		  /* If grid cell has a channel, sediment is intercepted by the channel */
 		  if (channel_grid_has_channel(ChannelData->stream_map, xn, yn)) {

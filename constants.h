@@ -117,8 +117,8 @@ extern float Z0_GROUND;		/* Roughness length for bare soil (m) */
 extern float Z0_SNOW;		/* Roughness length for snow (m) */
 extern float Zref;		/* Reference height (m) */
 extern float MASSITER;           /* Maximum number of iterations. */
-extern float DEBRISd50;
-extern float DEBRISd90;
+extern float DEBRISd50;          /* (mm) */
+extern float DEBRISd90;          /* (mm) */ 
 extern float CHANNELd50;
 extern float CHANNELd90;
 #endif
