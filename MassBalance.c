@@ -63,14 +63,15 @@ void MassBalance(DATE *Current, FILES *Out, AGGREGATED *Total,
   Mass->CumCulvertReturnFlow += Total->CulvertReturnFlow;
   Mass->CumCulvertToChannel += Total->CulvertToChannel;
   Mass->CumRunoffToChannel += Total->RunoffToChannel;
-
+  
   PrintDate(Current, Out->FilePtr);
-
+  
   fprintf(Out->FilePtr, " %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n",
-	  Total->Soil.IExcess, Total->CanopyWater, Total->SoilWater, Total->Snow.Swq,
-	  Total->Soil.SatFlow, Total->ChannelInt, Total->RoadInt,
-	  Total->CulvertReturnFlow, Total->Evap.ETot, Total->Precip.Precip,
-	  Total->Snow.VaporMassFlux, Total->Snow.CanopyVaporMassFlux,
-	  Mass->OldWaterStorage, Total->CulvertToChannel,
-	  Total->RunoffToChannel, MassError);
-}
+	   Total->Soil.IExcess, Total->CanopyWater, Total->SoilWater, Total->Snow.Swq,
+	   Total->Soil.SatFlow, Total->ChannelInt, Total->RoadInt,
+	   Total->CulvertReturnFlow, Total->Evap.ETot, Total->Precip.Precip,
+	   Total->Snow.VaporMassFlux, Total->Snow.CanopyVaporMassFlux,
+	   Mass->OldWaterStorage, Total->CulvertToChannel,
+	   Total->RunoffToChannel, MassError);
+      } 
+

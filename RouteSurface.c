@@ -46,7 +46,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 		  DUMPSTRUCT *Dump, VEGPIX ** VegMap, VEGTABLE * VType, 
 		  SOILTABLE *SType, CHANNEL *ChannelData, SEDPIX **SedMap,
 		  PRECIPPIX **PrecipMap, SEDTABLE *SedType,
-		  float Tair)
+		  float Tair, float Rh)
 {
   const char *Routine = "RouteSurface";
   int Lag;			/* Lag time for hydrograph */
@@ -57,6 +57,8 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
   TIMESTRUCT NextTime;
   TIMESTRUCT VariableTime;
   
+  FILE *fo;             /*    Output file pointer */
+
   int i, j, x, y, n, k;         /* Counters */
   float **Runon;                /* (m3/s) */
 
@@ -76,9 +78,14 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
   float term1, term2, term3;
   float streampower;           /* Unit streampower from KINEROS (M/s) */
   float TC;                    /* Transport capacity (m3/m3) */
-  float floweff;               /* Flow detachment efficiency (unitless) */
+
   float settling;              /* Settling velocity (m/s) */
   float Fw;                      /* Water depth correction factor */
+
+
+ if((fo = fopen("sedout.dat","a")) == NULL) {
+    printf("Cannot open/read output file\n");  
+    exit(0);  }  
   
   if (Options->Sediment) {
     if ((SedIn = (float **) calloc(Map->NY, sizeof(float *))) == NULL) {
@@ -172,7 +179,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 
       /* estimate kinematic viscosity through interpolation JSL */
 
-      knviscosity=viscosity(Tair);
+      knviscosity=viscosity(Tair, Rh);
 
       /* Must loop through surface routing multiple times within one DHSVM 
 	 model time step. */
@@ -294,9 +301,6 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	      TC = 0.05/(DS*pow((PARTDENSITY/WATER_DENSITY-1),2.))*
 		sqrt(slope*h/G)*(streampower-SETTLECRIT);
 
-	      /* Find erosion due to overland flow after Morgan et al. (1998). */
-	      floweff = 0.79*exp(-0.85*SedType[SoilMap[y][x].Soil-1].Cohesion.mean);
-	      
 	      /* Calculate sediment mass balance. */
 	      term1 = (TIMEWEIGHT/Map->DX);
 	      term2 = alpha/(2.*VariableDT);
@@ -307,24 +311,19 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 						term3*SoilMap[y][x].startRunoff) +
 			SedMap[y][x].OldSedIn*(term2*pow(SoilMap[y][x].startRunon, beta) + 
 					       term3*SoilMap[y][x].startRunon) +
-			DR + floweff*Map->DY*settling*TC)/
-		(term2*pow(outflow, beta) + term1*outflow + floweff*Map->DY*settling);
-	      
-	      /* As per Morgan et al. (1998), SedOut >= TC recalculate with floweff = 1 */
-	      if(SedOut >= TC)
-		SedOut = (SedIn[y][x]*(term1*Runon[y][x]-term2*pow(Runon[y][x], beta)) +
-			  SedMap[y][x].OldSedOut*(term2*pow(SoilMap[y][x].startRunoff, beta) -
-						  term3*SoilMap[y][x].startRunoff) +
-			  SedMap[y][x].OldSedIn*(term2*pow(SoilMap[y][x].startRunon, beta) + 
-						 term3*SoilMap[y][x].startRunon) +
-			  DR + Map->DY*settling*TC)/
-		  (term2*pow(outflow, beta) + term1*outflow + Map->DY*settling);
-	      
+			DR + Map->DY*settling*TC)/
+		(term2*pow(outflow, beta) + term1*outflow + Map->DY*settling);
+
+
+	      if(SedOut >= TC) SedOut=TC;
+
+
 	      SedMap[y][x].OldSedOut = SedOut;
 	      SedMap[y][x].OldSedIn = SedIn[y][x];
+	      SedMap[y][x].TotalSediment += (SedOut*Runon[y][x]*VariableDT);  /* total sediment in cu. meters */
 	      SedMap[y][x].SedFluxOut += SedOut;
 	      SedMap[y][x].Erosion += (SedIn[y][x]*Runon[y][x] - SedOut*outflow)*
-		VariableDT/(Map->DX*Map->DY);
+		VariableDT/(Map->DX*Map->DY)*1000.;  /* total depth of erosion in mm */
 	      
 	    } /* end if outflow > 0. */
 	    else {
@@ -450,6 +449,8 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
     fprintf(Dump->Stream.FilePtr, " %g\n", StreamFlow);
   }
 
+  fclose(fo);
+
 }
 
 
@@ -512,28 +513,39 @@ float FindDT(SOILPIX **SoilMap, MAPSIZE *Map, TIMESTRUCT *Time,
   return DT;
 }
 
-float viscosity(float Tair)
+float viscosity(float Tair, float Rh)
 {
-  float knviscosity=0;
+  float knviscosity=0;               /* kinematic viscosity */
+  float Tdew=0;                     /* Dew point temperature */
+  float X;                           /* complement of relative humidity, fraction */
+
+
 
 /* estimate kinematic viscosity through interpolation JSL */
 
-  if (Tair<0.)
+/* calculate Dewpoint temperature Eq. 2-7 Linsley */
+  X=1.-Rh/100.;
+
+
+  Tdew=-(14.55+.114*Tair)*X-pow(((2.5+0.007*Tair)*X),3)-(15.9+.117*Tair)*pow(X,14)+Tair;
+
+  
+
+  if (Tdew<0.)
     knviscosity=1.792;
-  else if (Tair<4. && Tair>=0.)
-    knviscosity=(1.792-(Tair-0.)/4.*(1.792-1.567));
-  else if  (Tair>=4. && Tair<10.)
-    knviscosity=(1.567-(Tair-4.)/6.*(1.567-1.371));
-  else if (Tair>=10. && Tair<20.)
-    knviscosity=(1.371-(Tair-10.)/10.*(1.371-1.007));        
-  else if  (Tair>=20. && Tair<25.)
-    knviscosity=(1.007-(Tair-20.)/5.*(1.007-.8963));
-  else if  (Tair>=25. && Tair<30.)
-    knviscosity=(.8963-(Tair-25.)/5.*(.8963-.8042));
-  else if  (Tair>=30. && Tair<40.)
-    knviscosity=(.8042-(Tair-30.)/10.*(.8042-.6611));
+  else if (Tdew<4. && Tdew>=0.)
+    knviscosity=(1.792-(Tdew-0.)/4.*(1.792-1.567));
+  else if  (Tdew>=4. && Tdew<10.)
+    knviscosity=(1.567-(Tdew-4.)/6.*(1.567-1.371));
+  else if (Tdew>=10. && Tdew<20.)
+    knviscosity=(1.371-(Tdew-10.)/10.*(1.371-1.007));        
+  else if  (Tdew>=20. && Tdew<25.)
+    knviscosity=(1.007-(Tdew-20.)/5.*(1.007-.8963));
+  else if  (Tdew>=25. && Tdew<30.)
+    knviscosity=(.8963-(Tdew-25.)/5.*(.8963-.8042));
+  else if  (Tdew>=30. && Tdew<40.)
+    knviscosity=(.8042-(Tdew-30.)/10.*(.8042-.6611));
   else
-    knviscosity=(.6611-(Tair-40.)/10.*(.6611-.556));
- 
+    knviscosity=(.6611-(Tdew-40.)/10.*(.6611-.556));
   return knviscosity;
 }

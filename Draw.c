@@ -1046,7 +1046,7 @@ void draw(DATE * Day, int first, int DayStep, MAPSIZE *Map, int NGraphics,
 	  }
 
 	  if (MapNumber == 47 && Options->Sediment) {
-	    text = "Sediment Flux (m3/m3)";
+	    text = "Total Sediment (m3)";
 	    length = 22;
 	    for (i = 0; i < Map->NX; i++) {
 	      for (j = 0; j < Map->NY; j++) {
@@ -1064,7 +1064,7 @@ void draw(DATE * Day, int first, int DayStep, MAPSIZE *Map, int NGraphics,
 	  }
 
 	  if (MapNumber == 48 && Options->Sediment) {
-	    text = "Erosion (m)";
+	    text = "Erosion (mm)";
 	    length = 22;
 	    for (i = 0; i < Map->NX; i++) {
 	      for (j = 0; j < Map->NY; j++) {
@@ -1245,7 +1245,7 @@ void draw(DATE * Day, int first, int DayStep, MAPSIZE *Map, int NGraphics,
 	    }
 	  }
 	  /* label the color bar */
-	  sprintf(text2, "%6.1f", max);
+	  sprintf(text2, "%6f", max);
 	  XSetForeground(display, gc, black);
 	  XClearArea(display, window, (int) (PX + Map->NX * re),
 		     (int) (PY - 20 + buf), 50, 20, False);

@@ -408,7 +408,7 @@ int main(int argc, char **argv)
       RouteSurface(&Map, &Time, TopoMap, SoilMap, &Options,
 		   UnitHydrograph, &HydrographInfo, Hydrograph,
 		   &Dump, VegMap, VType, SType, &ChannelData, SedMap,
-		   PrecipMap, SedType, LocalMet.Tair);
+		   PrecipMap, SedType, LocalMet.Tair, LocalMet.Rh );
 
 #endif
 
