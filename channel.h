@@ -67,6 +67,8 @@ typedef struct {
   float outflowrate[NSEDSIZES];          /* outflow to downstream reach, kg/s, by D */
   float last_outflowrate[NSEDSIZES]; 
   float tempvol;           /*volume of debris inflow - total. Temporary space */
+  float tempmass[NSEDSIZES];   /* channel storage, in kg, that can move due to 
+				  debris flows. Temporary space */
   float totalmass;         /* total sediment mass in reach */
   float outflowconc;       /* outflow concentration in ppm */
 } CHANSED;
@@ -141,8 +143,12 @@ void channel_free_network(Channel * net);
 
 void channel_init(void);
 void channel_done(void);
-void initialize_sediment_array(Channel * head, float *InitialSegmentSediment);
-void update_sediment_array(Channel * head, float *InitialSegmentSediment);
+void initialize_sediment_array(Channel * head, float *InitialSegmentSediment, 
+			       float **InitialSegmentSedimentm);
+void initialize_sediment_mass(Channel * head, float **InitialSegmentSedimentm);
+void count_sediment_mass(Channel * head, float *InitialSegmentSediment);
+void update_sediment_array(Channel * head, float *InitialSegmentSediment, float **InitialSegmentSedimentm);
+void update_sediment_mass(Channel * head, float **SegmentSedimentm, int massitertemp);
 void sed_vol_to_distrib_mass(Channel * head, float *volumearray);
 
 #endif

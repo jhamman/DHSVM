@@ -32,9 +32,13 @@
    ------------------------------------------------------------- */
 static ChannelMapRec *alloc_channel_map_record(void);
 static ChannelMapPtr **channel_grid_create_map(int cols, int rows);
-Channel *Find_First_Segment(ChannelMapPtr ** map, int col, int row, float SlopeAspect, char *Continue);
-Channel *Find_Next_Segment(ChannelMapPtr ** map, int curr_col, int curr_row, int next_col, int next_row, int CurrentID, int NextID, char *Continue, float *SedimentToChannel);
-char channel_grid_has_intersection(ChannelMapPtr ** map, int Currid, int Nextid,  int row, int col, int Flag);
+Channel *Find_First_Segment(ChannelMapPtr ** map, int col, int row, float SlopeAspect, 
+			    char *Continue);
+Channel *Find_Next_Segment(ChannelMapPtr ** map, int curr_col, int curr_row, int next_col, 
+			   int next_row, int CurrentID, int NextID, char *Continue, 
+			   float *SedimentToChannel, float *SedimentMass);
+char channel_grid_has_intersection(ChannelMapPtr ** map, int Currid, int Nextid, int row, 
+				   int col, int Flag);
 
 /* -------------------------------------------------------------
    local module variables
@@ -54,7 +58,12 @@ void RouteDebrisFlow(float *SedimentToChannel, int y, int x, float SlopeAspect,
   int SearchRadius, Flag;
   int i, j, curr_inti, curr_intj,next_inti,next_intj;
   int MaxRadius = 200;
+  float SedimentMass[NSEDSIZES];
 
+  /* Initialize */
+  for(i = 0; i < NSEDSIZES; i++){
+    SedimentMass[i] = 0.;
+  }
 
   /* Find pointer to segment where debris flow enters channel network.
      If multiple segments exist in the current gridcell, the debris flow
@@ -187,24 +196,30 @@ void RouteDebrisFlow(float *SedimentToChannel, int y, int x, float SlopeAspect,
 //  fprintf(stdout, "Intersection found at row %d, col %d for current seg, at row %d, col %d for next segment\n", curr_inti, curr_intj, next_inti, next_intj);
     
     /* Now have location of intersection, check channel aspect. */
-    CurrentSeg = Find_Next_Segment(ChannelData->stream_map, curr_intj, curr_inti, next_intj, next_inti, CurrentSeg->id, CurrentSeg->outlet->id, &Continue, SedimentToChannel);
+    CurrentSeg = Find_Next_Segment(ChannelData->stream_map, curr_intj, curr_inti, 
+				   next_intj, next_inti, CurrentSeg->id, 
+				   CurrentSeg->outlet->id, &Continue, SedimentToChannel,
+				   SedimentMass);
   }
-
-//   fprintf(stdout, "Debris flow stopped, Segment = %d\n", CurrentSeg->id);
+   /*  fprintf(stdout, "Debris flow stopped, Segment = %d\n", CurrentSeg->id); */
 }
 
 /* -------------------------------------------------------------
    Find_Next_Segment
    ------------------------------------------------------------- */
 
-Channel *Find_Next_Segment(ChannelMapPtr ** map, int curr_col, int curr_row, int next_col, int next_row,int CurrentID, int NextID, char *Continue, float *SedimentToChannel)
+Channel *Find_Next_Segment(ChannelMapPtr ** map, int curr_col, int curr_row, 
+			   int next_col, int next_row,int CurrentID, int NextID, 
+			   char *Continue, float *SedimentToChannel, float *SedimentMass)
 {
   ChannelMapPtr curr_cell = map[curr_col][curr_row];
   ChannelMapPtr next_cell = map[next_col][next_row];
   float test;
+  int i;
   float CurrentAspect, NextAspect;
   Channel *CurrPtr;
   Channel *NextPtr;
+ 
 
   while (curr_cell != NULL) {
     if(curr_cell->channel->id == CurrentID) {
@@ -237,19 +252,40 @@ Channel *Find_Next_Segment(ChannelMapPtr ** map, int curr_col, int curr_row, int
     *Continue = TRUE;
     *SedimentToChannel += CurrPtr->sediment.tempvol;
     CurrPtr->sediment.tempvol = 0.0;
+    for(i = 0; i < NSEDSIZES; i++){
+       SedimentMass[i] += CurrPtr->sediment.tempmass[i];
+       CurrPtr->sediment.tempmass[i] = 0.;
+     }
+   //  printf(" Movin sediment from %d\n",CurrPtr->id);
   }
   else {
     *Continue = FALSE;
     *SedimentToChannel += CurrPtr->sediment.tempvol;
     CurrPtr->sediment.tempvol = 0.;
+    for(i = 0; i < NSEDSIZES; i++){
+       SedimentMass[i] += CurrPtr->sediment.tempmass[i];
+       CurrPtr->sediment.tempmass[i] = 0.;
+     }
+  //   printf("2Movin sediment from %d\n",CurrPtr->id);
     if(test > 70.*PI/180.) { 
       NextPtr->sediment.tempvol += *SedimentToChannel/2.;
       CurrPtr->sediment.tempvol = *SedimentToChannel/2.;
       *SedimentToChannel = 0.0;
+      for(i = 0; i < NSEDSIZES; i++){
+ 	NextPtr->sediment.tempmass[i] += SedimentMass[i]/2.;
+ 	CurrPtr->sediment.tempmass[i] = SedimentMass[i]/2.;
+ 	SedimentMass[i] = 0.;
+      }
+  //     printf(" Dumpin sediment in %d %d \n",NextPtr->id,CurrPtr->id);
     }
     else {
       NextPtr->sediment.tempvol += *SedimentToChannel;
       *SedimentToChannel = 0.0;
+      for(i = 0; i < NSEDSIZES; i++){
+ 	NextPtr->sediment.tempmass[i] += SedimentMass[i];
+ 	SedimentMass[i] = 0.;
+      }
+  //     printf("2Dumpin sediment in %d \n",NextPtr->id);
     }
   }
 

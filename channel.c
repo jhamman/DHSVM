@@ -313,22 +313,86 @@ Channel *channel_find_segment(Channel * head, SegmentID id)
 }
 
 /* -------------------------------------------------------------
+   initialize_sediment_mass
+   ------------------------------------------------------------- */
+void initialize_sediment_mass(Channel * head, float **InitialSegmentSedimentm)
+{
+  int i;
+  
+  for (; head != NULL; head = head->next) {
+    for(i=0;i<NSEDSIZES;i++) {
+      InitialSegmentSedimentm[head->id][i] += head->sediment.mass[i]; 
+    }
+  }
+}
+
+/* -------------------------------------------------------------
    initialize_sediment_array
    ------------------------------------------------------------- */
-void initialize_sediment_array(Channel * head, float *InitialSegmentSediment)
+void initialize_sediment_array(Channel * head, float *InitialSegmentSediment,
+			       float **InitialSegmentSedimentm)
 {
-  for (; head != NULL; head = head->next) 
+  int i;
+  
+  for (; head != NULL; head = head->next) {
     InitialSegmentSediment[head->id] += head->sediment.tempvol; 
+    for(i=0;i<NSEDSIZES;i++) {
+      InitialSegmentSedimentm[head->id][i] += head->sediment.tempmass[i]; 
+    }
+  }
+}
+/* -------------------------------------------------------------
+   update_sediment_array
+   ------------------------------------------------------------- */
+void count_sediment_mass(Channel * head, float *InitialSegmentSediment)
+{
+  int i;
+  float junk=0;
+
+  for (; head != NULL; head = head->next){
+   /*  head->sediment.tempvol = InitialSegmentSediment[head->id]; */
+    for(i=0;i<NSEDSIZES;i++) {
+     /*  head->sediment.tempmass[i] = head->sediment.mass[i]; */
+       junk+=head->sediment.mass[i];
+    }
+  }
+  printf("%f\n", junk);
+}
+
+/* -------------------------------------------------------------
+   count_sediment_mass
+   ------------------------------------------------------------- */
+/* -------------------------------------------------------------
+   update_sediment_array
+   ------------------------------------------------------------- */
+void update_sediment_array(Channel * head, float *InitialSegmentSediment, float **InitialSegmentSedimentm)
+{
+  int i;
+
+  for (; head != NULL; head = head->next){
+    head->sediment.tempvol = InitialSegmentSediment[head->id];
+    for(i=0;i<NSEDSIZES;i++) {
+      head->sediment.tempmass[i] = InitialSegmentSedimentm[head->id][i];
+    }
+  }
 }
 
 /* -------------------------------------------------------------
    update_sediment_array
    ------------------------------------------------------------- */
-void update_sediment_array(Channel * head, float *InitialSegmentSediment)
+void update_sediment_mass(Channel * head, float **SegmentSedimentm, int massitertemp)
 {
-  for (; head != NULL; head = head->next)
-    head->sediment.tempvol = InitialSegmentSediment[head->id];
+  int i;
+
+  
+  for (; head != NULL; head = head->next){
+    for(i=0;i<NSEDSIZES;i++) { 
+      head->sediment.mass[i] = SegmentSedimentm[head->id][i]
+	/(float)massitertemp;
+	} 
+  }
 }
+
 /* -------------------------------------------------------------
    sed_vol_to_distrib_mass
    ------------------------------------------------------------- */

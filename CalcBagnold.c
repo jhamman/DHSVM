@@ -49,7 +49,7 @@ float CalcBagnold(float DS,TIMESTRUCT * Time, float outflow, float width, float 
   float tau0, taustar, tanalpha,tanalphamax, eb;
   float A,B;
   float TotalLoad;
-
+ 
   /* settling velocity uses Rubey's formula -- result in m/s */
   visc=VISCOSITY/1000000.0; /* convert mm2/s to m2/s to use SI units*/
   /* note -- this differs from the solution used in RouteSurface */

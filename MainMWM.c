@@ -70,7 +70,11 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
   float SlopeAspect, SedimentToChannel;
   float *SegmentSediment;         /* The cumulative sediment content over all stochastic
 				     iterations for each channel segment. */
+  float **SegmentSedimentm;         /* The cumulative sediment mass over all stochastic
+				     iterations for each channel segment. */
   float *InitialSegmentSediment; /* Placeholder of segment sediment load at 
+				    beginning of time step. */
+float **InitialSegmentSedimentm; /* Placeholder of segment sediment mass at 
 				    beginning of time step. */
   float **SedThickness;          /* Cumulative sediment depth over all stochastic
 				    iterations for each pixel.  */
@@ -289,10 +293,24 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
   
   if (!(SegmentSediment = (float *)calloc(MaxStreamID, sizeof(float ))))
     ReportError("MainMWM", 1);
+
+  if (!(SegmentSedimentm = (float **)calloc(MaxStreamID, sizeof(float *))))
+    ReportError("MainMWM", 1);
+  for(i=1; i<MaxStreamID+1; i++) {
+    if (!(SegmentSedimentm[i] = (float *)calloc(NSEDSIZES, sizeof(float))))
+      ReportError("MainMWM", 1);
+  }
   
   if (!(InitialSegmentSediment = (float *)calloc(MaxStreamID, sizeof(float ))))
     ReportError("MainMWM", 1);
-  
+
+  if (!(InitialSegmentSedimentm = (float **)calloc(MaxStreamID, sizeof(float *))))
+    ReportError("MainMWM", 1);  
+ for(i=1; i<MaxStreamID+1; i++) {
+    if (!(InitialSegmentSedimentm[i] = (float *)calloc(NSEDSIZES, sizeof(float))))
+      ReportError("MainMWM", 1);
+  }
+
   /* Initialize arrays. */
   for (y = 0; y < Map->NY; y++) {
     for (x = 0; x < Map->NX; x++) {
@@ -311,8 +329,8 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
       }
     }
   }
-  
-  update_sediment_array(ChannelData->streams, InitialSegmentSediment);
+  initialize_sediment_mass(ChannelData->streams, InitialSegmentSedimentm);
+  update_sediment_array(ChannelData->streams, InitialSegmentSediment, InitialSegmentSedimentm);
   
   /************************************************************************/
   /* Begin iteration for multiple ensembles. */
@@ -545,6 +563,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 
 			}
 		      }
+		     
 		    } /* End of this failure/runout event */
 		    
 		  }		      
@@ -587,14 +606,20 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 	}
       }
     }
+/*  printf("Sediment Mass is "); */
+/*  count_sediment_mass(ChannelData->streams, InitialSegmentSediment); */
+    
 
     /* Record cumulative stream sediment volumes. */
-    initialize_sediment_array(ChannelData->streams, SegmentSediment);
+    initialize_sediment_array(ChannelData->streams, SegmentSediment,
+			      SegmentSedimentm);
 
     /* Reset channel sediment volume for each iteration. */
-    update_sediment_array(ChannelData->streams, InitialSegmentSediment);
-   
+    update_sediment_array(ChannelData->streams, InitialSegmentSediment, InitialSegmentSedimentm);
     
+    update_sediment_mass(ChannelData->streams, SegmentSedimentm, 
+			 massitertemp);
+
   }    /* End iteration loop */
 
   // Normalize mass wasting vars by number of iterations
@@ -652,7 +677,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
     SegmentSediment[i] /= (float)massitertemp;
     if(SegmentSediment[i] < 0.0) SegmentSediment[i]=0.0;
   }
-  update_sediment_array(ChannelData->streams, SegmentSediment);
+  update_sediment_array(ChannelData->streams, SegmentSediment, SegmentSedimentm);
   /* Take new sediment inflow and distribute it by representative diameters*/
   /* and convert to mass */
   sed_vol_to_distrib_mass(ChannelData->streams, SegmentSediment);
@@ -687,11 +712,16 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
     free(SedThickness[i]);
     free(InitialSediment[i]);
   }
+  for(i=1; i<MaxStreamID+1; i++) {
+    free(SegmentSedimentm[i]);
+  }
   free(failure);
   free(SedThickness);
   free(InitialSediment);
   free(SegmentSediment);
+  free(SegmentSedimentm);
   free(InitialSegmentSediment);
+  free(InitialSegmentSedimentm);
 }
 
 /*****************************************************************************
