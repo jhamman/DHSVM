@@ -124,7 +124,7 @@ void MassBalance(DATE *Current, FILES *Out, FILES *SedOut, AGGREGATED *Total,
     
     PrintDate(Current, SedOut->FilePtr);
     
-    fprintf(SedOut->FilePtr, "%g %g %g %g %g %g %g %g %g %g %g %g %g %g %g \n", 
+    fprintf(SedOut->FilePtr, " %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g \n", 
 	    Total->Fine.MassWasting, Total->Fine.SedimentToChannel, 
 	    Total->Fine.MassDeposition, MWMMassError, Total->Sediment.Erosion,
 	    Total->Road.Erosion,Total->Sediment.RoadSed, 

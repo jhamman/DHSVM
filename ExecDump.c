@@ -1535,7 +1535,7 @@ void DumpPix(DATE * Current, int first, FILES * OutFile, FILES * OutFileSediment
     // Sediment Values File
     if (Options->Sediment) {
       fprintf(OutFileSediment->FilePtr, "Date ");
-      fprintf(OutFileSediment->FilePtr, "SatThick DeltaDepth Probability TotMassWasting TotMassDeposition TotSedToChannel");
+      fprintf(OutFileSediment->FilePtr, "SatThick DeltaDepth Probability TotMassWasting TotMassDeposition TotSedToChannel ");
       fprintf(OutFileSediment->FilePtr, "Erosion SedFluxOut OverlandInflow ");
       fprintf(OutFileSediment->FilePtr, "RdErosion RdSedToHill OverroadInflow \n");
     }
