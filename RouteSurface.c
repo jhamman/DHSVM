@@ -60,7 +60,10 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
   float **Runon;                /* (m3/s) */
 
   /* Kinematic wave routing: */
-  double slope, alpha, beta;
+
+/* JSL: slope is manning's slope; alpha is channel parameter including wetted perimeter, manning's n, and manning's slope.  Beta is 3/5 */
+
+  double slope, alpha, beta;    
   double outflow;              /* Outflow of water from a pixel during a sub-time step */    
   float VariableDT;            /* Maximum stable time step (s) */  
   float **SedIn, SedOut;       /* (m3/m3) */  
@@ -166,6 +169,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
       
       /* Must loop through surface routing multiple times within one DHSVM 
 	 model time step. */
+
       
       while (Before(&(VariableTime.Current), &(NextTime.Current))) {
 
@@ -185,7 +189,10 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	  
 	  /*COD check for validity of Manning's equation? */
 	  beta = 3./5.;
-	  alpha = pow(SType[SoilMap[y][x].Soil-1].Manning*pow(Map->DX,2/3)/sqrt(slope),beta);
+	  alpha = pow(SType[SoilMap[y][x].Soil-1].Manning*pow(Map->DX,2./3.)/sqrt(slope),beta);
+
+	 
+	 
 	  
 	  /* Calculate discharge (m3/s) from the grid cell using an explicit finite difference
 	     solution of the linear kinematic wave. */
@@ -439,6 +446,7 @@ float FindDT(SOILPIX **SoilMap, MAPSIZE *Map, TIMESTRUCT *Time,
 	     TOPOPIX **TopoMap, SOILTABLE *SType)
 {
   int x, y;
+/* JSL: slope is manning's slope; alpha is channel parameter including wetted perimeter, manning's n, and manning's slope.  Beta is 3/5 */
   float slope, beta, alpha;
   float Ck;
   float DT, minDT;
@@ -455,8 +463,8 @@ float FindDT(SOILPIX **SoilMap, MAPSIZE *Map, TIMESTRUCT *Time,
       
       if (slope <= 0) slope = 0.0001;
       beta = 3./5.;
-      alpha = pow(SType[SoilMap[y][x].Soil-1].Manning*pow(Map->DX,2/3)/sqrt(slope),beta);
-      
+      alpha = pow(SType[SoilMap[y][x].Soil-1].Manning*pow(Map->DX,2./3.)/sqrt(slope),beta);
+
       /* Calculate flow velocity from discharge  using manning's equation. */
       Ck = 1./(alpha*beta*pow(SoilMap[y][x].Runoff, beta -1.));
       
