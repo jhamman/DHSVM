@@ -47,6 +47,8 @@
 
 #define KhH2O 0.58		/* Thermal conductivity of water (W/(mk)) */
 
+#define LEAF_DRIP_DIA  0.0055    /* Leaf drip diameter (m) */
+
 #define LF           (333.7e3)	/* latent heat of fusion (J/kg) */
 
 #define MINPDEG        4.	/* minutes per degree longitude */

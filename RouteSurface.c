@@ -62,20 +62,20 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
   /* Kinematic wave routing: */
   double slope, alpha, beta;
   double outflow;              /* Outflow of water from a pixel during a sub-time step */    
-  int part_size;             
   float VariableDT;            /* Maximum stable time step (s) */  
-  float **SedIn, SedOut;     
-  float DR;                  
+  float **SedIn, SedOut;       /* (m3/m3) */  
+  float DR;                    /* Potential erosion due to leaf drip */ 
   float DS;                    /* Median particle diameter (mm) */
   float h;                     /* Water depth (m) */
   float term1, term2, term3;
   float streampower;           /* (g/s3) */
   float effectivepower;        /* (g^1.5 * s^-4.5 * cm^-2/3) */
-  float soliddischarge;      
+  float soliddischarge;        /* (g/cm*s) */
   float TC;                    /* Transport capacity (m3/m3) */
   float floweff;               /* Flow detachment efficiency (unitless) */
   float settling;              /* Settling velocity (m/s) */
-  
+  float Fw;                      /* Water depth correction factor */
+
   if (Options->Sediment) {
     if ((SedIn = (float **) calloc(Map->NY, sizeof(float *))) == NULL) {
       ReportError((char *) Routine, 1);
@@ -183,6 +183,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	    exit(0);
 	  }
 	  
+	  /*COD check for validity of Manning's equation? */
 	  beta = 3./5.;
 	  alpha = pow(SType[SoilMap[y][x].Soil-1].Manning*pow(Map->DX,2/3)/sqrt(slope),beta);
 	  
@@ -237,12 +238,29 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	    /* Only perform sediment routing if there is outflow*/
 	    if((outflow > 0.) && (h > 0.)){
 	      
-	      /* First find potential erosion due to rainfall Morgan et al. (1998). */   
-	      /* Kinetic energy of the precip is determined in MassEnergyBalance.c */
-	      
-	      DR = (SedType[SoilMap[y][x].Soil-1].KIndex/PARTDENSITY) * 
-		PrecipMap[y][x].KineticEnergy*exp(-1.*SEDEXPONENT*h);
-	      
+	      /* First find potential erosion due to rainfall Morgan et al. (1998). 
+		 Momentum squared of the precip is determined in MassEnergyBalance.c
+		 Converting from kg/m2*s to m3/s*m */
+	      if (h <= PrecipMap[y][x].Dm)
+		Fw = 1.;
+	      else
+		Fw = exp(1 - (h/PrecipMap[y][x].Dm));
+
+	      /* If there is an understory, it is assumed to cover the entire
+		 grid cell. Fract = 1 and DR = 0. */
+	      if (VType->OverStory == TRUE) 
+		/* Then (1-VType->Fract[1]) is the fraction of understory */
+		DR = SedType->KIndex * Fw * (1-VType->Fract[1]) *
+		PrecipMap[y][x].MomentSq; /* ((kg/m^2*s) */
+	      else
+		/* There is no Overstory, then (1-VType->Fract[0]) is the 
+		   fraction of understory */
+		DR = SedType->KIndex * Fw * (1-VType->Fract[0]) *
+		    PrecipMap[y][x].MomentSq; /* ((kg/m^2*s) */
+	
+	      /* converting units to m3 m-1 s-1*/
+	      DR = DR/PARTDENSITY * Map->DX;
+
        	      /* from Everaert equations (5) */
 	      streampower= WATER_DENSITY*G*1000.*(outflow/Map->DX)*slope;
 	      
@@ -327,8 +345,8 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 		    ChannelData->stream_map[xn][yn]->channel->sediment.overlandinflow[0] += 
 		      SedOut * ((float) TopoMap[y][x].Dir[n] /(float) TopoMap[y][x].TotalDir); 
 		   
-		    for (part_size=1; part_size<NSEDSIZES; part_size++){
-		      ChannelData->stream_map[xn][yn]->channel->sediment.overlandinflow[part_size] = 0.0;				
+		    for (i = 1; i < NSEDSIZES; i++){
+		      ChannelData->stream_map[xn][yn]->channel->sediment.overlandinflow[i] = 0.0;				
 		    }
 		  }
 		  else 

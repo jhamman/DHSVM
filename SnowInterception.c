@@ -59,6 +59,12 @@
     float *Tcanopy         - Canopy temperature (C)
     float *MeltEnergy      - Energy used in heating and melting of the snow 
                              (W/m2)
+    float *MomentSq        - Momentum squared for rain, used in the 
+		        sediment model (kg* m/s)^2 /m^2*s)
+     float *Height          - Height of vegetation (m)
+     float MS_Rainfall      - Momentum for direct rainfall () COD
+     float LD_FallVelocity  - Leaf drip fall velocity corresponding to the
+		        canopy height in vegetation map (m/s)
 
   Returns      : none
 
@@ -86,8 +92,8 @@ void SnowInterception(int y, int x, int Dt, float F, float LAI,
 		      float Vpd, float Wind, float *RainFall, float *SnowFall,
 		      float *IntRain, float *IntSnow, float *TempIntStorage,
 		      float *VaporMassFlux, float *Tcanopy, float *MeltEnergy,
-		      float *KineticEnergy, float *Height, 
-		      unsigned char Understory)
+		      float *MomentSq, float *Height, unsigned char Understory,
+		      float MS_Rainfall, float LD_FallVelocity)
 {
   float AdvectedEnergy;		/* Energy advected by the rain (W/m2) */
   float DeltaSnowInt;		/* Change in the physical swe of snow
@@ -394,21 +400,14 @@ void SnowInterception(int y, int x, int Dt, float F, float LAI,
   *RainFall = RainThroughFall + Drip;
   *SnowFall = SnowThroughFall + ReleasedMass;
 
-   /* Find kinetic energy of rainfall for use by the sediment model. */
-  if(Understory) {
-    
-    /* Since the understory is assumed to cover the entire grid cell, all 
-       KE is associated with leaf drainage, eq. 23, Morgan et al. (1998) */
-    
-    if(Height[1] > .14)
-      *KineticEnergy = *RainFall*1000.*(15.8*sqrt(Height[1]) - 5.87); 
-    else
-      *KineticEnergy = 0.0;
-  }
-  else {
+   /* Find momentum squared of rainfall for use by the sediment model. */
+  if(Understory) 
+     /* Since the understory is assumed to cover the entire grid cell, all 
+       momentum is associated with leaf drip, eq. 2, Wicks and Bathurst (1996) */
+    *MomentSq = pow(LD_FallVelocity * WATER_DENSITY, 2) * PI/6 *
+      pow(LEAF_DRIP_DIA, 3) * (*RainFall)/Dt;
+  else 
     /* If no understory, part of the rainfall reaches the ground as direct throughfall. */
-    *KineticEnergy = 1000.*(OriginalRainfall*(8.95+8.44*log10(OriginalRainfall*1000./Dt))*(1-F) +
-      Drip * (15.8*sqrt(Height[0])-5.87));
-  }
-
+     *MomentSq = pow(LD_FallVelocity * WATER_DENSITY, 2) * PI/6 *
+      pow(LEAF_DRIP_DIA, 3) * Drip/Dt + (1-F) * MS_Rainfall;
 }

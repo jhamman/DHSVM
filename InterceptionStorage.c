@@ -26,8 +26,9 @@
   InterceptionStorage()
 *****************************************************************************/
 void InterceptionStorage(int NMax, int NAct, float *MaxInt, float *Fract,
-			 float *Int, float *Precip, float *KE, float *Height, 
-			 unsigned char Understory, float Dt)
+			 float *Int, float *Precip, float *MomentSq, float *Height, 
+			 unsigned char Understory, float Dt, float MS_Rainfall,
+			 float LD_FallVelocity)
 {
   float Available;		/* Available storage */
   float Intercepted;		/* Amount of water intercepted during this 
@@ -51,23 +52,18 @@ void InterceptionStorage(int NMax, int NAct, float *MaxInt, float *Fract,
     Int[i] += Intercepted;
   }
 
-  /* Find kinetic energy of rainfall for use by the sediment model. */
-  if(Understory) {
-    
+  /* Find momentum squared of rainfall for use by the sediment model. */
+  if(Understory) 
     /* Since the understory is assumed to cover the entire grid cell, all 
-       KE is associated with leaf drainage, eq. 23, Morgan et al. (1998) */
-    
-    if(Height[1] > .14)
-      *KE = *Precip * 1000. * (15.8*sqrt(Height[1]) - 5.87); 
-    else
-      *KE = 0.0;
-  }
-  else {
+       momentum is associated with leaf drip, eq. 2, Wicks and Bathurst (1996) */
+    *MomentSq = pow(LD_FallVelocity * WATER_DENSITY, 2) * PI/6 *
+      pow(LEAF_DRIP_DIA, 3) * (*Precip)/Dt;
+  else
     /* If no understory, part of the rainfall reaches the ground as direct throughfall. */
-    *KE = 1000.*(OriginalPrecip*(8.95+8.44*log10(OriginalPrecip*1000./Dt))*(1-Fract[0]) +
-      *Precip * (15.8*sqrt(Height[0])-5.87));
-  }
-
+    *MomentSq = (pow(LD_FallVelocity * WATER_DENSITY, 2) * PI/6 *
+		 pow(LEAF_DRIP_DIA, 3) * (*Precip)/Dt) + (1-Fract[0]) *
+      MS_Rainfall;  
+ 
   /* WORK IN PROGESS */
   /* It should be checked whether the following statement can cause a "loss"
      of water.  When there is interception storage at timestep t, and snow

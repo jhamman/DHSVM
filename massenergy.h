@@ -39,8 +39,9 @@ void InitLocalRad(int HeatFluxOption, float Rs, float Ld,
 		  VEGTABLE * VType, SNOWPIX * LocalSnow, PIXRAD * LocalRad);
 
 void InterceptionStorage(int NMax, int NAct, float *MaxInt, float *Fract,
-			 float *Int, float *Precip, float *KE, float *Height, 
-			 unsigned char Understory, float Dt);
+			 float *Int, float *Precip, float *MomentSq, float *Height, 
+			 unsigned char Understory, float Dt,
+			 float MS_Rainfall, float LD_FallVelocity);
 
 void LongwaveBalance(unsigned char OverStory, float F, float Ld,
 		     float Tcanopy, float Tsurf, PIXRAD * LocalRad);

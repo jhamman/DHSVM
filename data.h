@@ -273,14 +273,15 @@ typedef struct {
   float Precip;			/* Total amount of precipitation at pixel (m) */
   float RainFall;		        /* Amount of rainfall (m) */
   float SnowFall;		        /* Amount of snowfall (m) */
-  float KineticEnergy;           /*Rainfall energy at the ground surface, used for
-				   the sediment model (J/m2*mm) */
+  float MomentSq;                /* Momentum squared for rain, used in the 
+				    sediment model (kg* m/s)^2 /m^2*s) */
   float *IntRain;		        /* Rain interception by each vegetation layer (m) */
   float *IntSnow;		        /* Snow interception by each vegetation layer (m) */
   float TempIntStorage;		/* Temporary snow and rain interception storage,
 				   used by MassRelease() */
   int PrecipStart;               /* TRUE if there was surface water in the last
-				    time step */  
+				    time step */ 
+  float Dm;                      /* Median raindrop diameter (m) */
  } PRECIPPIX;
 
 typedef struct {

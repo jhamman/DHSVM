@@ -32,9 +32,33 @@
 #include "snow.h"
 #include "constants.h"
 #include "soilmoisture.h"
+#include "Calendar.h"
 
 /*****************************************************************************
-  MassEnergyBalance()
+  Function name: MassEnergyBalance()
+
+  Purpose      : Calculate mass and energy balance
+
+  Required     :
+
+  Returns      : void
+
+  Modifies     :
+
+  Comments     :
+
+  Reference    :
+    Epema, G.F. and H.T. Riezbos, 1983, Fall Velocity of waterdrops at different
+heights as a factor influencing erosivity of simulated rain. Rainfall simulation,
+Runoff and Soil Erosion. Catena suppl. 4, Braunschweig. Jan de Ploey (Ed), 1-17. 
+
+  Laws, J.o., and D.A. Parsons, 1943, the relation of raindrop size to intensity. 
+Trans. Am. Geophys. Union, 24: 452-460.
+
+  Wicks, J.M. and J.C. Bathurst, 1996, SHESED: a physically based, distributed
+erosion and sediment yield component for the SHE hydrological modeling system,
+Journal of Hydrology, 175, 213-238.
+
 *****************************************************************************/
 void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX, 
 		       float DY, int Dt, int HeatFluxOption, 
@@ -82,6 +106,24 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
   float Tsurf;			/* Surface temperature used in
 				   LongwaveBalance() (C) */
   int NVegLActual;		/* Number of vegetation layers above snow */
+  float alpha[4]={2.69e-8,3.75e-8,6.12e-8,11.75e-8}; /* empirical coefficient
+				for rainfall momentum after Wicks and Bathurst (1996) */ 
+  float beta[4]={1.6896,1.5545,1.4242,1.2821};       /* empirical coefficient
+				for rainfall momentum after Wicks and Bathurst (1996) */ 
+  float RainfallIntensity;       /* Rainfall intensity (mm/h) */
+  float MS_Rainfall;             /* Momentum squared for rain throughfall ((kg* m/s)^2 /(m^2 * s)) */
+  int MS_Index;                  /* Index for determining alpha and beta cooresponding to
+				  RainfallIntensity*/
+  int i;
+  float CanopyHeight[18] = {0.5,1,1.5,2,3,4,5,6,7,8,9,10,11,12,
+			    13,14,15,16};        /* Canopy height at which drip fall 
+			          velocity is prescribed after Epema and Riezebos (1983) (m)*/           
+  float FallVelocity[18] = {2.96,4.12,5.12,5.82,6.84,7.54,8.05,8.36,
+			    8.54,8.66,8.75,8.82,8.87,8.91,8.96,9.02,9.07,9.13};
+                                            /* Drip fall velocity corresponding to
+                                                          CanopyHeight after Epema and Riezebos (1983) (m/s)*/
+  float LD_FallVelocity;         /* Leaf drip fall velocity corresponding to the
+				    canopy height in vegetation map (m/s) */
 
   /* Calculate the number of vegetation layers above the snow */
 
@@ -117,6 +159,67 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
     LowerRa = UpperRa;
   }
 
+  /* Leaf drip impact*/
+  /* Find corresponding fall velocity for overstory and understory heights
+     by weighting scheme */
+
+  if (VType->OverStory){
+    /* staring at 1 assumes the overstory height > 0.5 m */
+    for (i = 1; i <= 17; i++ ) {           
+      if (VType->Height[0] < CanopyHeight[i]) {
+        LD_FallVelocity = ((VType->Height[0] - CanopyHeight[i-1])
+			   *FallVelocity[i] +
+			   (CanopyHeight[i] - VType->Height[0])*FallVelocity[i-1]) /
+	  (CanopyHeight[i] - CanopyHeight[i-1]);
+      }
+    }
+    if (VType->UnderStory) {                 
+      /* ending at 16 assumes the understory height < 16 m */
+      for (i = 0; i <= 16; i++) {
+	if (VType->Height[1] < CanopyHeight[i]) {
+	  LD_FallVelocity = ((VType->Height[1] - CanopyHeight[i])*FallVelocity[i] +
+			     (CanopyHeight[i+1] - VType->Height[1])*FallVelocity[i-1]) /
+	    (CanopyHeight[i+1] - CanopyHeight[i]);
+	}
+      }
+    }
+  }
+  else if (VType->UnderStory) {                 
+    /* ending at 16 assumes the understory height < 16 m */
+    for (i = 0; i <= 16; i++) {
+      if (VType->Height[0] < CanopyHeight[i]) {
+	LD_FallVelocity = ((VType->Height[0] - CanopyHeight[i])*FallVelocity[i] +
+			   (CanopyHeight[i+1] - VType->Height[0])*FallVelocity[i-1]) /
+	  (CanopyHeight[i+1] - CanopyHeight[i]);
+      }
+    }
+  }
+  else LD_FallVelocity = 0;
+
+  
+  /* RainFall impact */
+  if (LocalPrecip->RainFall > 0.) {
+    RainfallIntensity = LocalPrecip->RainFall * (1/MMTOM) * (SECPHOUR/Dt);
+    
+    /* Momentum is later weighted with the overstory/understory fraction */
+    if (RainfallIntensity > 10.)
+      MS_Index = 0;
+    else if (RainfallIntensity >= 10. && RainfallIntensity < 100.) 
+      MS_Index = floor((RainfallIntensity + 49)/50);
+    else 
+      MS_Index = 3;
+    
+    /* Eq. 1, Wicks and Bathurst (1996) */
+    MS_Rainfall = alpha[MS_Index] * pow(RainfallIntensity, beta[MS_Index]);
+    
+    /* Calculating mediam raindrop diameter after Laws and Parsons (1943) */
+    LocalPrecip->Dm =  0.00124 * pow(RainfallIntensity, 0.182); 
+  }
+  else {
+    MS_Rainfall = 0;
+    LocalPrecip->Dm = LEAF_DRIP_DIA;
+  }
+
   /* calculate the amount of interception storage, and the amount of 
      throughfall.  Of course this only needs to be done if there is
      vegetation present. */
@@ -134,7 +237,8 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
 		     &(LocalPrecip->IntRain[0]), &(LocalPrecip->IntSnow[0]),
 		     &(LocalPrecip->TempIntStorage),
 		     &(LocalSnow->CanopyVaporMassFlux), &(LocalVeg->Tcanopy),
-		     &MeltEnergy, &(LocalPrecip->KineticEnergy), VType->Height, VType->UnderStory);
+		     &MeltEnergy, &(LocalPrecip->MomentSq), VType->Height, 
+		     VType->UnderStory, MS_Rainfall, LD_FallVelocity);
 
     MoistureFlux -= LocalSnow->CanopyVaporMassFlux;
 
@@ -155,18 +259,19 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
     LocalPrecip->TempIntStorage = 0.0;
     InterceptionStorage(VType->NVegLayers, NVegLActual, VType->MaxInt,
 			VType->Fract, LocalPrecip->IntRain,
-			&(LocalPrecip->RainFall), &(LocalPrecip->KineticEnergy), 
-			VType->Height, VType->UnderStory, Dt);
+			&(LocalPrecip->RainFall), &(LocalPrecip->MomentSq), 
+			VType->Height, VType->UnderStory, Dt, MS_Rainfall,
+			LD_FallVelocity);
   }
   else {
     /* If no vegetation, kinetic energy is all due to direct precipitation. */
     if(LocalPrecip->RainFall > 0.0)
-      LocalPrecip->KineticEnergy = LocalPrecip->RainFall*1000.*(8.95+ 8.44*log10(LocalPrecip->RainFall*1000./Dt));
+    LocalPrecip->MomentSq = MS_Rainfall;
   }
 
   /* If snow on the ground, assume no overland flow erosion. */
   if(LocalSnow->HasSnow)
-    LocalPrecip->KineticEnergy = 0.0;
+    LocalPrecip->MomentSq = 0.0;
 						    
   /* if snow is present, simulate the snow pack dynamics */
 
