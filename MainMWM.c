@@ -51,7 +51,12 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
   int coursei, coursej;
   int nextx, nexty;
   int prevx, prevy;
+  int numfailedpixels;
+  int numlikelyfailedpixels;
   int numfailures;
+  float avgnumfailures;
+  float avgpixperfailure;
+  float failure_threshold = 0.5;
   char buffer[32];
   char sumoutfile[100], outfile[100];  /* Character arrays to hold file name. */ 
   int **failure;
@@ -318,6 +323,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
   if(MASSITER==0) massitertemp=1;
   else massitertemp=MASSITER;
   
+  numfailures = 0;
   for(iter=0; iter < massitertemp; iter++) {
     
     fprintf(stderr,"iter=%d\n",iter);
@@ -364,6 +370,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 		    
 		    /* check if fine pixel fails */
 		    if (factor_safety < 1 && factor_safety > 0) {
+                      numfailures++;
 		      numpixels = 1;
 		      failure[y][x] = 1;	      
 		      
@@ -624,13 +631,15 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
   /* specified output directory:                                           */ 
   /* failure_summary.txt - no. of failed pixels for each date that the mwm */
   /*                       algorithm is run.  Failed pixel = probability   */
-  /*                       of failure > 0.5                                */ 
+  /*                       of failure > failure_threshold                  */ 
   /* "date"_failure.txt - map of probability of failure for each pixel     */
   /* "date"_Deltasoildepth.txt - map of cumulative change in soil depth    */
   /*                             since beginning of model run.             */
   /*************************************************************************/
 
-  numfailures = 0;
+  // Normalize mass wasting vars by number of iterations
+  numfailedpixels = 0;
+  numlikelyfailedpixels = 0;
   for(i=0; i<Map->NY; i++) {
     for(j=0; j<Map->NX; j++) {
       if (INBASIN(TopoMap[i][j].Mask)) {		
@@ -654,8 +663,11 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 	      (*FineMap[y][x]).MassWasting = (InitialSediment[y][x] - (*FineMap[y][x]).sediment)*(Map->DMASS*Map->DMASS);
 //fprintf(stdout,"y %d x %d i %d j %d MassWasting %f\n",y,x,i,j,(*FineMap[y][x]).MassWasting);
 	    }
-	    if((*FineMap[y][x]).Probability > .5)
-	      numfailures +=1;
+	    if((*FineMap[y][x]).Probability > 0)
+	      numfailedpixels +=1;
+	  
+	    if((*FineMap[y][x]).Probability > failure_threshold)
+	      numlikelyfailedpixels +=1;
 	  
 	    (*FineMap[y][x]).DeltaDepth = (*FineMap[y][x]).sediment - 
 	      SoilMap[i][j].Depth;
@@ -681,6 +693,17 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
     }
   }
 
+  // Compute average number of failures
+  avgnumfailures = numfailures/(float)massitertemp;
+
+  // Compute average number of pixels per failure
+  if (numfailures > 0) {
+    avgpixperfailure = (float)numfailedpixels/(float)numfailures;
+  }
+  else {
+    avgpixperfailure = 0.0;
+  }
+
   /*average sediment delivery to each stream segment***************/
   for(i=0; i<MaxStreamID; i++) {
     SegmentSediment[i] /= (float)massitertemp;
@@ -703,14 +726,15 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
     }
 
   SPrintDate(&(Time->Current), buffer);
-  fprintf(fs, "%-20s %7d\n", buffer, numfailures); 
-  fprintf(stderr, "%d pixels failed\n", numfailures);
+  fprintf(fs, "%-20s %.4f %.4f %7d\n", buffer, avgnumfailures, avgpixperfailure, numlikelyfailedpixels); 
+  fprintf(stderr, "%.4f failures; %.4f pixels per failure; %d pixels have failure likelihood > %.2f\n",
+    avgnumfailures, avgpixperfailure, numlikelyfailedpixels, failure_threshold);
   fclose(fs);
 
   /* If any pixels failed, output map of failure probabilities & deltasoildepth. 
      Note: no failures does not mean that the probability of failure is zero. */ 
      
-  if(numfailures > 0) {
+  if(numlikelyfailedpixels > 0) {
     sprintf(outfile, "%s%s_failure.txt", DumpPath, buffer);
 
     if((fo=fopen(outfile,"w")) == NULL) {
