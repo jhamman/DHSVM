@@ -88,7 +88,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
   tail = NULL;
 
   /*****************************************************************************
-   Allocate memory 
+   Allocate memory for Soil Moisture Redistribution
   ****************************************************************************/
   if (!(Redistribute = (float **)calloc(Map->NY, sizeof(float *))))
     ReportError("MainMWM", 1);
@@ -96,57 +96,26 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
     if (!(Redistribute[i] = (float *)calloc(Map->NX, sizeof(float))))
       ReportError("MainMWM", 1);
   }
-
+  
   if (!(TopoIndex = (float **)calloc(Map->NY, sizeof(float *))))
     ReportError("MainMWM", 1);
   for(i=0; i<Map->NY; i++) {
-      if (!(TopoIndex[i] = (float *)calloc(Map->NX, sizeof(float))))
-	ReportError("MainMWM", 1);
+    if (!(TopoIndex[i] = (float *)calloc(Map->NX, sizeof(float))))
+      ReportError("MainMWM", 1);
   }
-
+  
   if (!(TopoIndexAve = (float **)calloc(Map->NY, sizeof(float *))))
     ReportError("MainMWM", 1);
   for(i=0; i<Map->NY; i++) {
-      if (!(TopoIndexAve[i] = (float *)calloc(Map->NX, sizeof(float))))
-	ReportError("MainMWM", 1);
+    if (!(TopoIndexAve[i] = (float *)calloc(Map->NX, sizeof(float))))
+      ReportError("MainMWM", 1);
   }
   
-  if (!(failure = (int **)calloc(Map->NYfine, sizeof(int *))))
-    ReportError("MainMWM", 1);
-  for(i=0; i<Map->NYfine; i++) {
-      if (!(failure[i] = (int *)calloc(Map->NXfine, sizeof(int))))
-	ReportError("MainMWM", 1);
-  }
-
-  if (!(SedThickness = (float **)calloc(Map->NYfine, sizeof(float *))))
-    ReportError("MainMWM", 1);
-  for(i=0; i<Map->NYfine; i++) {
-      if (!(SedThickness[i] = (float *)calloc(Map->NXfine, sizeof(float))))
-	ReportError("MainMWM", 1);
-  }
-
-  if (!(InitialSediment = (float **)calloc(Map->NYfine, sizeof(float *))))
-    ReportError("MainMWM", 1);
-  for(i=0; i<Map->NYfine; i++) {
-      if (!(InitialSediment[i] = (float *)calloc(Map->NXfine, sizeof(float))))
-	ReportError("MainMWM", 1);
-  }
-
-  if (!(SegmentSediment = (float *)calloc(MaxStreamID, sizeof(float ))))
-    ReportError("MainMWM", 1);
-
-  if (!(InitialSegmentSediment = (float *)calloc(NSEDSIZES, sizeof(float ))))
-    ReportError("MainMWM", 1);
-
-  /*****************************************************************************
-  Perform Calculations 
-  *****************************************************************************/
   /* Redistribute soil moisture from coarse grid to fine grid. The is done similarly
      to Burton, A. and J.C. Bathurst, 1998, Physically based modelling of shallow 
      landslide sediment yield as a catchment scale, Environmental Geology, 
      35 (2-3), 89-99.*/
- 
-  /* This could be moved elsewhere. */
+  
   for (i = 0; i < Map->NY; i++) {
     for (j = 0; j < Map->NX; j++) {
       
@@ -181,7 +150,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 	/* Do not want to distribute ponded water  */
 	if (TableDepth < 0)
 	  TableDepth = 0;
-		
+	
 	for(ii=0; ii< Map->DY/Map->DMASS; ii++) {
 	  for(jj=0; jj< Map->DX/Map->DMASS; jj++) {
 	    y = (int) i*Map->DY/Map->DMASS + ii;
@@ -190,26 +159,25 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 	    FineMapTableDepth = TableDepth + 
 	      ((TopoIndexAve[i][j]-(*FineMap[y][x]).TopoIndex)/ 
 	       SType[SoilMap[i][j].Soil - 1].KsLatExp);
-	    
-	  
+	    	    
 	    if (FineMapTableDepth < 0) {
 	      (*FineMap[y][x]).SatThickness = (*FineMap[y][x]).sediment; 
 	    }
 	    else if (FineMapTableDepth > (*FineMap[y][x]).sediment)
 	      (*FineMap[y][x]).SatThickness = 0; 
-	      
+	    
 	    else 
 	      (*FineMap[y][x]).SatThickness = (*FineMap[y][x]).sediment -
 		FineMapTableDepth;
-	  
-
+	    
 	    FineMapSatThickness += (*FineMap[y][x]).SatThickness;
 	    
 	    if ((ii== Map->DY/Map->DMASS - 1) & (jj== Map->DX/Map->DMASS - 1)){
-	    
+	      
 	      /* Calculating the difference between the volume of water distributed
 		 (only saturated) and available volume of water (m3)*/
-	      Redistribute[i][j] = (Map->DY * Map->DX *(SoilMap[i][j].Depth - TableDepth)) - 
+	      Redistribute[i][j] = (Map->DY * Map->DX *
+				    (SoilMap[i][j].Depth - TableDepth)) - 
 		(FineMapSatThickness*Map->DMASS*Map->DMASS); 
 	      FineMapSatThickness = 0;
 	    }
@@ -218,14 +186,14 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
       }
     }
   }
-
+  
   /* Redistribute volume difference. Start with cells with too much water. */ 
   for (i = 0; i < Map->NY; i++) {
     for (j  = 0; j < Map->NX; j++) {
       if (INBASIN(TopoMap[i][j].Mask)) {
 	
 	if (Redistribute[i][j]< -25.){
-
+	  
 	  for (k = 0; k < Map->NumFineIn; k++) { 
 	    y = TopoMap[i][j].OrderedTopoIndex[k].y;
 	    x = TopoMap[i][j].OrderedTopoIndex[k].x;
@@ -235,16 +203,17 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 	    /* Convert sat thickness to a volume */
 	    (*FineMap[y][x]).SatThickness *= (Map->DMASS)*(Map->DMASS);
 	    /* Add to volume based on amount to be redistributed */
-	    (*FineMap[y][x]).SatThickness += Redistribute[i][j] * ((*FineMap[yy][xx]).TopoIndex/TopoIndex[i][j]); 
+	    (*FineMap[y][x]).SatThickness += Redistribute[i][j] * 
+	      ((*FineMap[yy][xx]).TopoIndex/TopoIndex[i][j]); 
 	    /* Convert back to thickness (m)*/
 	    (*FineMap[y][x]).SatThickness /= (Map->DMASS)*(Map->DMASS);
-
+	    
 	  }
 	}
       }
     }
   }
-
+  
   /* Redistribute volume difference for cells with too little water.*/ 
   for (i = 0; i < Map->NY; i++) {
     for (j  = 0; j < Map->NX; j++) {
@@ -257,14 +226,15 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 	    x = (int) j*Map->DX/Map->DMASS + jj;
 	    
 	    if (Redistribute[i][j] > 25.){
-
+	      
 	      /* Convert sat thickness to a volume */
 	      (*FineMap[y][x]).SatThickness *= (Map->DMASS)*(Map->DMASS);
 	      /* Add to volume based on amount to be redistributed */
-	      (*FineMap[y][x]).SatThickness += Redistribute[i][j] * ((*FineMap[y][x]).TopoIndex/TopoIndex[i][j]);
+	      (*FineMap[y][x]).SatThickness += Redistribute[i][j] * 
+		((*FineMap[y][x]).TopoIndex/TopoIndex[i][j]);
 	      /* Convert back to thickness (m)*/
 	      (*FineMap[y][x]).SatThickness /= (Map->DMASS)*(Map->DMASS);
-
+	      
 	    }
 	    
 	    if ((Redistribute[i][j] > 25.)||(Redistribute[i][j]< -25.)){
@@ -280,37 +250,67 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
       }
     }
   }	      
-	 
- for(i=0; i<Map->NY; i++) { 
+  
+  for(i=0; i<Map->NY; i++) { 
     free(Redistribute[i]);
     free(TopoIndex[i]);
     free(TopoIndexAve[i]);
- }
- free(Redistribute);
- free(TopoIndex);
- free(TopoIndexAve);
-
+  }
+  free(Redistribute);
+  free(TopoIndex);
+  free(TopoIndexAve);
+  
+  /*****************************************************************************
+    Allocate memory for ensemble calculations
+  *****************************************************************************/
+  if (!(failure = (int **)calloc(Map->NYfine, sizeof(int *))))
+    ReportError("MainMWM", 1);
+  for(i=0; i<Map->NYfine; i++) {
+    if (!(failure[i] = (int *)calloc(Map->NXfine, sizeof(int))))
+      ReportError("MainMWM", 1);
+  }
+  
+  if (!(SedThickness = (float **)calloc(Map->NYfine, sizeof(float *))))
+    ReportError("MainMWM", 1);
+  for(i=0; i<Map->NYfine; i++) {
+    if (!(SedThickness[i] = (float *)calloc(Map->NXfine, sizeof(float))))
+      ReportError("MainMWM", 1);
+  }
+  
+  if (!(InitialSediment = (float **)calloc(Map->NYfine, sizeof(float *))))
+    ReportError("MainMWM", 1);
+  for(i=0; i<Map->NYfine; i++) {
+    if (!(InitialSediment[i] = (float *)calloc(Map->NXfine, sizeof(float))))
+      ReportError("MainMWM", 1);
+  }
+  
+  if (!(SegmentSediment = (float *)calloc(MaxStreamID, sizeof(float ))))
+    ReportError("MainMWM", 1);
+  
+  if (!(InitialSegmentSediment = (float *)calloc(NSEDSIZES, sizeof(float ))))
+    ReportError("MainMWM", 1);
+  
   /* Initialize arrays. */
- for (y = 0; y < Map->NY; y++) {
-   for (x = 0; x < Map->NX; x++) {
-     if (INBASIN(TopoMap[y][x].Mask)) {
-       for(ii=0; ii< Map->DY/Map->DMASS; ii++) { /* Fine resolution counters. */
-	 for(jj=0; jj< Map->DX/Map->DMASS; jj++) {
-	   yy = (int) y*Map->DY/Map->DMASS + ii;
-	   xx = (int) x*Map->DX/Map->DMASS + jj;
-	   InitialSediment[yy][xx] = (*FineMap[yy][xx]).sediment;
-	   (*FineMap[yy][xx]).Probability = 0.;
-	   (*FineMap[yy][xx]).MassWasting = 0.;
-	   (*FineMap[yy][xx]).MassDeposition = 0.;
-	   (*FineMap[yy][xx]).SedimentToChannel = 0.;
-	 }
-       }
-     }
-   }
- }
-
+  for (y = 0; y < Map->NY; y++) {
+    for (x = 0; x < Map->NX; x++) {
+      if (INBASIN(TopoMap[y][x].Mask)) {
+	for(ii=0; ii< Map->DY/Map->DMASS; ii++) { /* Fine resolution counters. */
+	  for(jj=0; jj< Map->DX/Map->DMASS; jj++) {
+	    yy = (int) y*Map->DY/Map->DMASS + ii;
+	    xx = (int) x*Map->DX/Map->DMASS + jj;
+	    InitialSediment[yy][xx] = (*FineMap[yy][xx]).sediment;
+	    (*FineMap[yy][xx]).Probability = 0.;
+	    (*FineMap[yy][xx]).MassWasting = 0.;
+	    (*FineMap[yy][xx]).MassDeposition = 0.;
+	    (*FineMap[yy][xx]).SedimentToChannel = 0.;
+	  }
+	}
+      }
+    }
+  }
+  
   update_sediment_array(ChannelData->streams, InitialSegmentSediment);
-	    
+  
   /************************************************************************/
   /* Begin iteration for multiple ensembles. */
   /************************************************************************/
