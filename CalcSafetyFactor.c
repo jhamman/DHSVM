@@ -90,10 +90,10 @@ float CalcSafetyFactor(float Slope, int Soil, float SoilDepth, int Veg,
       ((1 - M) * (fc_soil_density / WATER_DENSITY));
     
     /* Check to see if slope is unconditionally unstable.*/
-    term1 = ((soil_cohes_kg + root_cohes_kg) /
-	     (Surcharge + SoilDepth * fc_soil_density) *
-	     cos(slope_angle_rad)*cos(slope_angle_rad)) + 
-      (tan(angle_int_frict_rad));
+    term1 = ((soil_cohes_kg + root_cohes_kg)/
+	     ((Surcharge + SoilDepth * fc_soil_density)*
+	      cos(slope_angle_rad)*cos(slope_angle_rad))) + 
+      tan(angle_int_frict_rad);
 		
     if(term1 <= tan(slope_angle_rad)) {
       /* Slope is unconditionally unstable for these values. */
