@@ -252,7 +252,7 @@ void ElevationSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap)
 	
 	/* Count the number of cells in the basin.  Need this to allocate memory for
 	   the new, smaller Elev[] and Coords[][].  */
-	  Map->NumCells++;
+	Map->NumCells++;
 	
 	for (n = 0; n < NDIRS; n++) {
 	  int xn = x + xneighbor[n];
@@ -276,7 +276,7 @@ void ElevationSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap)
 		       neighbor_elev, &(TopoMap[y][x].FlowGrad),
 		       TopoMap[y][x].Dir, &(TopoMap[y][x].TotalDir));
 	
-      } // end of if statement (TopoMap[y][x].Mask)
+      } // end if (INBASIN(TopoMap[y][x].Mask)) {
       
     }
   } // end of for loops
@@ -520,13 +520,12 @@ void ElevationSlopeAspectfine(MAPSIZE * Map, FINEPIX ** FineMap)
 
   for (x = 0; x < Map->NXfine; x++) { 
     for (y = 0; y < Map->NYfine; y++) {
-      if (FineMap[y][x].Mask) { 
+      if (INBASIN(FineMap[y][x].Mask)) { 
 	
 	/* Count the number of cells in the basin.  Need this to allocate memory for
 	   the new, smaller Elev[] and Coords[][].  */
-	if (INBASIN(FineMap[y][x].Mask)) 
-	  Map->NumCellsfine++;
-	    	
+	Map->NumCellsfine++;
+	
 /* 	for (n = 0; n < NDIRSfine; n++) { */
 /* 	  int xn = x + xneighborfine[n]; */
 /* 	  int yn = y + yneighborfine[n]; */
@@ -542,7 +541,8 @@ void ElevationSlopeAspectfine(MAPSIZE * Map, FINEPIX ** FineMap)
 /* 	slope_aspect(Map->DMASS, Map->DMASS, FineMap[y][x].Dem, neighbor_elev, */
 /* 		     &(FineMap[y][x].Slope), &(FineMap[y][x].Aspect)); */
 	
-      }/*  end of (FineMap[y][x].Mask */
+      }/*  end if (INBASIN(FineMap[y][x].Mask)) { */
+	
     }
   }  /* end of for loops */
   
