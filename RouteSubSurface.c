@@ -85,6 +85,14 @@
   grid is not square.  The method for defining the flow widths in the case
   of square grids is taken from Quinn et al [1991]
 
+  Update Jan 2004 COD
+  When Gradient = WATERTABLE, the watertable was used to route the
+  surface water. This was because of the common use of TopoMap.Dir and 
+  TopoMap.TotalDir. These are now for surface routing (always) and subsurface 
+  routing (when Gradient = TOPOGRAPHY). Subsurface routing directions 
+  and FlowGrad (SubDir, SubTotalDir, SubFlowGrad) for Gradient = WATERTABLE 
+  are now determined locally here (in RouteSubsurface.c.)
+
   WORK IN PROGRESS
 *****************************************************************************/
 void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,

@@ -28,11 +28,12 @@
   Aggregate()
   
   Calculate the average values for the different fluxes and state variables
-  over the basin.  Only the runoff is calculated as a total volume instead
+  over the basin.  Only the runoff and some of the sediment variables (as 
+  noted) are calculated as a totals (i.e. runoff is total volume) instead
   of an average.  In the current implementation the local radiation
   elements are not stored for the entire area.  Therefore these components
   are aggregated in AggregateRadiation() inside MassEnergyBalance().
-
+  
   The aggregated values are set to zero in the function RestAggregate,
   which is executed at the beginning of each time step.
 *****************************************************************************/

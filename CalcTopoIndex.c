@@ -289,9 +289,9 @@ void CalcTopoIndex(MAPSIZE *Map, FINEPIX ***FineMap, TOPOPIX **TopoMap)
   }
   
   /*************************************************************************/
-  /* Create output files...currently hard-coded, should be moved to dump   */
+  /* Create output files...currently hard-coded, chould be moved to dump   */
   /* functions for user specification. Creates the following file in the   */
-  /* topo_index.txt - TopoIndex for the mass wasting resolution map        */
+  /* topoindex.asc - TopoIndex for the mass wasting resolution map        */
   /*************************************************************************/
    
   printmap = 0;

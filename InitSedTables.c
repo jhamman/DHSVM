@@ -189,7 +189,8 @@ int InitSedTable(SEDTABLE **SedType, LISTPTR Input, SOILTABLE **SType)
 	ReportError(KeyName[fa_mode], 51);
     }
     
-    /* Calculating the saturated soil density based on average density - this is not a weighted average */
+    /* Calculating the saturated soil density based on average density - 
+       this is not a weighted average */
     AveDensity = 0.0;
     for (j = 0; j < (*SType)[i].NLayers; j++){
       AveDensity += (*SType)[i].Dens[j];

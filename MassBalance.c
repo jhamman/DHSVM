@@ -27,7 +27,8 @@
   Aggregate()
   
   Calculate the average values for the different fluxes and state variables
-  over the basin.  Only the runoff is calculated as a total volume instead
+  over the basin.  Only the runoff and some of the sediment variables (as 
+  noted) are calculated as a totals (i.e. runoff is total volume) instead
   of an average.  In the current implementation the local radiation
   elements are not stored for the entire area.  Therefore these components
   are aggregated in AggregateRadiation() inside MassEnergyBalance().
@@ -41,8 +42,9 @@ void MassBalance(DATE *Current, FILES *Out, FILES *SedOut, AGGREGATED *Total,
   float NewWaterStorage;	/* water storage at the end of the time step */
   float Output;			/* total water flux leaving the basin;  */
   float MassError;		/* mass balance error m  */
-  float MWMMassError;
-  float SedInput, SedOutput, SedMassError;
+  float MWMMassError;            /* mass wasting mass balance error m3  */
+  float SedInput, SedOutput, SedMassError;  /* sediment mass balance variables 
+					       for channel network */
 
   NewWaterStorage = Total->Soil.IExcess + Total->Road.IExcess + 
     Total->CanopyWater + Total->SoilWater +
@@ -97,19 +99,19 @@ void MassBalance(DATE *Current, FILES *Out, FILES *SedOut, AGGREGATED *Total,
     
     /* update */
     
-    /* Mass Wasting */
+    /* Mass Wasting - tota,l m3 */
     Mass->CumMassWasting += Total->Fine.MassWasting;
     Mass->CumSedimentToChannel += Total->Fine.SedimentToChannel;
     Mass->CumMassDeposition += Total->Fine.MassDeposition;
     
-    /* Surface Erosion */
+    /* Surface Erosion - ave, mm */
     Mass->CumSedimentErosion += Total->Sediment.Erosion;
     
-    /* Road Erosion */
+    /* Road Erosion - ave, m */
     Mass->CumRoadErosion += Total->Road.Erosion;
     Mass->CumRoadSedHill += Total->Sediment.RoadSed;
     
-    /* Channel Erosion */
+    /* Channel Erosion - total, kg */
     Mass->CumDebrisInflow += Total->DebrisInflow;
     
     Mass->CumSedOverlandInflow += Total->SedimentOverlandInflow;

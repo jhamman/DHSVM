@@ -9,7 +9,6 @@
  * Last Change: Thu Jun 19 09:27:02 2003 by Ed Maurer <edm@u.washington.edu>
  * DESCRIPTION:  Main routine to drive MWM - the Mass Wasting Module for DHSVM 
  * DESCRIP-END.   
- cd
  * FUNCTIONS:    main()
  * COMMENTS:
  */
@@ -602,9 +601,12 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
   /* Create output files...currently hard-coded, should be moved to dump   */
   /* functions for user specification. Creates the following files in the  */
   /* specified output directory:                                           */ 
-  /* failure_summary.txt - no. of failed pixels for each date that the mwm */
-  /*                       algorithm is run.  Failed pixel = probability   */
-  /*                       of failure > failure_threshold                  */ 
+  /* failure_summary.txt - for each date that the mwm algorithm is run:    */
+  /*                       ave. no. of failures (strip of pixels           */
+  /*                            originating from a failed pixel)           */
+  /*                       ave. no. of pixles per failure                  */
+  /*                       total number of failed pixels with probability  */
+  /*                            of failure > failure_threshold             */ 
   /* "date"_failure.txt - map of probability of failure for each pixel     */
   /* "date"_Deltasoildepth.txt - map of cumulative change in soil depth    */
   /*                             since beginning of model run.             */

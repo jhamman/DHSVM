@@ -329,7 +329,7 @@ void InitNewStep(INPUTFILES *InFiles, MAPSIZE *Map, TIMESTRUCT *Time,
 /*end if MM5*/
 
   /* if the flow gradient is based on the water table, recalculate the water
-     table gradients and the flow directions */
+     table gradients.  Flow directions are now calculated in RouteSubSurface*/
   if (Options->FlowGradient == WATERTABLE) {
     /* Calculate the WaterLevel, i.e. the height of the water table above 
        some datum */

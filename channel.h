@@ -54,14 +54,12 @@ typedef struct _channel_class_rec_ {
    ------------------------------------------------------------- */
 typedef struct {
   float mass[NSEDSIZES];             /* stored mass, kg, of sediment in channel by D */
-/*   float last_mass[NSEDSIZES];       */
   float debrisinflow[NSEDSIZES];     /* inflow of sediment from mass wasting, kg, by D */
   float overlandinflow[NSEDSIZES];   /* inflow of sediment from overland
 					flow erosion, kg, by D */
   float overroadinflow[NSEDSIZES];   /* inflow of sediment from over road
 					flow erosion, kg, by D */
   float inflow[NSEDSIZES];           /* inflow from upstream reach, kg, by D */
-/*   float last_inflow[NSEDSIZES];    */        /* inflow from upstream reach, kg, by D */
   float inflowrate[NSEDSIZES];           /* inflow from upstream reach, kg/s, by D */
   float last_inflowrate[NSEDSIZES]; 
   float outflow[NSEDSIZES];          /* outflow to downstream reach, kg, by D */

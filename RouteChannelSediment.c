@@ -26,14 +26,6 @@
 #include "DHSVMerror.h"
 
 /*****************************************************************************
-  Alloc_Chan_Sed_Mem
-*****************************************************************************/
-/* void Alloc_Chan_Sed_Mem(float ** DummyVar) */
-/* { */
-/*    if (!(*DummyVar = (float *) calloc(NSEDSIZES, sizeof(float)))) */
-/*     ReportError(" Alloc_Chan_Sed_Mem", 1); */
-/*  } */
-/*****************************************************************************
   InitChannelSediment)
 
   Assign initial colluvium mass to each unique channel ID (amount
@@ -60,7 +52,6 @@ int InitChannelSediment(Channel * Head, AGGREGATED * Total)
 	Current->sediment.debrisinflow[i]=0.0; 
 	Current->sediment.overlandinflow[i]=0.0;
 	Current->sediment.overroadinflow[i]=0.0;
-/* 	Current->sediment.inflow[i]=0.0; */
 	Current->sediment.inflowrate[i]=0.0;
 	Current->sediment.last_inflowrate[i]=0.0; 
 	Current->sediment.outflow[i]=0.0;
@@ -158,11 +149,7 @@ void RouteChannelSediment(Channel * Head, TIMESTRUCT Time,
     
     while (Current != NULL) {
       if (Current->order == order) {
-/* 	Current->sediment.outflowconc = 0.0; */
 	CapacityUsed = 0.0;
-	
-/* 	if (Current->outlet != NULL) */
-/* 	  Current->outlet->sediment.totalmass = 0.; */
 	
 	/* rate of inflow and outflow change over model time step*/
 	dIdt = (Current->inflow - Current->last_inflow)/(float) Time.Dt;
@@ -187,7 +174,6 @@ void RouteChannelSediment(Channel * Head, TIMESTRUCT Time,
 	  if(numinc<1) numinc=1;
 	  DT_sed = (float) Time.Dt/numinc;
 	  
-
 	  /* Initialize sediment.outflow for this segment 
 	     and calculate inflow from upstream reach */
 	  

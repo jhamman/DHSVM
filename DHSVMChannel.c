@@ -213,7 +213,7 @@ RouteChannel(CHANNEL * ChannelData, TIMESTRUCT * Time, MAPSIZE * Map,
     RouteRoad(Map, Time, TopoMap, SoilMap, Network, SType, ChannelData, 
 	      PrecipMap, SedMap, Tair, Rh, SedDiams);  
   }
- /*  exit(0); */
+
   /* route the road network and save results */
   SPrintDate(&(Time->Current), buffer);
   flag = IsEqualTime(&(Time->Current), &(Time->Start));

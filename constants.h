@@ -135,6 +135,6 @@ extern float Zref;		/* Reference height (m) */
 extern float MASSITER;           /* Maximum number of iterations. */
 extern float DEBRISd50;          /* (mm) */
 extern float DEBRISd90;          /* (mm) */ 
-extern float CHANNELd50;
-extern float CHANNELd90;
+extern float CHANNELd50;         /* Currently not used */
+extern float CHANNELd90;         /* Currently not used */
 #endif

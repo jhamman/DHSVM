@@ -172,8 +172,8 @@ ChannelClass *channel_read_classes(const char *file, int ChanType, int Sediment)
 	    err++;
 	  }
 	  break;
-	  // We do not want those 3 values to be 0.0 EVER
-	  // We then stop the program if it is the case.
+	  // We do not want these 3 values to be 0.0 EVER
+	  // Exit if this is the case.
 	case 1:
 		if (class_fields[i].value.real>0.0)
 			current->width = class_fields[i].value.real;

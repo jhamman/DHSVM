@@ -237,7 +237,7 @@ void InitConstants(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   else if (strncmp(StrEnv[infiltration].VarStr, "DYNAMIC", 7) == 0) {
     Options->Infiltration = DYNAMIC ;
     printf("WARNING: Dynamic maximum infiltration capacity has\n");
-    printf("not been tested. It is a work in progress.\n\n");
+    printf("not been fully tested. It is a work in progress.\n\n");
   }
   else
     ReportError(StrEnv[infiltration].KeyName, 51);

@@ -2,7 +2,7 @@
  * SUMMARY:      CalcKinViscosity - Calculate the kinematic viscosity
  * USAGE:        Part of DHSVM
  *
- * AUTHOR:       Jordan Laninii
+ * AUTHOR:       Jordan Lanini
  * ORG:          University of Washington, Department of Civil Engineering
  * E-MAIL:       dhsvm@hydro.washington.edu
  * ORIG-DATE:    

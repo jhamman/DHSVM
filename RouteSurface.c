@@ -38,6 +38,10 @@
   assumption is likely to be true for small urban basins, and perhaps even for
   large rural basins with some urban development
 
+  If Overland Routing = KINEMATIC, then "excess" water is routed to the outlet 
+  using a infinite difference approximation to the kinematic wave solution of 
+  the Saint-Venant equations.
+
 *****************************************************************************/
 void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 		  SOILPIX ** SoilMap, OPTIONSTRUCT *Options,

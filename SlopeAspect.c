@@ -505,8 +505,9 @@ float ElevationSlope(MAPSIZE *Map, TOPOPIX **TopoMap, FINEPIX ***FineMap, int y,
     }
   }
 
-  /* If no positive slope found, a bedrock sink was encountered.  Assuming the sink should be filled to 
-     the lowest "pour elevation", aspect should have already been assigned correctly. */
+  /* If no positive slope found, a bedrock sink was encountered.  Assuming the 
+     sink should be filled to the lowest "pour elevation", aspect should have 
+     already been assigned correctly. */
 
   /* Find dynamic slope in direction of steepest descent. */
   

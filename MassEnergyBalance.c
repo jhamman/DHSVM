@@ -421,7 +421,9 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
 #ifndef NO_SOIL
 
   /* This has been modified so that PercArea for infiltration is calculated
-     locally. I am not sure if the old PercArea needs to remain the same. 
+     locally to account for the fact that some cells have roads and streams.
+     I am not sure if the old PercArea (which does not account for the fact 
+     that some cells have roads and streams) needs to remain the same. 
      Currently, the old PercArea is passed to UnsaturatedFlow */
   
   MaxRoadbedInfiltration = 0.;
@@ -454,8 +456,8 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
     LocalSoil->IExcess;
   
   /* RoadWater is rain falling on the road surface +
-     snowmelt on the road surface + existing IExcess 
-     Existing IExcess = 0. WORK IN PROGRESS*/
+     snowmelt on the road surface + existing Road IExcess 
+     (Existing road IExcess = 0). WORK IN PROGRESS*/
   RoadWater = (LocalNetwork->RoadArea/(DX*DY) * 
 	       (LocalPrecip->RainFall + LocalSnow->Outflow)) + 
     LocalNetwork->IExcess;

@@ -330,7 +330,7 @@ int main(int argc, char **argv)
 
 /*     PrintDate(&(Time.Current),stdout); */
 /*     printf("\n"); */
-/*     uncomment the above line to print the time at every step */
+/*     uncomment the above lines to print the time at every step */
 
     /* determine surface erosion and routing scheme */
     SedimentFlag(&Options, &Time); 

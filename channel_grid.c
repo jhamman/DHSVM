@@ -783,7 +783,6 @@ double channel_grid_flowlength(ChannelMapPtr ** map, int col, int row, float flo
 
   while (cell != NULL) {
     area = cell->length * cell->cut_width;
-   /*  printf("%d col(%d) row(%d) area(%f) length(%f) width(%f) crown(%d)\n",cell->channel->id, col, row, area,cell->length,cell->cut_width,cell->channel->class->crown);   */
     if(area > maxarea){
       flolen = cell->cut_width * (floslope/ROADCROWN)*sqrt(1+pow(ROADCROWN,2));
       maxarea = area;
@@ -796,7 +795,6 @@ double channel_grid_flowlength(ChannelMapPtr ** map, int col, int row, float flo
     
     cell = cell->next;
   }
-/*   printf("maxarea(%f) floslope(%f) flolen(%f) \n\n", maxarea, floslope, flolen); */
   return flolen;
 }
 

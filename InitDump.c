@@ -1,5 +1,5 @@
 /*
- * SUMMARY:      InitDump.c - Initializa output settings
+ * SUMMARY:      InitDump.c - Initialize output settings
  * USAGE:        Part of DHSVM
  *
  * AUTHOR:       Bart Nijssen

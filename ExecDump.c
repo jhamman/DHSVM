@@ -45,8 +45,8 @@ void ExecDump(MAPSIZE * Map, DATE * Current, DATE * Start, OPTIONSTRUCT * Option
   int jj;			/* FineMap counter */
   int xx;			/* FineMap x-coordinate */
   int yy;			/* FineMap y-coordinate */
-  float overlandinflow;
-  float overroadinflow;
+  float overlandinflow;          /* Hillslope erosion that enters the channel network */
+  float overroadinflow;          /* Road surface erosion that enters the channel network */
   FINEPIX PixAggFineMap;	/* FineMap quanitities aggregated over a pixel */
 
   /* dump the aggregated basin values for this timestep */

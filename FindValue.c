@@ -52,19 +52,19 @@ float FindValue(STATSTABLE Stats, int iter) {
   temp  = drand48();
 
   if(strcmp(Stats.Distribution,"NORMAL")==0) {
-    if(MASSITER == 0) /*EDM - changed to be "0" for specifying the mean */
+    if(MASSITER == 0) /*EDM - for specifying the mean */
       y= Stats.mean;
     else
       y = NORMALDIST(Stats.mean, Stats.stdev, temp);
   }
   else if(strcmp(Stats.Distribution,"TRIANGULAR")==0) {
-     if(MASSITER == 0) /*EDM - changed to be "0" for specifying the mean */
+     if(MASSITER == 0) /*EDM - for specifying the mean */
        y= Stats.mode;
      else
        y = TRIDIST(Stats.min, Stats.max, Stats.mode, temp);
   }
   else if(strcmp(Stats.Distribution,"UNIFORM")==0) {
-     if(MASSITER == 0) /*EDM - changed to be "0" for specifying the mean */
+     if(MASSITER == 0) /*EDM - for specifying the mean */
        y= Stats.min + (Stats.max - Stats.min)/2.;
      else
        y = UNIFORMDIST(Stats.min, Stats.max, temp);

@@ -26,7 +26,7 @@
 /*****************************************************************************
   Function name: RouteRoad()
 
-  Purpose      : Calculate routing of water and sediment  across the road 
+  Purpose      : Calculate routing of water and sediment across the road 
                  surface using a four-point finite difference solution of the 
                  kinematic wave approximation of the Saint-Venant equations
 
@@ -413,8 +413,6 @@ float FindDTRoad(ROADSTRUCT **Network, TIMESTRUCT *Time, int y, int x,
   
   if(DT > Time->Dt)
     DT = (float) Time->Dt;
-
-/*   printf("VarDt(%.2f)\n", DT); */
   
   return DT;
 }

@@ -94,7 +94,7 @@ typedef unsigned int unint;
 #define NAMESIZE     127
 
 #define NDIRS          4	/* Number of directions in which water can 
-				   flow,  must equal 4 */
+			    flow, must equal 4 */
 #define NNEIGHBORS      8 /* Number of directions in which water and 
 			    sediment can flow based on fine grid,
 			    must equal 8 */

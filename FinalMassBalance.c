@@ -101,7 +101,7 @@ void FinalMassBalance(FILES * Out, AGGREGATED * Total, WATERBALANCE * Mass,
       
       MWMMassError = Mass->CumMassWasting - Mass->CumSedimentToChannel - 
 	Mass->CumMassDeposition;
-      
+      /* These are totals, not averages */
       fprintf(stderr, " \nTotal Mass Wasting\n");
       fprintf(stderr, " MassWasted (m3): %.2e\n", Mass->CumMassWasting);
       fprintf(stderr, " SedimentToChannel (m3): %.2e\n", 
@@ -109,7 +109,7 @@ void FinalMassBalance(FILES * Out, AGGREGATED * Total, WATERBALANCE * Mass,
       fprintf(stderr, " MassDepostion (m3): %.2e\n", Mass->CumMassDeposition);
       fprintf(stderr, " Mass Error (m3): %e\n", MWMMassError);
     }
-    
+    /* These are averages */
     if (Options->InitSedFlag){
       fprintf(stderr, " \nAverage Surface Erosion\n");
       fprintf(stderr, " Surface Erosion (mm): %.2e\n", 
@@ -138,7 +138,7 @@ void FinalMassBalance(FILES * Out, AGGREGATED * Total, WATERBALANCE * Mass,
       fprintf(stderr, "Road Sediment to Hillslope (mm): %.2e\n", 
 	      Mass->CumRoadSedHill/roadarearatio * 1000.);
     }
-
+    /* These are totals */
     SedInput = Mass->CumDebrisInflow + 
       (Mass->CumSedOverlandInflow - Mass->CumCulvertSedToChannel) + 
       Mass->CumSedOverroadInflow;
