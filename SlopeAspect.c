@@ -243,13 +243,17 @@ void ElevationSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap)
   int n;
   int k;
   float neighbor_elev[NDIRS];
-
+  int tempdir[NDIRS];
+  float diff[NDIRS];
+  float mindiff;
+  int neigh;
+ 
   /* fill neighbor array */
   
   for (x = 0; x < Map->NX; x++) {
     for (y = 0; y < Map->NY; y++) {
       if (INBASIN(TopoMap[y][x].Mask)) {
-	
+
 	/* Count the number of cells in the basin.  Need this to allocate memory for
 	   the new, smaller Elev[] and Coords[][].  */
 	Map->NumCells++;
@@ -257,6 +261,7 @@ void ElevationSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap)
 	for (n = 0; n < NDIRS; n++) {
 	  int xn = x + xneighbor[n];
 	  int yn = y + yneighbor[n];
+	  tempdir[n] = 0; /* initialize */
 	  
 	  if (valid_cell(Map, xn, yn)) {
 	    neighbor_elev[n] = ((TopoMap[yn][xn].Mask) ? TopoMap[yn][xn].Dem : (float) OUTSIDEBASIN);
@@ -277,24 +282,42 @@ void ElevationSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap)
 		       TopoMap[y][x].Dir, &(TopoMap[y][x].TotalDir));
 
 	/* Checks that upslope neighbors Dir = 0. 
-	   Accounts for sinks and basin outlet by letting second
-	   or only neighbor with a direction keep its direction. 
-	   This could be modified, for a sink, so that the neighbor 
-	   closest in elevation gets the water.*/
+	   Accounts for sinks and basin outlet by letting neighbor closest
+	   in elevation or only neighbor with a direction keep its direction. */
 	for (n = 0; n < NDIRS; n++) {
 	  int xn = x + xneighbor[n];
 	  int yn = y + yneighbor[n];
+	  diff[n] = 0.;  /*initialize */
 	  
 	  if ((TopoMap[y][x].Dir[n] > 0) && 
-	      (TopoMap[yn][xn].Dem > TopoMap[y][x].Dem)) {
-	    (TopoMap[y][x].TotalDir) -= TopoMap[y][x].Dir[n]; 
-	    if (TopoMap[y][x].TotalDir == 0) {
-	      printf("WARNING: There may be a sink in the DEM in y(%d) x(%d).\n",
-		      y,x);
-	      (TopoMap[y][x].TotalDir)+= TopoMap[y][x].Dir[n];
-	    }
-	    else TopoMap[y][x].Dir[n] = 0;
+	      (TopoMap[yn][xn].Dem > TopoMap[y][x].Dem)){
+	    (TopoMap[y][x].TotalDir) -= TopoMap[y][x].Dir[n];
+	    tempdir[n] = TopoMap[y][x].Dir[n];
+	    TopoMap[y][x].Dir[n] = 0.; 
 	  }
+	}
+
+	/* If there is a sink or the outlet, set the Dir of the cell closest in elevation
+	   back to its original value and update TotalDir. */
+	if (TopoMap[y][x].TotalDir == 0){
+	  mindiff = DHSVM_HUGE;  /*initialize */
+	  
+	  for (n = 0; n < NDIRS; n++) {
+	    int xn = x + xneighbor[n];
+	    int yn = y + yneighbor[n];
+	    
+	    if (tempdir[n] > 0){
+	      diff[n] = TopoMap[yn][xn].Dem - TopoMap[y][x].Dem;
+	      if (diff[n] < mindiff){
+		mindiff = diff[n];
+		neigh = n;
+	      }
+	    }
+	  }
+	  
+	  TopoMap[y][x].Dir[neigh] = tempdir[neigh];
+	  TopoMap[y][x].TotalDir += (TopoMap[y][x].Dir[neigh]);
+
 	}
       } // end if (INBASIN(TopoMap[y][x].Mask)) {
     }
