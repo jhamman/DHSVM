@@ -219,7 +219,7 @@ void RouteRoad(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 		 or if the flow depth is less than the median particle size */
 	      SedOut = 0.;
 
-	      if((Network[y][x].RoadClass->erodibility_coeff < 9999 ) && 
+	      if((Network[y][x].RoadClass->erodibility_coeff < 999999 ) && 
 		 (outflow > 0.) && (h > DS)){
 
 		/* Calculating rainsplash erosion */

@@ -82,6 +82,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
   float streampower;           /* Unit streampower from KINEROS (M/s) */
   float TC;                    /* Transport capacity (m3/m3) */
   float Fw;                    /* Water depth correction factor */
+  float floweff;               /* Flow efficiency similar to Morgan */
   int sedbin;                  /* Particle bin that erosion is added to */
 
   /* Check to see if calculations for surface erosion should be done */
@@ -286,9 +287,9 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	      if (h <= 0.) streampower = 0.;
 	      
 	      /* Only continue sediment routing if there is depth greater 
-		 than the particle diameter and streampower is greater than 
+		 than 0.001m  and streampower is greater than 
 		 critical streampower */
-	      if((h > DS) && (streampower > SETTLECRIT)){
+	      if((h > 0.001) && (streampower > SETTLECRIT)){
 		
 		/* First find potential erosion due to rainfall Morgan et al. (1998). 
 		   Momentum squared of the precip is determined in MassEnergyBalance.c
@@ -326,6 +327,8 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 		  vs = sqrt((4./3.) * G * ((PARTDENSITY/WATER_DENSITY) - 1.)*(DS/Cd));
 		}
 
+		floweff = 0.79*exp(-0.6*SedType[SoilMap[y][x].Soil-1].Cohesion.mean); 
+
 		/* calculate transport capacity (eq. 7 kineros) */
 		TC = 0.05/(DS*pow((PARTDENSITY/WATER_DENSITY-1.),2.))*
 		  sqrt(slope*h/G)*(streampower-SETTLECRIT);
@@ -340,8 +343,8 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 						  term3*SoilMap[y][x].startRunoff) +
 			  SedMap[y][x].OldSedIn*(term2*pow(SoilMap[y][x].startRunon, beta) + 
 						 term3*SoilMap[y][x].startRunon) +
-			  DR + Map->DY*vs*TC)/
-		  (term2*pow(sedoutflow, beta) + term1*sedoutflow + Map->DY*vs);
+			  DR + floweff*Map->DY*vs*TC)/
+		  (term2*pow(sedoutflow, beta) + term1*sedoutflow + floweff*Map->DY*vs);
 		
 		if(SedOut >= TC) SedOut = TC;
 		
