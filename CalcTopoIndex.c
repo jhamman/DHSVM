@@ -79,9 +79,9 @@ void CalcTopoIndex(MAPSIZE *Map, FINEPIX ***FineMap, TOPOPIX **TopoMap)
   int i, j, k, x, y, n, lower;  /* counters */
   int dx, dy;
   float celev;
-  float neighbor_elev[NDIRSfine];
-  float temp_slope[NDIRSfine];
-  float delta_a[NDIRSfine];
+  float neighbor_elev[NNEIGHBORS];
+  float temp_slope[NNEIGHBORS];
+  float delta_a[NNEIGHBORS];
   float length_diagonal;
   float **a;                    /* Area of hillslope per unit contour (m2) */
   float **tanbeta;
@@ -89,17 +89,17 @@ void CalcTopoIndex(MAPSIZE *Map, FINEPIX ***FineMap, TOPOPIX **TopoMap)
   int coarsei, coarsej;
 
   /* These indices are so neighbors can be looked up quickly */
-  int xneighbor[NDIRSfine] = {
-#if NDIRSfine == 4
+  int xneighbor[NNEIGHBORS] = {
+#if NNEIGHBORS == 4
     0, 1, 0, -1
-#elif NDIRSfine == 8
+#elif NNEIGHBORS == 8
     -1, 0, 1, 1, 1, 0, -1, -1
 #endif
   };
-  int yneighbor[NDIRSfine] = {
-#if NDIRSfine == 4
+  int yneighbor[NNEIGHBORS] = {
+#if NNEIGHBORS == 4
     -1, 0, 1, 0
-#elif NDIRSfine == 8
+#elif NNEIGHBORS == 8
     1, 1, 1, 0, -1, -1, -1, 0
 #endif
   };
@@ -144,7 +144,7 @@ void CalcTopoIndex(MAPSIZE *Map, FINEPIX ***FineMap, TOPOPIX **TopoMap)
     x = Map->OrderedCellsfine[k].x;
     
     /* fill neighbor array */
-    for (n = 0; n < NDIRSfine; n++) {
+    for (n = 0; n < NNEIGHBORS; n++) {
 
       int xn = x + xneighbor[n];
       int yn = y + yneighbor[n];
@@ -173,10 +173,10 @@ void CalcTopoIndex(MAPSIZE *Map, FINEPIX ***FineMap, TOPOPIX **TopoMap)
     
     celev = (*FineMap[y][x]).Dem; 
     
-    switch (NDIRSfine) { 
+    switch (NNEIGHBORS) { 
     case 8:
       lower = 0;
-      for (n = 0; n < NDIRSfine; n++) {
+      for (n = 0; n < NNEIGHBORS; n++) {
 	if(neighbor_elev[n] == OUTSIDEBASIN) {
 	  neighbor_elev[n] = celev;
 	}
@@ -201,17 +201,17 @@ void CalcTopoIndex(MAPSIZE *Map, FINEPIX ***FineMap, TOPOPIX **TopoMap)
 	}
 	else
 	  lower++;
-      } /* end for (n = 0; n < NDIRSfine; n++) { */
+      } /* end for (n = 0; n < NNEIGHBORS; n++) { */
       
       if (lower == 8){
 	/* if this is a flat area then tanbeta = sum of (0.5 * vertical resolution of elevation 
 	   data)/ honizontal distance between centers of neighboring grid cells */
-	tanbeta[y][x] = ((NDIRSfine/2)*((0.5 * VERTRES)/length_diagonal)) +
-	  ((NDIRSfine/2)*((0.5 * VERTRES)/(Map->DMASS)));
+	tanbeta[y][x] = ((NNEIGHBORS/2)*((0.5 * VERTRES)/length_diagonal)) +
+	  ((NNEIGHBORS/2)*((0.5 * VERTRES)/(Map->DMASS)));
       }
 
       /* Distributing total upslope area to downslope neighboring cells */
-      for (n = 0; n < NDIRSfine; n++) {
+      for (n = 0; n < NNEIGHBORS; n++) {
 	if(neighbor_elev[n]<celev){  
 	  switch (n) {
 	  case 0:
@@ -243,7 +243,7 @@ void CalcTopoIndex(MAPSIZE *Map, FINEPIX ***FineMap, TOPOPIX **TopoMap)
 	    assert(0);
 	  } /* end switch (n) {*/
 	}/* end 	 if(neighbor_elev[n]<celev){ */	
-      } /*  for (n = 0; n < NDIRSfine; n++) { */
+      } /*  for (n = 0; n < NNEIGHBORS; n++) { */
       break; /*end case 8: */
 		     
     case 4:
@@ -253,7 +253,7 @@ void CalcTopoIndex(MAPSIZE *Map, FINEPIX ***FineMap, TOPOPIX **TopoMap)
     default:
       ReportError("CalcTopoIndex", 65);
       assert(0);			/* other cases don't work either */
-    } /* end  switch (NDIRSfine) {  */
+    } /* end  switch (NNEIGHBORS) {  */
   } /* end  for (k = 0; k < Map->NumCellsfine; k++) { */
   
   for (k = (Map->NumCellsfine)-1; k >-1; k--) { 

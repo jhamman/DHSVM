@@ -134,8 +134,8 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	    }
 	    else {
 	      for (n = 0; n < NDIRS; n++) {
-		int xn = x + xneighbor[n];
-		int yn = y + yneighbor[n];
+		int xn = x + xdirection[n];
+		int yn = y + ydirection[n];
 		if (valid_cell(Map, xn, yn)) {
 		  SoilMap[yn][xn].IExcess +=
 		    SoilMap[y][x].Runoff * ((float) TopoMap[y][x].Dir[n] /
@@ -370,8 +370,8 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	  if(outflow > 0.) {  
 	    
 	    for (n = 0; n < NDIRS; n++) {
-	      int xn = x + xneighbor[n];
-	      int yn = y + yneighbor[n];
+	      int xn = x + xdirection[n];
+	      int yn = y + ydirection[n];
 	      
 	      /* If a channel cell runoff does not go to downslope pixels. */
 	      if (valid_cell(Map, xn, yn)) {

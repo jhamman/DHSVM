@@ -22,8 +22,10 @@
 /* -------------------------------------------------------------
    available variables
    ------------------------------------------------------------- */
-extern int xneighbor[NDIRS];
-extern int yneighbor[NDIRS];
+extern int xneighbor[NNEIGHBORS];
+extern int yneighbor[NNEIGHBORS];
+extern int xdirection[NDIRS];
+extern int ydirection[NDIRS];
 
 /* -------------------------------------------------------------
    available functions

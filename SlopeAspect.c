@@ -35,33 +35,24 @@
 
 /* These indices are so neighbors can be looked up quickly */
 
-int xneighbor[NDIRS] = {
-#if NDIRS == 4
+int xdirection[NDIRS] = {
   0, 1, 0, -1
-#elif NDIRS == 8
-  -1, 0, 1, 1, 1, 0, -1, -1
-#endif
 };
-int yneighbor[NDIRS] = {
-#if NDIRS == 4
+int ydirection[NDIRS] = {
   -1, 0, 1, 0
-#elif NDIRS == 8
-  1, 1, 1, 0, -1, -1, -1, 0
-#endif
 };
 
-float temp_aspect[NDIRSfine] = {
- 135., 180., 225., 270., 315., 0., 45., 90.
+float temp_aspect[NNEIGHBORS] = {
+  225., 180., 135., 90., 45., 0., 315., 270.
 };
 
-
-/* NDIRS fine used for redistribution of subsurface flow in topoindex
+/* NNEIGHBORS used for redistribution of subsurface flow in topoindex
  * and for slope/aspect calculations, must equal 8. */
-int xneighborfine[NDIRSfine] = {
+int xneighbor[NNEIGHBORS] = {
 -1, 0, 1, 1, 1, 0, -1, -1
 };
 
-int yneighborfine[NDIRSfine] = {
+int yneighbor[NNEIGHBORS] = {
  1, 1, 1, 0, -1, -1, -1, 0
 };
 
@@ -92,62 +83,25 @@ int valid_cell_fine(MAPSIZE *Map, int x, int y)
    Calculation of slope and aspect given elevations of cell and neighbors
    ------------------------------------------------------------- */
 static void slope_aspect(float dx, float dy, float celev, float
-			 nelev[NDIRS], float *slope, float *aspect)
+			 nelev[NNEIGHBORS], float *slope, float *aspect)
 {
   int n;
   float dzdx, dzdy;
-  switch (NDIRS) {
-  case 8:
-    /* for eight neighbors, this is
-       exactly the same algorithm that
-       Arc/Info uses */
-
-    for (n = 0; n < NDIRS; n++) {
-      if (nelev[n] == OUTSIDEBASIN) {
-	nelev[n] = celev;
-      }
+ 
+  for (n = 0; n < NNEIGHBORS; n++) {
+    if (nelev[n] == OUTSIDEBASIN) {
+      nelev[n] = celev;
     }
-
-    dzdx = ((nelev[7] + 2 * nelev[6] + nelev[5]) -
-	    (nelev[1] + 2 * nelev[2] + nelev[3])) / (8 * dx);
-    dzdy = ((nelev[7] + 2 * nelev[0] + nelev[1]) -
-	    (nelev[5] + 2 * nelev[4] + nelev[3])) / (8 * dy);
-    break;
-
-  case 4:
-    if (nelev[1] == (float) OUTSIDEBASIN && nelev[3] == (float) OUTSIDEBASIN) {
-      dzdx = 0.0;
-    }
-    else if (nelev[1] == (float) OUTSIDEBASIN) {
-      dzdx = (nelev[3] - celev) / dx;
-    }
-    else if (nelev[3] == (float) OUTSIDEBASIN) {
-      dzdx = (celev - nelev[1]) / dx;
-    }
-    else {
-      dzdx = (nelev[3] - nelev[1]) / (2 * dx);
-    }
-
-    if (nelev[0] == (float) OUTSIDEBASIN && nelev[2] == (float) OUTSIDEBASIN) {
-      dzdy = 0.0;
-    }
-    else if (nelev[2] == (float) OUTSIDEBASIN) {
-      dzdy = (celev - nelev[0]) / dy;
-    }
-    else if (nelev[0] == (float) OUTSIDEBASIN) {
-      dzdy = (nelev[2] - celev) / dy;
-    }
-    else {
-      dzdy = (nelev[2] - nelev[0]) / (2 * dy);
-    }
-    break;
-  default:
-    ReportError("slope_aspect",65);
-    assert(0);			/* nothing else works */
-    break;
   }
 
+  dzdx = ((nelev[0] + 2 * nelev[7] + nelev[6]) -
+	  (nelev[2] + 2 * nelev[3] + nelev[4])) / (8 * dx);
+  dzdy = ((nelev[0] + 2 * nelev[1] + nelev[2]) -
+	  (nelev[4] + 2 * nelev[5] + nelev[6])) / (8 * dy);
+ 
   *slope = sqrt(dzdx * dzdx + dzdy * dzdy);
+  
+  /* Aspect is in radians cw from north, in the range -pi to pi. */
   if (fequal(dzdx, 0.0) && fequal(dzdy, 0.0)) {
     *aspect = 0.0;
   }
@@ -155,7 +109,7 @@ static void slope_aspect(float dx, float dy, float celev, float
     *aspect = atan2(dzdx, dzdy);
   }
 
-/*  if (*slope>2.0) printf("slope >2 = %g\n",*slope); */
+  //fprintf(stdout, "slope = %f\, aspect=%f\n",*slope, *aspect*180/3.14159);
   return;
 }
 
@@ -164,7 +118,7 @@ static void slope_aspect(float dx, float dy, float celev, float
    Computes subsurface flow fractions given the slope and aspect 
 ------------------------------------------------------------- */
 static void flow_fractions(float dx, float dy, float slope, float aspect,
-			   float nelev[NDIRS], float *grad,
+			   float nelev[NNEIGHBORS], float *grad,
 			   unsigned char dir[NDIRS], unsigned int *total_dir)
 {
   float cosine = cos(aspect);
@@ -174,16 +128,15 @@ static void flow_fractions(float dx, float dy, float slope, float aspect,
 
   switch (NDIRS) {
   case 4:
-
     /* fudge any cells which flow outside
        the basin by just pointing the
        aspect in the opposite direction */
 
-    if ((cosine > 0 && nelev[0] == (float) OUTSIDEBASIN) ||
-	(cosine < 0 && nelev[2] == (float) OUTSIDEBASIN))
+    if ((cosine > 0 && nelev[5] == (float) OUTSIDEBASIN) ||
+	(cosine < 0 && nelev[1] == (float) OUTSIDEBASIN))
       cosine = -cosine;
-    if ((sine > 0 && nelev[1] == (float) OUTSIDEBASIN) ||
-	(sine < 0 && nelev[3] == (float) OUTSIDEBASIN))
+    if ((sine > 0 && nelev[3] == (float) OUTSIDEBASIN) ||
+	(sine < 0 && nelev[7] == (float) OUTSIDEBASIN))
       sine = -sine;
 
     /* compute flow widths */
@@ -200,10 +153,10 @@ static void flow_fractions(float dx, float dy, float slope, float aspect,
 	effective_width = (cosine < 0 ? -cosine * dx : 0.0);
 	break;
       case 1:
-	effective_width = (sine > 0 ? sine * dx : 0.0);
+	effective_width = (sine > 0 ? sine * dy : 0.0);
 	break;
       case 3:
-	effective_width = (sine < 0 ? -sine * dx : 0.0);
+	effective_width = (sine < 0 ? -sine * dy : 0.0);
 	break;
       default:
 	ReportError("flow_fractions",65);
@@ -234,26 +187,28 @@ void ElevationSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap)
   int y;
   int n;
   int k;
-  float neighbor_elev[NDIRS];
+  float neighbor_elev[NNEIGHBORS];
   int tempdir[NDIRS];
-  float diff[NDIRS];
-  float mindiff;
-  int neigh;
- 
+  int steepestdirection;
+  unsigned int sum;
+  float min;
+  int xn, yn;
+
   /* fill neighbor array */
   
   for (x = 0; x < Map->NX; x++) {
     for (y = 0; y < Map->NY; y++) {
       if (INBASIN(TopoMap[y][x].Mask)) {
 
-	/* Count the number of cells in the basin.  Need this to allocate memory for
+	/* Count the number of cells in the basin.  
+	   Need this to allocate memory for
 	   the new, smaller Elev[] and Coords[][].  */
 	Map->NumCells++;
-	
-	for (n = 0; n < NDIRS; n++) {
-	  int xn = x + xneighbor[n];
-	  int yn = y + yneighbor[n];
-	  tempdir[n] = 0; /* initialize */
+
+	for (n = 0; n < NNEIGHBORS; n++) {
+	  xn = x + xneighbor[n];
+	  yn = y + yneighbor[n];
+	  
 	  
 	  if (valid_cell(Map, xn, yn)) {
 	    neighbor_elev[n] = ((TopoMap[yn][xn].Mask) ? TopoMap[yn][xn].Dem : (float) OUTSIDEBASIN);
@@ -273,48 +228,83 @@ void ElevationSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap)
 		       neighbor_elev, &(TopoMap[y][x].FlowGrad),
 		       TopoMap[y][x].Dir, &(TopoMap[y][x].TotalDir));
 
-	/* Checks that upslope neighbors Dir = 0. 
-	   Accounts for sinks and basin outlet by letting neighbor closest
-	   in elevation or only neighbor with a direction keep its direction. */
+	/* Check that upslope neighbors && outsidebasin Dir = 0. */
+	
+	for (n = 0; n < NDIRS; n++)
+	  tempdir[n] = 0; /* initialize */
+	   
+	sum = 0;
 	for (n = 0; n < NDIRS; n++) {
-	  int xn = x + xneighbor[n];
-	  int yn = y + yneighbor[n];
-	  diff[n] = 0.;  /*initialize */
+	  xn = x + xdirection[n];
+	  yn = y + ydirection[n];
 	  
-	  if ((TopoMap[y][x].Dir[n] > 0) && 
-	      (TopoMap[yn][xn].Dem > TopoMap[y][x].Dem)){
-	    (TopoMap[y][x].TotalDir) -= TopoMap[y][x].Dir[n];
-	    tempdir[n] = TopoMap[y][x].Dir[n];
-	    TopoMap[y][x].Dir[n] = 0.; 
-	  }
-	}
-
-	/* If there is a sink or the outlet, set the Dir of the cell closest in elevation
-	   back to its original value and update TotalDir. */
-	if (TopoMap[y][x].TotalDir == 0){
-	  mindiff = DHSVM_HUGE;  /*initialize */
-	  
-	  for (n = 0; n < NDIRS; n++) {
-	    int xn = x + xneighbor[n];
-	    int yn = y + yneighbor[n];
+	  if ((TopoMap[y][x].Dir[n] > 0) && valid_cell(Map, xn, yn)) {
 	    
-	    if (tempdir[n] > 0){
-	      diff[n] = TopoMap[yn][xn].Dem - TopoMap[y][x].Dem;
-	      if (diff[n] < mindiff){
-		mindiff = diff[n];
-		neigh = n;
-	      }
+	    if (!INBASIN(TopoMap[yn][xn].Mask))  { 
+	      /* Can never have flow in this direction.*/
+	      (TopoMap[y][x].TotalDir) -= TopoMap[y][x].Dir[n];
+	      TopoMap[y][x].Dir[n] = 0; 
+	    }
+	    else if(TopoMap[yn][xn].Dem >= TopoMap[y][x].Dem) {
+	      /* Will put flow in this direction if no other choice to
+		 preserve water balance. */
+	      (TopoMap[y][x].TotalDir) -= TopoMap[y][x].Dir[n];
+	      tempdir[n]=TopoMap[y][x].Dir[n];
+	      TopoMap[y][x].Dir[n] = 0; 
+	    }
+	  }
+	  else if((TopoMap[y][x].Dir[n] > 0) && valid_cell(Map, xn, yn)) {
+	    /* Can never have flow in this direction, should not be 
+	       possible to get here. */
+	    (TopoMap[y][x].TotalDir) -= TopoMap[y][x].Dir[n];
+	      TopoMap[y][x].Dir[n] = 0; 
+	    }
+	  sum+=TopoMap[y][x].Dir[n];
+	}
+	
+	/* If there is a sink, check again to see if there 
+	   is a direction of steepest descent. Does not account 
+	   for ties.*/
+	steepestdirection = -99;
+	if(sum==0) {
+	 
+	  min = DHSVM_HUGE;
+	       
+	  for (n = 0; n < NDIRS; n++) {
+	    xn = x + xdirection[n];
+	    yn = y + ydirection[n];
+	  
+	    if (valid_cell(Map, xn, yn)) {
+	      if (INBASIN(TopoMap[yn][xn].Mask)) {
+		if(TopoMap[yn][xn].Dem < min)
+		{ 
+		  min = TopoMap[yn][xn].Dem;
+		  steepestdirection = n;
+		}}
 	    }
 	  }
 	  
-	  TopoMap[y][x].Dir[neigh] = tempdir[neigh];
-	  TopoMap[y][x].TotalDir += (TopoMap[y][x].Dir[neigh]);
-
+	  if(min < TopoMap[y][x].Dem) {
+	    TopoMap[y][x].Dir[steepestdirection] = (int)(255.0 + 0.5);
+	    TopoMap[y][x].TotalDir = (int)(255.0 + 0.5);
+	  }
+	  else {
+	    /*  Last resort: set the Dir of the cell to the cell that is
+		closest in elevation. This should only happen for the 
+		basin outlet, unless the Dem wasn't filled. */
+	  
+	    TopoMap[y][x].Dir[steepestdirection] = (int)(255.0 + 0.5);
+	    TopoMap[y][x].TotalDir = (int)(255.0 + 0.5);
+	    
+	    xn = x + xdirection[steepestdirection];
+	    yn = y + ydirection[steepestdirection];
+	  }
 	}
+	
       } // end if (INBASIN(TopoMap[y][x].Mask)) {
     }
   } // end of for loops
- 
+	
   /* Create a structure to hold elevations of only those cells
      within the basin and the y,x of those cells.*/
  
@@ -397,7 +387,7 @@ void HeadSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap, SOILPIX ** SoilMap,
   int x;
   int y;
   int n;
-  float neighbor_elev[NDIRS];
+  float neighbor_elev[NNEIGHBORS];
 
   /* let's assume for now that WaterLevel is the SOILPIX map is
      computed elsewhere */
@@ -408,7 +398,7 @@ void HeadSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap, SOILPIX ** SoilMap,
 
 	float slope, aspect;
 
-	for (n = 0; n < NDIRS; n++) {
+	for (n = 0; n < NNEIGHBORS; n++) {
 	  int xn = x + xneighbor[n];
 	  int yn = y + yneighbor[n];
 
@@ -442,20 +432,20 @@ float ElevationSlope(MAPSIZE *Map, TOPOPIX **TopoMap, FINEPIX ***FineMap, int y,
 		     int *nextx, int prevy, int prevx, float *Aspect) 
 {
   int n, direction;
-  float soil_elev[NDIRSfine];
-  float bedrock_elev[NDIRSfine];
+  float soil_elev[NNEIGHBORS];
+  float bedrock_elev[NNEIGHBORS];
   float Slope;
-  float temp_slope[NDIRSfine];
+  float temp_slope[NNEIGHBORS];
   double length_diagonal;
   float dx, dy, celev;
   int coarsej, coarsei;
 
   /* fill neighbor array */
   
-  for (n = 0; n < NDIRSfine; n++) {
+  for (n = 0; n < NNEIGHBORS; n++) {
 
-    int xn = x + xneighborfine[n];
-    int yn = y + yneighborfine[n];
+    int xn = x + xneighbor[n];
+    int yn = y + yneighbor[n];
    
     // Initialize soil_elev and bedrock_elev
     soil_elev[n] = (float) OUTSIDEBASIN;
@@ -486,7 +476,7 @@ float ElevationSlope(MAPSIZE *Map, TOPOPIX **TopoMap, FINEPIX ***FineMap, int y,
 
   length_diagonal = sqrt((pow(dx, 2)) + (pow(dy, 2))); 
 
-  for (n = 0; n < NDIRSfine; n++) {
+  for (n = 0; n < NNEIGHBORS; n++) {
     if (bedrock_elev[n] == OUTSIDEBASIN) 
       bedrock_elev[n] = DHSVM_HUGE;
     
@@ -505,13 +495,13 @@ float ElevationSlope(MAPSIZE *Map, TOPOPIX **TopoMap, FINEPIX ***FineMap, int y,
   Slope = -999.;
   *Aspect = -99.;
 
-  for (n = 0; n < NDIRSfine; n++){
+  for (n = 0; n < NNEIGHBORS; n++){
     if(temp_slope[n] > Slope) {
       Slope = temp_slope[n];
       *Aspect = temp_aspect[n] * PI / 180.0;
       direction = n;
-      *nexty = y + yneighborfine[n];
-      *nextx = x + xneighborfine[n];
+      *nexty = y + yneighbor[n];
+      *nextx = x + xneighbor[n];
     }
   }
 
@@ -554,7 +544,7 @@ void ElevationSlopeAspectfine(MAPSIZE * Map, FINEPIX ***FineMap, TOPOPIX **TopoM
  /*  int n; */
   int k;
   int coarsei, coarsej;
- /*  float neighbor_elev[NDIRSfine]; */
+ /*  float neighbor_elev[NNEIGHBORS]; */
 
   /* Create a structure to hold elevations of all cells within the coarse
      resolution mask and the y,x of those cells.*/

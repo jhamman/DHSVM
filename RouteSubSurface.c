@@ -281,8 +281,8 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
 	    OutFlow = 0.;
 
 	  for (k = 0; k < NDIRS; k++) {
-	    int nx = xneighbor[k] + x;
-	    int ny = yneighbor[k] + y;
+	    int nx = xdirection[k] + x;
+	    int ny = ydirection[k] + y;
 	    if (valid_cell(Map, nx, ny)) {
 	      SoilMap[ny][nx].SatFlow += OutFlow * SubDir[y][x][k];
 /* 	      SoilMap[ny][nx].SatFlow += OutFlow * TopoMap[y][x].Dir[k]; */
