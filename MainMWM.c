@@ -41,7 +41,7 @@ void dequeue(node **head, node **tail, int *y, int *x);
 void RouteDebrisFlow(float *SedimentToChannel, int prevy, int prevx, float SlopeAspect, CHANNEL *ChannelData, MAPSIZE *Map); 
 void InitChannelSediment(Channel * Head);
 void InitChannelSedInflow(Channel * Head);
-void DistributeSedimentDiams(float SedDiam[NSEDSIZES]);
+void DistributeSedimentDiams(float SedDiams[NSEDSIZES]);
 void OutputChannelSediment(Channel * Head, TIMESTRUCT Time, DUMPSTRUCT *Dump);
 void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, DUMPSTRUCT *Dump);
 void Alloc_Chan_Sed_Mem(float ** DummyVar);
@@ -79,7 +79,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX *** FineMap, VEGTABLE *VType, SEDTABLE *Se
 			      iterations for each pixel.  */
   float **InitialSediment; /* Place holder of pixel sediment load at beginning of
 			      time step. */
-  float *SedDiams, *SedDist;
+  float *SedDiams;
   head = NULL;
   tail = NULL;
 
@@ -112,9 +112,6 @@ void MainMWM(SEDPIX **SedMap, FINEPIX *** FineMap, VEGTABLE *VType, SEDTABLE *Se
     ReportError("MainSEM", 1);
 
   if (!(SedDiams = (float *)calloc(NSEDSIZES, sizeof(float))))
-    ReportError("MainSEM", 1);
-
-  if (!(SedDist = (float *)calloc(NSEDSIZES, sizeof(float))))
     ReportError("MainSEM", 1);
 
   if (!(InitialSegmentSediment = (float *)calloc(NSEDSIZES, sizeof(float ))))
@@ -193,7 +190,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX *** FineMap, VEGTABLE *VType, SEDTABLE *Se
 
 		LocalSlope = ElevationSlope(Map, FineMap, y, x, &nexty, &nextx, y, x, &SlopeAspect);
 
-		if(LocalSlope >= 10. && LocalSlope <= 90.) {
+		if(LocalSlope >= 10. && LocalSlope <= 45.) { /* Slopes >45 are not likely to have soil. Also, factor of safety increases (indicating slope is more stable) with slope for slopes greater than 45 degrees. */
 		  factor_safety = CalcSafetyFactor(LocalSlope, SoilMap[i][j].Soil, 
 						   (*FineMap)[y][x].sediment, 
 						   VegMap[i][j].Veg, SedType, VType, 
@@ -503,6 +500,8 @@ printf("Here we try to write in failure_summary.txt");
   free(SedThickness);
   free(InitialSediment);
   free(SegmentSediment);
+  free(SedDiams);
+  free(InitialSegmentSediment);
   }
 
 /*****************************************************************************
@@ -567,6 +566,8 @@ void InitChannelSediment(Channel * Head)
   float InitialDepth = 0.010; /* initial depth of sediment in the channel, m */
   float bulkporosity, initvol;
 
+  printf("Initializing channel sediment\n\n");
+
   bulkporosity = 0.245+0.14*pow(DEBRISd50,-0.21); /* Komura, 1961 relation */
 
   /* Assign the storages to the correct IDs */
@@ -614,7 +615,7 @@ void InitChannelSedInflow(Channel * Head)
   For new lateral sediment inflow, Find the particle diameters for each portion
   Assumes a lognormal distribution
 *****************************************************************************/
-void DistributeSedimentDiams(float SedDiam[NSEDSIZES])
+void DistributeSedimentDiams(float SedDiams[NSEDSIZES])
 {
   /* to be consistent with FindValue, use the Tukey (1960) approx to normal
      CDF -- y is probability, function returns Z(y) */
@@ -634,7 +635,7 @@ void DistributeSedimentDiams(float SedDiam[NSEDSIZES])
 
   for(i=0;i<NSEDSIZES;i++) {
     z = NORMALDIST(mn,std,pctfiner);
-    SedDiam[i] = pow(10,mn+std*z);
+    SedDiams[i] = pow(10,mn+std*z);
     pctfiner += 1.0/NSEDSIZES;
   }
 }
@@ -679,12 +680,12 @@ void OutputChannelSediment(Channel * Head, TIMESTRUCT Time, DUMPSTRUCT *Dump)
 void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, DUMPSTRUCT *Dump)
 {
   Channel *Current = NULL;
-  float DS,DT_sed,Q,numinc;
+  float DS,DT_sed,numinc;
   float flowdepth,Qavg,V,dIdt,dOdt,dMdt,Vsed,Vshear,Vshearcrit;
   float minDT_sed,TotalCapacityUp,TotalCapacityDown;
   float lateral_sed_inflow_rate;
   float TotalCapacity, CapacityUsed;
-  float SedDiam[NSEDSIZES];
+  float SedDiams[NSEDSIZES];
   float Qup,Qdown;
   float phi=0.55, theta=0.55,term3,term4; /*space and time weighting factors*/
   int i,tstep;
@@ -692,7 +693,7 @@ void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, DU
   int order_count;
 
   /* For each of the sediment diameters, calculate the mass balance */
-  DistributeSedimentDiams(SedDiam); /* find diameter for each portion */
+  DistributeSedimentDiams(SedDiams); /* find diameter for each portion */
 
   /* the next 5 lines are from channel_route_network - used to order streams */
   for (order = 1;; order += 1) {
@@ -717,7 +718,7 @@ void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, DU
 	Qavg = (Current->inflow+Current->outflow)/(2.0*(float) Time.Dt);
 	if(Current->slope>0.0) {
 	  flowdepth = pow(Qavg*Current->class->friction/(Current->class->width*sqrt(Current->slope)),0.6);
-	  V = Q/(flowdepth*Current->class->width);
+	  V = Qavg/(flowdepth*Current->class->width);
 	}
 	else V=0.01;
 	if(Current->length/V < minDT_sed) minDT_sed = Current->length/V;
@@ -731,7 +732,7 @@ void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, DU
 	/*DO NOT USE BAGNOLD's EQ. FOR D<0.015 mm - this is wash load anyway*/
 	for(i=0;i<NSEDSIZES;i++) {
 	  Current->sediment.outflow[i]=0.0;
-	  DS = SedDiam[i]*((float) MMTOM); /* convert from mm to m */
+	  DS = SedDiams[i]*((float) MMTOM); /* convert from mm to m */
 
 	  /****************************************/
     	  /* Calculate segment sed inflows        */
@@ -757,7 +758,7 @@ void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, DU
 	    /* Find rate of bed change and new mass */
 	    /****************************************/
 	    /* TotalCapacity is in kg/s */
-	    if(SedDiam[i] < 0.062) { /* per Wicks and Bathurst, wash load */
+	    if(SedDiams[i] < 0.062) { /* per Wicks and Bathurst, wash load */
 	      TotalCapacity = 
 		Current->sediment.inflowrate[i]+Current->sediment.mass[i]/DT_sed;
 	    }
@@ -818,21 +819,29 @@ void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, DU
 	  // Olivier - 2003/07/08 : We should add a condition on current->outflow
 	  // to avoid division by zero in the calculation of Current->sediment.outflowconc
 	  // It makes sense as the concentration should be 0 if there is no outflow
-	  if (Current->outflow==0.0)
-			Current->sediment.outflowconc = 0.0;
-	  else {
+	  if (Current->outflow >= 0.0) {
 		if(Current->slope>0.0) 
 			flowdepth = pow(Current->outflow*Current->class->friction/(Current->class->width*sqrt(Current->slope)),0.6);
 		else flowdepth = 0.005;
+		
 		V = Current->outflow/(flowdepth*Current->class->width);
-		Vshear = sqrt(G*flowdepth*Current->slope); /* approximate */
-		if(SedDiam[i] < 15) Vshearcrit = -0.0003*SedDiam[i]*SedDiam[i]+0.0109*SedDiam[i]+0.0106;
-		else Vshearcrit = 0.0019*SedDiam[i]+0.0926; /* both in m/s */
-		if (Vshearcrit > Vshear) Vshearcrit = 0.95*Vshear; /*arbitrary */
-		/* sed velocity per Wicks and Bathurst, fine particles travel at flow velocity */
-		Vsed = 8.5*Vshear*sqrt(1-(Vshearcrit/Vshear));
-		if(Vsed>V || SedDiam[i]<=0.062) Vsed=V;
+		
+		if (Current->slope >= 0.0)
+		  Vshear = sqrt(G*flowdepth*Current->slope); /* approximate */
+		else Vshear = 0.0; /* could calculate with friction slope */ 
+		
+		if(SedDiams[i] < 15) Vshearcrit = -0.0003*SedDiams[i]*SedDiams[i]+0.0109*SedDiams[i]+0.0106;
+		else Vshearcrit = 0.0019*SedDiams[i]+0.0926; /* both in m/s */
+		
+		if (Vshearcrit > Vshear)
+		  Vsed = 8.5*Vshear*sqrt(0.05); /* arbitrary - substituted Vshearcrit = 0.95*Vshear in equation below */
+		else /* sed velocity per Wicks and Bathurst, fine particles travel at flow velocity */
+		  Vsed = 8.5*Vshear*sqrt(1-(Vshearcrit/Vshear));
+		
+		if(Vsed>V || SedDiams[i]<=0.062) Vsed=V;
+		
 		if(Vsed<(0.2*V)) Vsed=0.2*V;
+		
 		Current->sediment.outflowconc += 
 			(1000.0*Current->sediment.outflow[i]/(Current->outflow))*(V/Vsed);
 	  }
@@ -842,13 +851,11 @@ void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, DU
 	    Current->outlet->sediment.inflow[i] += Current->sediment.outflow[i];
 	  
 	} /* close loop for each sediment size */
-			/* the next 7 lines are from channel_route_network -- closes the loop above */
-			order_count += 1;
-		} /* close if statement checking for stream order */
-		Current = Current->next;  
-		
+	/* the next 7 lines are from channel_route_network -- closes the loop above */
+	order_count += 1;
+      } /* close if statement checking for stream order */
+      Current = Current->next;  
     } /* close while statement checking that CURRENT != NULL */
-
     if (order_count == 0)
       break;
   } /* close loop for the stream order */

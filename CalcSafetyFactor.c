@@ -47,7 +47,7 @@ float CalcSafetyFactor(float Slope, int Soil, float SoilDepth, int Veg, SEDTABLE
   float loading;
   float safetyfactor;
 
-  if (Slope >= 0. && Slope <= 90.) { 
+  if (Slope >= 0. && Slope <= 45.) { 
 
     if(SoilDepth<=0.0) SoilDepth=0.001;
 

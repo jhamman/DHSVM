@@ -252,7 +252,7 @@ int main(int argc, char **argv)
   if(Options.Sediment) {
 
     printf("\nRunning sediment model version 0.0\n");
-    printf("\nSTARTING INITIALIZATION PROCEDURES\n\n");
+    printf("\nSTARTING SEDIMENT INITIALIZATION PROCEDURES\n\n");
 
     ReadInitFile(Options.SedFile, &Input);
 
@@ -263,10 +263,8 @@ int main(int argc, char **argv)
     InitFineMaps(Input, &Options, &Map, &Soil, &TopoMap, &SoilMap, 
 		  &FineMap);
 
-    printf("\n initializing channel sediment\n");
     InitChannelSediment(ChannelData.streams);
 
-    printf("\n done...\n");
     /* Allocate memory for the sediment grid */
     if (!(SedMap = (SEDPIX **) calloc(Map.NY, sizeof(SEDPIX *))))
       ReportError("MainDHSVM", 1);
