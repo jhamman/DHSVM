@@ -385,7 +385,7 @@ int main(int argc, char **argv)
 
     RouteSubSurface(Time.Dt, &Map, TopoMap, VType, VegMap, Network,
 		    SType, SoilMap, &ChannelData, &Time, &Options, Dump.Path,
-		    SedMap, &FineMap, SedType, MaxStreamID);
+		    SedMap, &FineMap, SedType, MaxStreamID, SnowMap);
 
     if (Options.HasNetwork)
       RouteChannel(&ChannelData, &Time, &Map, TopoMap, SoilMap, &Total);

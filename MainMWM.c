@@ -45,7 +45,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX *** FineMap, VEGTABLE *VType,
 	     SEDTABLE *SedType, CHANNEL *ChannelData, char *DumpPath, 
 	     SOILPIX **SoilMap, TIMESTRUCT *Time, MAPSIZE *Map,
 	     TOPOPIX **TopoMap, SOILTABLE *SType, VEGPIX **VegMap,
-	     int MaxStreamID) 
+	     int MaxStreamID, SNOWPIX **SnowMap) 
 {
   int x,y,xx,yy,i,j,ii,jj,k,iter;  /* Counters. */
   int coursei, coursej;
@@ -349,11 +349,11 @@ void MainMWM(SEDPIX **SedMap, FINEPIX *** FineMap, VEGTABLE *VType,
 		   increases (indicating slope is more stable) with slope for slopes 
 		   greater than 45 degrees. */
 		if(LocalSlope >= 10. && LocalSlope <= 45.) { 
-		  factor_safety = CalcSafetyFactor(LocalSlope,
-						   SoilMap[i][j].Soil, 
+		  factor_safety = CalcSafetyFactor(LocalSlope, SoilMap[i][j].Soil, 
 						   (*FineMap)[y][x].sediment, 
-						   VegMap[i][j].Veg, SedType,
-						   VType, (*FineMap)[y][x].SatThickness, SType);
+						   VegMap[i][j].Veg, SedType, VType, 
+						   (*FineMap)[y][x].SatThickness, SType, 
+						   SnowMap[i][j].Swq, SnowMap[i][j].Depth);
 		  
 		  /* check if fine pixel fails */
 		  if (factor_safety < 1 && factor_safety > 0) {
@@ -385,18 +385,19 @@ void MainMWM(SEDPIX **SedMap, FINEPIX *** FineMap, VEGTABLE *VType,
 		coursei = floor(y*Map->DMASS/Map->DY);
 		coursej = floor(x*Map->DMASS/Map->DX);
 		
-		LocalSlope = ElevationSlope(Map, FineMap, y, x, &nexty, &nextx, prevy, prevx, &SlopeAspect);
+		LocalSlope = ElevationSlope(Map, FineMap, y, x, &nexty, 
+					    &nextx, prevy, prevx, &SlopeAspect);
 
 		/*  Check that not a sink and that we have not encountered 
 		    a stream segment. */
 		if(LocalSlope >= 0) {
 	
-		  factor_safety = CalcSafetyFactor(LocalSlope,
-				   SoilMap[coursei][coursej].Soil, 
-				   (*FineMap)[y][x].sediment, 
-				   VegMap[coursei][coursej].Veg, SedType,
-				   VType, (*FineMap)[y][x].SatThickness,
-				   SType);
+		  factor_safety = CalcSafetyFactor(LocalSlope, SoilMap[coursei][coursej].Soil, 
+						   (*FineMap)[y][x].sediment, 
+						   VegMap[coursei][coursej].Veg, SedType, VType,
+						   (*FineMap)[y][x].SatThickness, SType,
+						   SnowMap[coursei][coursej].Swq, 
+						   SnowMap[coursei][coursej].Depth);
 			
 		  if (factor_safety < 1 && factor_safety > 0) {
 		    numpixels += 1;

@@ -44,7 +44,7 @@ float CalcKhDry(float Density);
 
 float CalcSafetyFactor(float Slope, int Soil, float SoilDepth, int Veg, 
 		       SEDTABLE *SedType, VEGTABLE *VType, 
-		       float M, SOILTABLE *SType);
+		       float M, SOILTABLE *SType, float Swq, float Depth);
 
 float CalcSnowAlbedo(float TSurf, unsigned short Last, SNOWTABLE *SnowAlbedo);
 
@@ -279,7 +279,7 @@ float LapseT(float Temp, float FromElev, float ToElev, float LapseRate);
 void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType, SEDTABLE *SedType,
 	    CHANNEL *ChannelData, char *DumpPath, SOILPIX **SoilMap, TIMESTRUCT *Time,
 	    MAPSIZE *Map, TOPOPIX **TopoMap, SOILTABLE *SType, VEGPIX **VegMap, 
-	     int MaxStreamID);
+	     int MaxStreamID, SNOWPIX **SnowMap);
  
 PIXMET MakeLocalMetData(int y, int x, MAPSIZE *Map, int DayStep,
 			OPTIONSTRUCT *Options, int NStats,
@@ -345,7 +345,7 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
 		     SOILPIX **SoilMap, CHANNEL *ChannelData, 
 		     TIMESTRUCT *Time, OPTIONSTRUCT *Options, 
 		     char *DumpPath, SEDPIX **SedMap, FINEPIX ***FineMap,
-		     SEDTABLE *SedType, int MaxStreamID);
+		     SEDTABLE *SedType, int MaxStreamID, SNOWPIX **SnowMap);
 
 void RouteSurface(MAPSIZE *Map, TIMESTRUCT *Time, TOPOPIX **TopoMap,
 		  SOILPIX **SoilMap, OPTIONSTRUCT *Options,

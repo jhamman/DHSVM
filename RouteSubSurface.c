@@ -93,7 +93,7 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
 		     SOILPIX **SoilMap, CHANNEL *ChannelData,
 		     TIMESTRUCT *Time, OPTIONSTRUCT *Options, 
 		     char *DumpPath, SEDPIX **SedMap, FINEPIX ***FineMap,
-		     SEDTABLE *SedType, int MaxStreamID)
+		     SEDTABLE *SedType, int MaxStreamID, SNOWPIX **SnowMap)
 {
   const char *Routine = "RouteSubSurface";
   int x;			/* counter */
@@ -289,7 +289,7 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
     if((float)count/((float)totalcount) > SATPERCENT) 
       {
 	MainMWM(SedMap, FineMap, VType, SedType, ChannelData, DumpPath, SoilMap, Time,
-	    Map, TopoMap, SType, VegMap, MaxStreamID);
+	    Map, TopoMap, SType, VegMap, MaxStreamID, SnowMap);
       }
   }
  
