@@ -194,7 +194,7 @@ int InitSedTable(SEDTABLE **SedType, LISTPTR Input, SOILTABLE **SType)
     for (j = 0; j < (*SType)[i].NLayers; j++){
       AveDensity += (*SType)[i].Dens[j];
     }
-    AveDensity /= j+1;
+    AveDensity /= j;
     (*SedType)[i].SatDensity = CalcSatDensity(AveDensity);
 
   }
