@@ -563,6 +563,10 @@ void SedimentFlag(OPTIONSTRUCT *Options,  TIMESTRUCT * Time){
   if ((Options->ErosionPeriod) && (Time->Current.Julian==Time->Start.Julian)){
     Options->OldSedFlag=1;
   }
+
+  if ((Options->Routing) && (Time->Current.Julian==Time->Start.Julian)){
+    Options->OldRouteFlag=1;
+  }
   
   oldrouting=Options->Routing;
   
