@@ -61,7 +61,7 @@
 #define MTHRESH 0.85            /* The 'critical' value of M for triggering the mass
 				   wasting algorithm. */
 
-#define PARTDENSITY 2685         /* Particle density in kg/m3 */
+#define PARTDENSITY 2685.         /* Particle density in kg/m3 */
 
 #undef PI
 #define PI             3.14159265358979323846
