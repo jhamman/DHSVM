@@ -301,7 +301,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 			SedMap[y][x].OldSedIn*(term2*pow(SoilMap[y][x].startRunon, beta) + 
 					       term3*SoilMap[y][x].startRunon) +
 			DR + Map->DY*settling*TC)/
-		(term2*pow(outflow, beta) + term1*outflow + Map->DY*settling);
+		(term2*pow(sedoutflow, beta) + term1*sedoutflow + Map->DY*settling);
 
 
 	      if(SedOut >= TC) SedOut = TC;
@@ -310,7 +310,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	      SedMap[y][x].OldSedIn = SedIn[y][x];
 	      SedMap[y][x].SedFluxOut += (SedOut*Runon[y][x]*
 					  VariableDT);  /* total sediment (m3) */
-	      SedMap[y][x].Erosion += (SedIn[y][x]*Runon[y][x] - SedOut*outflow)*
+	      SedMap[y][x].Erosion += (SedIn[y][x]*Runon[y][x] - SedOut*sedoutflow)*
 		VariableDT/(Map->DX*Map->DY)*1000.;  /* total depth of erosion (mm) */
 	      
 	    } /* end if sedoutflow > 0. */
