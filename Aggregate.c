@@ -149,9 +149,12 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
 	Total->Soil.Qst += SoilMap[y][x].Qst;
 	Total->Soil.IExcess += SoilMap[y][x].IExcess;
 	if(Options->RoadRouting){
-	  for (i = 0; i < CELLFACTOR; i++)
-	    Total->Road.IExcess += (Network[y][x].h[i] * Network[y][x].RoadArea)/
-				    ((float)CELLFACTOR * (Map->DX*Map->DY));
+	  if (Network[y][x].RoadArea > 0) {
+	    for (i = 0; i < CELLFACTOR; i++)
+	      Total->Road.IExcess += (Network[y][x].h[i] * 
+				      Network[y][x].RoadArea)/
+		((float)CELLFACTOR * (Map->DX*Map->DY));
+	  }
 	}
 	if (Options->Infiltration == DYNAMIC)
 	  Total->Soil.InfiltAcc += SoilMap[y][x].InfiltAcc;

@@ -115,21 +115,23 @@ void InitParameters(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
     for (y = 0; y < Map->NY; y++) {
       for (x = 0; x < Map->NX; x++) {
 	if (INBASIN(TopoMap[y][x].Mask)) {
-	  if (!((*Network)[y][x].h = 
-		(float *) calloc(CELLFACTOR, sizeof(float))))
-	    ReportError((char *) Routine, 1);
-	  if (!((*Network)[y][x].startRunoff =
-		(float *) calloc(CELLFACTOR, sizeof(float))))
-	    ReportError((char *) Routine, 1);
-	  if (!((*Network)[y][x].startRunon =
-		(float *) calloc(CELLFACTOR, sizeof(float))))
-	    ReportError((char *) Routine, 1);
-	  if (!((*Network)[y][x].OldSedIn = 
-		(float *) calloc(CELLFACTOR, sizeof(float))))
-	    ReportError((char *) Routine, 1);
-	  if (!((*Network)[y][x].OldSedOut =
-		(float *) calloc(CELLFACTOR, sizeof(float))))
-	    ReportError((char *) Routine, 1);
+	  if ((*Network)[y][x].RoadArea > 0) {
+	    if (!((*Network)[y][x].h = 
+		  (float *) calloc(CELLFACTOR, sizeof(float))))
+	      ReportError((char *) Routine, 1);
+	    if (!((*Network)[y][x].startRunoff =
+		  (float *) calloc(CELLFACTOR, sizeof(float))))
+	      ReportError((char *) Routine, 1);
+	    if (!((*Network)[y][x].startRunon =
+		  (float *) calloc(CELLFACTOR, sizeof(float))))
+	      ReportError((char *) Routine, 1);
+	    if (!((*Network)[y][x].OldSedIn = 
+		  (float *) calloc(CELLFACTOR, sizeof(float))))
+	      ReportError((char *) Routine, 1);
+	    if (!((*Network)[y][x].OldSedOut =
+		  (float *) calloc(CELLFACTOR, sizeof(float))))
+	      ReportError((char *) Routine, 1);
+	  }
 	}
       }
     }
