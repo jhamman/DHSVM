@@ -37,14 +37,15 @@ extern long black, white;
 extern int e, ndx;
 #endif
 
-void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
+void draw(DATE * Day, int first, int DayStep, MAPSIZE *Map, int NGraphics,
 	  int *which_graphics, VEGTABLE * VType, SOILTABLE * SType,
-	  SNOWPIX ** SnowMap, SOILPIX ** SoilMap, SEDPIX ** SedMap, VEGPIX ** VegMap,
-	  TOPOPIX ** TopoMap, PRECIPPIX ** PrecipMap, float **PrismMap,
+	  SNOWPIX ** SnowMap, SOILPIX ** SoilMap, SEDPIX ** SedMap, FINEPIX ** FineMap,
+	  VEGPIX ** VegMap, TOPOPIX ** TopoMap, PRECIPPIX ** PrecipMap, float **PrismMap,
 	  float **SkyViewMap, unsigned char ***ShadowMap, EVAPPIX ** EvapMap,
 	  RADCLASSPIX ** RadMap, MET_MAP_PIX ** MetMap, OPTIONSTRUCT * Options)
 {				/*begin */
   int i, j, k, ie, je, ir, jr;
+  int ii, jj, yy, xx;
   int PX, PY;
   int MapNumber;
   float min, max, scale;
@@ -104,12 +105,12 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  PX = k - ndx * PY;
 
 	  if (expand > 0) {
-	    PX = PX * (NX * expand + buf) + 10;
-	    PY = PY * (NY * expand + buf) + 20;	/*top 20 pixels reserved for date stamp */
+	    PX = PX * (Map->NX * expand + buf) + 10;
+	    PY = PY * (Map->NY * expand + buf) + 20;	/*top 20 pixels reserved for date stamp */
 	  }
 	  else {
-	    PX = PX * (NX * (1.0 / ((float) (-expand))) + buf) + 10;
-	    PY = PY * (NY * (1.0 / ((float) (-expand))) + buf) + 20;
+	    PX = PX * (Map->NX * (1.0 / ((float) (-expand))) + buf) + 10;
+	    PY = PY * (Map->NY * (1.0 / ((float) (-expand))) + buf) + 20;
 	  }
 	  max = -1000000.;
 	  min = 1000000.;
@@ -117,8 +118,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 1) {
 	    text = "SWE (mm)";
 	    length = 8;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SnowMap[j][i].Swq * 1000.0;
@@ -137,8 +138,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 2) {
 	    text = "Water Table Depth (mm)";
 	    length = 22;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SoilMap[j][i].TableDepth * 1000.0;
@@ -155,8 +156,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 3) {
 	    text = "Digital Elevation Model (m)";
 	    length = 27;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = TopoMap[j][i].Dem;
@@ -173,8 +174,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 4) {
 	    text = "Vegetation Class";
 	    length = 16;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = VegMap[j][i].Veg;
@@ -191,8 +192,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 5) {
 	    text = "Soil Class";
 	    length = 10;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SoilMap[j][i].Soil;
@@ -209,8 +210,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 6) {
 	    text = "Soil Depth (mm)";
 	    length = 15;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SoilMap[j][i].Depth * 1000.;
@@ -227,8 +228,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 7) {
 	    text = "Precipitation (mm)";
 	    length = 18;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = PrecipMap[j][i].Precip * 1000.0;
 		  if (temp > max)
@@ -245,8 +246,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 8) {
 	    text = "Incoming Shortwave (W/sqm)";
 	    length = 26;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = RadMap[j][i].Beam + RadMap[j][i].Diffuse;
 		  if (temp > max)
@@ -262,8 +263,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 9) {
 	    text = "Intercepted Snow (mm)";
 	    length = 21;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)
 		    && VType[VegMap[j][i].Veg - 1].OverStory == 1) {
 		  temp = PrecipMap[j][i].IntSnow[0] * 1000.0;;
@@ -284,8 +285,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    text = "Snow Surface Temp (C)";
 	    length = 21;
 	    max = 0.0;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SnowMap[j][i].TSurf;
 		  if (temp > max)
@@ -305,8 +306,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    text = "Cold Content (kJ)";
 	    length = 17;
 	    max = 0.0;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  if (SnowMap[j][i].Swq > MAX_SURFACE_SWE) {
 		    pack_swe = SnowMap[j][i].Swq - MAX_SURFACE_SWE;
@@ -333,8 +334,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 12) {
 	    text = "Snow Melt (mm)";
 	    length = 14;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SnowMap[j][i].Melt * 1000.0;
 		  if (temp > max)
@@ -350,8 +351,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 13) {
 	    text = "Snow Pack Outflow (mm)";
 	    length = 22;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SnowMap[j][i].Outflow * 1000.0;;
 		  if (temp > max)
@@ -369,8 +370,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 14) {
 	    text = "Sat. Subsurf Flow (mm) 0=white";
 	    length = 30;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SoilMap[j][i].SatFlow * 1000.0;;
 		  if (temp > max)
@@ -388,8 +389,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 15) {
 	    text = "Overland Flow (mm)";
 	    length = 18;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SoilMap[j][i].Runoff * 1000.0;
 		  if (temp > max)
@@ -405,8 +406,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 16) {
 	    text = "Total EvapoTranspiration (mm)";
 	    length = 29;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = EvapMap[j][i].ETot * 1000.0;
 		  if (temp > max)
@@ -422,8 +423,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 17) {
 	    text = "Snow Pack Vapor Flux (mm)";
 	    length = 25;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SnowMap[j][i].VaporMassFlux * 1000.0;
 		  if (temp > max)
@@ -441,8 +442,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 18) {
 	    text = "Int Snow Vapor Flux (mm)";
 	    length = 24;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SnowMap[j][i].CanopyVaporMassFlux * 1000.0;
 		  if (temp > max)
@@ -460,8 +461,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 19) {
 	    text = "Soil Moist L1 (% Sat)";
 	    length = 21;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  /*  temp=(SoilMap[j][i].Moist[0]-SType[SoilMap[j][i].Soil-1].FCap[0])/
 		     (SType[SoilMap[j][i].Soil-1].Porosity[0]-
@@ -483,8 +484,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 20) {
 	    text = "Soil Moist L2 (% Sat)";
 	    length = 21;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  /*      temp=(SoilMap[j][i].Moist[1]-SType[SoilMap[j][i].Soil-1].FCap[1])/
 		     (SType[SoilMap[j][i].Soil-1].Porosity[1]-
@@ -506,8 +507,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 21) {
 	    text = "Soil Moist L3 (% Sat)";
 	    length = 21;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  /*  temp=(SoilMap[j][i].Moist[2]-SType[SoilMap[j][i].Soil-1].FCap[2])/
 		     (SType[SoilMap[j][i].Soil-1].Porosity[2]-
@@ -527,8 +528,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 22) {
 	    text = "Accumulated Precip (mm)";
 	    length = 23;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = MetMap[j][i].accum_precip * 1000.0;
 		  if (temp > max)
@@ -545,8 +546,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 23) {
 	    text = "Air Temp (C) 0=white";
 	    length = 20;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = MetMap[j][i].air_temp;
 		  if (temp > max)
@@ -564,8 +565,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 24) {
 	    text = "Wind Speed (m/s)";
 	    length = 16;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = MetMap[j][i].wind_speed;
 		  if (temp > max)
@@ -581,8 +582,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 25) {
 	    text = "RH";
 	    length = 2;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = MetMap[j][i].humidity;
 		  if (temp > max)
@@ -599,8 +600,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 26) {
 	    text = "Prism Precip (mm)";
 	    length = 17;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = PrismMap[j][i] / 100.0;
 		  if (temp > max)
@@ -618,8 +619,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 27) {
 	    text = "Deep Layer Storage (% Sat)";
 	    length = 26;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 
 		  temp =
@@ -638,8 +639,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 28) {
 	    text = "Surface runoff from HOF and Return Flow (mm)";
 	    length = 22;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SoilMap[j][i].IExcess * 1000.0;
@@ -656,8 +657,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 29 && Options->Infiltration == DYNAMIC) {
 	    text = "Infiltration Accumulation (mm)";
 	    length = 22;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SoilMap[j][i].TableDepth * 1000.0;
@@ -671,11 +672,41 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    }
 	  }
 
+	  if (MapNumber == 30 && Options->Sediment) {
+	    text = "Sediment to Channel (m)";
+	    length = 23;
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
+
+		if (INBASIN(TopoMap[j][i].Mask)) {
+
+		  // FineMap quantities must be aggregated to coarse grid
+		  temp = 0.0;
+		  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+		    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		      yy = (int) j*Map->DY/Map->DMASS + ii;
+		      xx = (int) i*Map->DX/Map->DMASS + jj;
+		      temp += FineMap[yy][xx].SedimentToChannel;
+		    }
+		  }
+		  // Normalize by # FineMap cells in a pixel
+		  temp /= Map->DMASS*Map->DMASS;
+
+		  if (temp > max)
+		    max = temp;
+		  if (temp < min)
+		    min = temp;
+		}
+		temp_array[j][i] = temp;
+	      }
+	    }
+	  }
+
 	  if (MapNumber == 31) {
 	    text = "Overstory Trans (mm)";
 	    length = 20;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = EvapMap[j][i].EAct[0] * 1000.0;
 		  if (temp > max)
@@ -691,8 +722,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 32) {
 	    text = "Understory Trans (mm)";
 	    length = 21;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = EvapMap[j][i].EAct[1] * 1000.0;
 		  if (temp > max)
@@ -708,8 +739,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 33) {
 	    text = "Soil Evaporation (mm)";
 	    length = 21;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = EvapMap[j][i].EvapSoil * 1000.0;
 		  if (temp > max)
@@ -725,8 +756,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 34) {
 	    text = "Overstory Int Evap (mm)";
 	    length = 23;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = EvapMap[j][i].EInt[0] * 1000.0;
 		  if (temp > max)
@@ -742,10 +773,160 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 35) {
 	    text = "Understory Int Evap (mm)";
 	    length = 24;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = EvapMap[j][i].EInt[1] * 1000.0;
+		  if (temp > max)
+		    max = temp;
+		  if (temp < min)
+		    min = temp;
+		}
+		temp_array[j][i] = temp;
+	      }
+	    }
+	  }
+
+	  if (MapNumber == 36 && Options->Sediment) {
+	    text = "Elevation (m)";
+	    length = 13;
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
+
+		if (INBASIN(TopoMap[j][i].Mask)) {
+
+		  // FineMap quantities must be aggregated to coarse grid
+		  temp = 0.0;
+		  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+		    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		      yy = (int) j*Map->DY/Map->DMASS + ii;
+		      xx = (int) i*Map->DX/Map->DMASS + jj;
+		      temp += FineMap[yy][xx].Dem;
+		    }
+		  }
+		  // Normalize by # FineMap cells in a pixel
+		  temp /= Map->DMASS*Map->DMASS;
+
+		  if (temp > max)
+		    max = temp;
+		  if (temp < min)
+		    min = temp;
+		}
+		temp_array[j][i] = temp;
+	      }
+	    }
+	  }
+
+	  if (MapNumber == 37 && Options->Sediment) {
+	    text = "Slope";
+	    length = 5;
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
+
+		if (INBASIN(TopoMap[j][i].Mask)) {
+
+		  // FineMap quantities must be aggregated to coarse grid
+		  temp = 0.0;
+		  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+		    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		      yy = (int) j*Map->DY/Map->DMASS + ii;
+		      xx = (int) i*Map->DX/Map->DMASS + jj;
+		      temp += FineMap[yy][xx].Slope;
+		    }
+		  }
+		  // Normalize by # FineMap cells in a pixel
+		  temp /= Map->DMASS*Map->DMASS;
+
+		  if (temp > max)
+		    max = temp;
+		  if (temp < min)
+		    min = temp;
+		}
+		temp_array[j][i] = temp;
+	      }
+	    }
+	  }
+
+	  if (MapNumber == 38 && Options->Sediment) {
+	    text = "Water Table Thickness (m)";
+	    length = 25;
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
+
+		if (INBASIN(TopoMap[j][i].Mask)) {
+
+		  // FineMap quantities must be aggregated to coarse grid
+		  temp = 0.0;
+		  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+		    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		      yy = (int) j*Map->DY/Map->DMASS + ii;
+		      xx = (int) i*Map->DX/Map->DMASS + jj;
+		      temp += FineMap[yy][xx].SatThickness;
+		    }
+		  }
+		  // Normalize by # FineMap cells in a pixel
+		  temp /= Map->DMASS*Map->DMASS;
+
+		  if (temp > max)
+		    max = temp;
+		  if (temp < min)
+		    min = temp;
+		}
+		temp_array[j][i] = temp;
+	      }
+	    }
+	  }
+
+	  if (MapNumber == 39 && Options->Sediment) {
+	    text = "Change in Sediment Depth (m)";
+	    length = 28;
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
+
+		if (INBASIN(TopoMap[j][i].Mask)) {
+
+		  // FineMap quantities must be aggregated to coarse grid
+		  temp = 0.0;
+		  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+		    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		      yy = (int) j*Map->DY/Map->DMASS + ii;
+		      xx = (int) i*Map->DX/Map->DMASS + jj;
+		      temp += FineMap[yy][xx].DeltaDepth;
+		    }
+		  }
+		  // Normalize by # FineMap cells in a pixel
+		  temp /= Map->DMASS*Map->DMASS;
+
+		  if (temp > max)
+		    max = temp;
+		  if (temp < min)
+		    min = temp;
+		}
+		temp_array[j][i] = temp;
+	      }
+	    }
+	  }
+
+	  if (MapNumber == 40 && Options->Sediment) {
+	    text = "Failure Probability";
+	    length = 19;
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
+
+		if (INBASIN(TopoMap[j][i].Mask)) {
+
+		  // FineMap quantities must be aggregated to coarse grid
+		  temp = 0.0;
+		  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+		    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+		      yy = (int) j*Map->DY/Map->DMASS + ii;
+		      xx = (int) i*Map->DX/Map->DMASS + jj;
+		      temp += FineMap[yy][xx].Probability;
+		    }
+		  }
+		  // Normalize by # FineMap cells in a pixel
+		  temp /= Map->DMASS*Map->DMASS;
+
 		  if (temp > max)
 		    max = temp;
 		  if (temp < min)
@@ -759,8 +940,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 41) {
 	    text = "Sky View Factor (%)";
 	    length = 19;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SkyViewMap[j][i] * 100.0;
 		  if (temp > max)
@@ -778,8 +959,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 42) {
 	    text = "Shade Map  (%)";
 	    length = 14;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = (float) ShadowMap[DayStep][j][i] / 0.2223191;
 		  if (temp > max)
@@ -797,8 +978,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 43) {
 	    text = "Direct Shortwave (W/sqm)";
 	    length = 24;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = RadMap[j][i].Beam;
 		  if (temp > max)
@@ -814,8 +995,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 44) {
 	    text = "Diffuse Shortwave (W/sqm)";
 	    length = 25;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = RadMap[j][i].Diffuse;
 		  if (temp > max)
@@ -831,8 +1012,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 45) {
 	    text = "Aspect (degrees)";
 	    length = 16;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = TopoMap[j][i].Aspect * 57.2957;
@@ -849,8 +1030,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 46) {
 	    text = "Slope (percent)";
 	    length = 15;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = TopoMap[j][i].Slope * 100.0;
@@ -865,13 +1046,13 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  }
 
 	  if (MapNumber == 47 && Options->Sediment) {
-	    text = "Total Sediment (m3/m3)";
+	    text = "Sediment Flux (m3/m3)";
 	    length = 22;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 
 		if (INBASIN(TopoMap[j][i].Mask)) {
-		  temp = SedMap[j][i].TotalSediment;
+		  temp = SedMap[j][i].SedFluxOut;
 		  if (temp > max)
 		    max = temp;
 		  if (temp < min)
@@ -885,8 +1066,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 48 && Options->Sediment) {
 	    text = "Erosion (m)";
 	    length = 22;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SedMap[j][i].Erosion;
@@ -903,8 +1084,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 50) {
 	    text = "Channel Sub Surf Int (mm)";
 	    length = 25;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SoilMap[j][i].ChannelInt * 1000.0;;
 		  if (temp > max)
@@ -922,8 +1103,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  if (MapNumber == 51) {
 	    text = "Road Sub Surf Inter (mm)";
 	    length = 24;
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (INBASIN(TopoMap[j][i].Mask)) {
 		  temp = SoilMap[j][i].RoadInt * 1000.0;;
 		  if (temp > max)
@@ -950,8 +1131,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  /* and the color bar */
 
 	  if (expand > 0) {
-	    for (i = 0; i < NX; i++) {
-	      for (j = 0; j < NY; j++) {
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
 		if (!fequal(temp_array[j][i], -9999.0) && 
 		    INBASIN(TopoMap[j][i].Mask)) {
 		  index = (int) (scale * (temp_array[j][i] - min));
@@ -973,8 +1154,8 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	  }
 	  else {		/* expand < 0 need to average image */
 
-	    for (i = 0; i < NX / (-expand); i++) {
-	      for (j = 0; j < NY / (-expand); j++) {
+	    for (i = 0; i < Map->NX / (-expand); i++) {
+	      for (j = 0; j < Map->NY / (-expand); j++) {
 		jr = j * (-expand);
 		ir = i * (-expand);
 		temp = 0.0;
@@ -1053,28 +1234,28 @@ void draw(DATE * Day, int first, int DayStep, int NX, int NY, int NGraphics,
 	    XDrawString(display, window, gc, PX, PY + 40, text, length);
 
 	    /* draw the color bar */
-	    for (j = 0; j < NY * re; j++) {
+	    for (j = 0; j < Map->NY * re; j++) {
 	      XSetForeground(display, gc,
-			     my_color[(int) (50 * j / (NY * re))].pixel);
-	      /*    if((int)((float)(j*50/(NY*re))/scale+min)==0) XSetForeground(display,gc,white); */
-	      XDrawLine(display, window, gc, (int) (PX + NX * re + 10),
-			(int) (PY + NY * re - j + buf),
-			(int) (PX + NX * re + 20),
-			(int) (PY + NY * re - j + buf));
+			     my_color[(int) (50 * j / (Map->NY * re))].pixel);
+	      /*    if((int)((float)(j*50/(Map->NY*re))/scale+min)==0) XSetForeground(display,gc,white); */
+	      XDrawLine(display, window, gc, (int) (PX + Map->NX * re + 10),
+			(int) (PY + Map->NY * re - j + buf),
+			(int) (PX + Map->NX * re + 20),
+			(int) (PY + Map->NY * re - j + buf));
 	    }
 	  }
 	  /* label the color bar */
 	  sprintf(text2, "%6.1f", max);
 	  XSetForeground(display, gc, black);
-	  XClearArea(display, window, (int) (PX + NX * re),
+	  XClearArea(display, window, (int) (PX + Map->NX * re),
 		     (int) (PY - 20 + buf), 50, 20, False);
-	  XDrawString(display, window, gc, (int) (PX + NX * re),
+	  XDrawString(display, window, gc, (int) (PX + Map->NX * re),
 		      (int) (PY - 10 + buf), text2, 6);
 	  sprintf(text2, "%6.1f", min);
-	  XClearArea(display, window, (int) (PX + NX * re),
-		     (int) (PY + NY * re + buf), 50, 30, False);
-	  XDrawString(display, window, gc, (int) (PX + NX * re),
-		      (int) (PY + NY * re + 20 + buf), text2, 6);
+	  XClearArea(display, window, (int) (PX + Map->NX * re),
+		     (int) (PY + Map->NY * re + buf), 50, 30, False);
+	  XDrawString(display, window, gc, (int) (PX + Map->NX * re),
+		      (int) (PY + Map->NY * re + 20 + buf), text2, 6);
 
 	}
       }

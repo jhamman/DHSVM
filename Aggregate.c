@@ -39,7 +39,8 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
 	       LAYER *Soil, LAYER * Veg, VEGPIX **VegMap, EVAPPIX **Evap,
 	       PRECIPPIX **Precip, RADCLASSPIX **RadMap, SNOWPIX **Snow,
 	       SOILPIX **SoilMap, AGGREGATED *Total, VEGTABLE *VType,
-	       ROADSTRUCT **Network, SEDPIX **SedMap, CHANNEL *ChannelData)
+	       ROADSTRUCT **Network, SEDPIX **SedMap, FINEPIX **FineMap,
+	       CHANNEL *ChannelData)
 {
   int NPixels;			/* Number of pixels in the basin */
   int NSoilL;			/* Number of soil layers for current pixel */
@@ -50,6 +51,10 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
   int x;
   int y;
   float DeepDepth;		/* depth to bottom of lowest rooting zone */
+  int ii;			/* FineMap counter */
+  int jj;			/* FineMap counter */
+  int xx;			/* x-coordinate on FineMap grid */
+  int yy;			/* y-coordinate on FineMap grid */
 
   NPixels = 0;
   for (y = 0; y < Map->NY; y++) {
@@ -151,10 +156,22 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
 	SoilMap[y][x].RoadInt = 0.0;
 	if (Options->Sediment) {
 	  Total->Sediment.Erosion += SedMap[y][x].Erosion; 
-	  Total->Sediment.TotalSediment += SedMap[y][x].TotalSediment; 
-          if (ChannelData->stream_map[x][y] != NULL) {
+	  Total->Sediment.SedFluxOut += SedMap[y][x].SedFluxOut; 
+	  if (ChannelData->stream_map[x][y] != NULL) {
 	    Total->SedimentOverlandInflow += ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[0];
-          }
+	  }
+	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+	      yy = (int) y*Map->DY/Map->DMASS + ii;
+	      xx = (int) x*Map->DX/Map->DMASS + jj;
+	      Total->Fine.SatThickness += FineMap[yy][xx].SatThickness;
+	      Total->Fine.DeltaDepth += FineMap[yy][xx].DeltaDepth;
+	      Total->Fine.Probability += FineMap[yy][xx].Probability;
+	      Total->Fine.MassWasting += FineMap[yy][xx].MassWasting;
+	      Total->Fine.MassDeposition += FineMap[yy][xx].MassDeposition;
+	      Total->Fine.SedimentToChannel += FineMap[yy][xx].SedimentToChannel;
+	    }
+	  }
 	}
       }
     }
@@ -240,7 +257,14 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
   Total->RunoffToChannel /= NPixels;
   if (Options->Sediment) {
     Total->Sediment.Erosion /= NPixels; 
-    Total->Sediment.TotalSediment /= NPixels; 
+    Total->Sediment.SedFluxOut /= NPixels; 
     Total->SedimentOverlandInflow /= NPixels; 
+    // FineMap quantities must be averaged over number of FineMap cells
+    // rather than over the number of coarse grid cells
+    Total->Fine.SatThickness /= (NPixels*Map->DMASS*Map->DMASS); 
+    Total->Fine.DeltaDepth /= (NPixels*Map->DMASS*Map->DMASS); 
+    Total->Fine.Probability /= (NPixels*Map->DMASS*Map->DMASS); 
+    // (We don't divide SedimentToChannel, MassWasting, etc. by NPixels,
+    // since they are totals and not averages)
   }
 }

@@ -33,20 +33,26 @@ void ExecDump(MAPSIZE * Map, DATE * Current, DATE * Start, OPTIONSTRUCT * Option
 	      DUMPSTRUCT * Dump, TOPOPIX ** TopoMap, EVAPPIX ** EvapMap,
 	      PRECIPPIX ** PrecipMap, RADCLASSPIX ** RadMap, SNOWPIX ** SnowMap,
 	      MET_MAP_PIX ** MetMap, VEGPIX ** VegMap, LAYER * Veg, SOILPIX ** SoilMap,
-	      SEDPIX ** SedMap, CHANNEL * ChannelData, LAYER * Soil, AGGREGATED * Total,
-	      UNITHYDRINFO * HydrographInfo, float *Hydrograph)
+	      SEDPIX ** SedMap, CHANNEL * ChannelData, FINEPIX ** FineMap,
+	      LAYER * Soil, AGGREGATED * Total, UNITHYDRINFO * HydrographInfo,
+	      float *Hydrograph)
 {
   int i;			/* counter */
   int j;			/* counter */
   int x;
   int y;
+  int ii;			/* FineMap counter */
+  int jj;			/* FineMap counter */
+  int xx;			/* FineMap x-coordinate */
+  int yy;			/* FineMap y-coordinate */
+  FINEPIX PixAggFineMap;	/* FineMap quanitities aggregated over a pixel */
 
   /* dump the aggregated basin values for this timestep */
   DumpPix(Current, IsEqualTime(Current, Start), &(Dump->Aggregate),
 	  &(Dump->AggregateSediment), &(Total->Evap),
 	  &(Total->Precip), &(Total->RadClass), &(Total->Snow), &(Total->Soil),
-	  &(Total->Sediment), Total->SedimentOverlandInflow, Soil->MaxLayers,
-	  Veg->MaxLayers, Options);
+	  &(Total->Sediment), Total->SedimentOverlandInflow, &(Total->Fine),
+	  Soil->MaxLayers, Veg->MaxLayers, Options);
   fprintf(Dump->Aggregate.FilePtr, " %lu", Total->Saturated);
   fprintf(Dump->Aggregate.FilePtr, "\n");
 
@@ -79,11 +85,39 @@ void ExecDump(MAPSIZE * Map, DATE * Current, DATE * Start, OPTIONSTRUCT * Option
     for (i = 0; i < Dump->NPix; i++) {
       y = Dump->Pix[i].Loc.N;
       x = Dump->Pix[i].Loc.E;
+      // If we include any FineMap quantities, we need to aggregate them over the
+      // pixel, which is on the coarse grid
+      if (Options->Sediment) {
+        // Initialize PixAggFineMap
+        PixAggFineMap.SatThickness = 0.0;
+        PixAggFineMap.DeltaDepth = 0.0;
+        PixAggFineMap.Probability = 0.0;
+        PixAggFineMap.MassWasting = 0.0;
+        PixAggFineMap.MassDeposition = 0.0;
+        PixAggFineMap.SedimentToChannel = 0.0;
+        // Sum up PixAggFineMap quantities
+        for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+          for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+            yy = (int) y*Map->DY/Map->DMASS + ii;
+            xx = (int) x*Map->DX/Map->DMASS + jj;
+            PixAggFineMap.SatThickness += FineMap[yy][xx].SatThickness;
+            PixAggFineMap.DeltaDepth += FineMap[yy][xx].DeltaDepth;
+            PixAggFineMap.Probability += FineMap[yy][xx].Probability;
+            PixAggFineMap.MassWasting += FineMap[yy][xx].MassWasting;
+            PixAggFineMap.MassDeposition += FineMap[yy][xx].MassDeposition;
+            PixAggFineMap.SedimentToChannel += FineMap[yy][xx].SedimentToChannel;
+          }
+        }
+        // Normalize PixAggFineMap quantities by # FineMap cells in a pixel
+        PixAggFineMap.SatThickness /= Map->DMASS*Map->DMASS;
+        PixAggFineMap.DeltaDepth /= Map->DMASS*Map->DMASS;
+        PixAggFineMap.Probability /= Map->DMASS*Map->DMASS;
+      }
       DumpPix(Current, IsEqualTime(Current, Start), &(Dump->Pix[i].OutFile),
               &(Dump->Pix[i].OutFileSediment), &(EvapMap[y][x]), &(PrecipMap[y][x]),
               &(RadMap[y][x]), &(SnowMap[y][x]), &(SoilMap[y][x]),&(SedMap[y][x]), 
               ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[0],
-              Soil->NLayers[(SoilMap[y][x].Soil - 1)],
+              &PixAggFineMap, Soil->NLayers[(SoilMap[y][x].Soil - 1)],
               Veg->NLayers[(VegMap[y][x].Veg - 1)], Options);
       fprintf(Dump->Pix[i].OutFile.FilePtr, "\n");
     }
@@ -98,8 +132,8 @@ void ExecDump(MAPSIZE * Map, DATE * Current, DATE * Start, OPTIONSTRUCT * Option
 	  PrintDate(Current, stdout);
 	  fprintf(stdout, "\n");
 	  DumpMap(Map, Current, &(Dump->DMap[i]), TopoMap, EvapMap,
-		  PrecipMap, RadMap, SnowMap, SoilMap, SedMap, Soil,
-		  VegMap, Veg, Options);
+		  PrecipMap, RadMap, SnowMap, SoilMap, SedMap, FineMap,
+		  Soil, VegMap, Veg, Options);
 	}
       }
     }
@@ -111,8 +145,8 @@ void ExecDump(MAPSIZE * Map, DATE * Current, DATE * Start, OPTIONSTRUCT * Option
 *****************************************************************************/
 void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 	     EVAPPIX ** EvapMap, PRECIPPIX ** PrecipMap, RADCLASSPIX ** RadMap,
-	     SNOWPIX ** SnowMap, SOILPIX ** SoilMap, SEDPIX ** SedMap, LAYER * Soil,
-	     VEGPIX ** VegMap, LAYER * Veg, OPTIONSTRUCT *Options)
+	     SNOWPIX ** SnowMap, SOILPIX ** SoilMap, SEDPIX ** SedMap, FINEPIX **FineMap,
+	     LAYER * Soil, VEGPIX ** VegMap, LAYER * Veg, OPTIONSTRUCT *Options)
 {
   const char *Routine = "DumpMap";
   char DataLabel[MAXSTRING + 1];
@@ -124,6 +158,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
   int i;			/* counter */
   int x;			/* counter */
   int y;			/* counter */
+  int ii, jj, yy, xx; 		/* counters for FineMap variables */
   void *Array;
 
   sprintf(DataLabel, "%02d.%02d.%04d.%02d.%02d.%02d", Current->Month,
@@ -1032,6 +1067,264 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
       ReportError((char *) Routine, 26);
     break;
 
+  case 801:
+    if (!Options->Sediment) {
+      ReportError((char *) Routine, 26);
+    }
+    if (DMap->Resolution == MAP_OUTPUT) {
+      for (y = 0; y < Map->NY; y++) {
+	for (x = 0; x < Map->NX; x++) {
+	  ((float *) Array)[y * Map->NX+ x] = 0.0;
+	  // FineMap quantities must be aggregated to coarse grid
+	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+	      yy = (int) y*Map->DY/Map->DMASS + ii;
+	      xx = (int) x*Map->DX/Map->DMASS + jj;
+	      ((float *) Array)[y * Map->NX+ x] += FineMap[yy][xx].Dem;
+	    }
+	  }
+	}
+      }
+      Write2DMatrix(DMap->FileName, Array, DMap->NumberType, Map->NY, Map->NX,
+		    DMap, Index);
+    }
+    else if (DMap->Resolution == IMAGE_OUTPUT) {
+      for (y = 0; y < Map->NY; y++) {
+	for (x = 0; x < Map->NX; x++) {
+	  ((float *) Array)[y * Map->NX+ x] = 0.0;
+	  // FineMap quantities must be aggregated to coarse grid
+	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+	      yy = (int) y*Map->DY/Map->DMASS + ii;
+	      xx = (int) x*Map->DX/Map->DMASS + jj;
+	      ((unsigned char *) Array)[y * Map->NX+ x] +=
+		(unsigned char) ((FineMap[yy][xx].Dem - Offset) / Range * MAXUCHAR);
+	    }
+	  }
+	}
+      }
+      Write2DMatrix(DMap->FileName, Array, NC_BYTE, Map->NY, Map->NX, DMap,
+		    Index);
+    }
+    else
+      ReportError((char *) Routine, 26);
+    break;
+
+  case 802:
+    if (!Options->Sediment) {
+      ReportError((char *) Routine, 26);
+    }
+    if (DMap->Resolution == MAP_OUTPUT) {
+      for (y = 0; y < Map->NY; y++) {
+	for (x = 0; x < Map->NX; x++) {
+	  ((float *) Array)[y * Map->NX+ x] = 0.0;
+	  // FineMap quantities must be aggregated to coarse grid
+	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+	      yy = (int) y*Map->DY/Map->DMASS + ii;
+	      xx = (int) x*Map->DX/Map->DMASS + jj;
+	      ((float *) Array)[y * Map->NX+ x] += FineMap[yy][xx].Slope;
+	    }
+	  }
+	}
+      }
+      Write2DMatrix(DMap->FileName, Array, DMap->NumberType, Map->NY, Map->NX,
+		    DMap, Index);
+    }
+    else if (DMap->Resolution == IMAGE_OUTPUT) {
+      for (y = 0; y < Map->NY; y++) {
+	for (x = 0; x < Map->NX; x++) {
+	  ((float *) Array)[y * Map->NX+ x] = 0.0;
+	  // FineMap quantities must be aggregated to coarse grid
+	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+	      yy = (int) y*Map->DY/Map->DMASS + ii;
+	      xx = (int) x*Map->DX/Map->DMASS + jj;
+	      ((unsigned char *) Array)[y * Map->NX+ x] +=
+		(unsigned char) ((FineMap[yy][xx].Slope - Offset) / Range * MAXUCHAR);
+	    }
+	  }
+	}
+      }
+      Write2DMatrix(DMap->FileName, Array, NC_BYTE, Map->NY, Map->NX, DMap,
+		    Index);
+    }
+    else
+      ReportError((char *) Routine, 26);
+    break;
+
+  case 803:
+    if (!Options->Sediment) {
+      ReportError((char *) Routine, 26);
+    }
+    if (DMap->Resolution == MAP_OUTPUT) {
+      for (y = 0; y < Map->NY; y++) {
+	for (x = 0; x < Map->NX; x++) {
+	  ((float *) Array)[y * Map->NX+ x] = 0.0;
+	  // FineMap quantities must be aggregated to coarse grid
+	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+	      yy = (int) y*Map->DY/Map->DMASS + ii;
+	      xx = (int) x*Map->DX/Map->DMASS + jj;
+	      ((float *) Array)[y * Map->NX+ x] += FineMap[yy][xx].SatThickness;
+	    }
+	  }
+	}
+      }
+      Write2DMatrix(DMap->FileName, Array, DMap->NumberType, Map->NY, Map->NX,
+		    DMap, Index);
+    }
+    else if (DMap->Resolution == IMAGE_OUTPUT) {
+      for (y = 0; y < Map->NY; y++) {
+	for (x = 0; x < Map->NX; x++) {
+	  ((float *) Array)[y * Map->NX+ x] = 0.0;
+	  // FineMap quantities must be aggregated to coarse grid
+	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+	      yy = (int) y*Map->DY/Map->DMASS + ii;
+	      xx = (int) x*Map->DX/Map->DMASS + jj;
+	      ((unsigned char *) Array)[y * Map->NX+ x] +=
+		(unsigned char) ((FineMap[yy][xx].SatThickness - Offset) / Range * MAXUCHAR);
+	    }
+	  }
+	}
+      }
+      Write2DMatrix(DMap->FileName, Array, NC_BYTE, Map->NY, Map->NX, DMap,
+		    Index);
+    }
+    else
+      ReportError((char *) Routine, 26);
+    break;
+
+  case 804:
+    if (!Options->Sediment) {
+      ReportError((char *) Routine, 26);
+    }
+    if (DMap->Resolution == MAP_OUTPUT) {
+      for (y = 0; y < Map->NY; y++) {
+	for (x = 0; x < Map->NX; x++) {
+	  ((float *) Array)[y * Map->NX+ x] = 0.0;
+	  // FineMap quantities must be aggregated to coarse grid
+	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+	      yy = (int) y*Map->DY/Map->DMASS + ii;
+	      xx = (int) x*Map->DX/Map->DMASS + jj;
+	      ((float *) Array)[y * Map->NX+ x] += FineMap[yy][xx].DeltaDepth;
+	    }
+	  }
+	}
+      }
+      Write2DMatrix(DMap->FileName, Array, DMap->NumberType, Map->NY, Map->NX,
+		    DMap, Index);
+    }
+    else if (DMap->Resolution == IMAGE_OUTPUT) {
+      for (y = 0; y < Map->NY; y++) {
+	for (x = 0; x < Map->NX; x++) {
+	  ((float *) Array)[y * Map->NX+ x] = 0.0;
+	  // FineMap quantities must be aggregated to coarse grid
+	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+	      yy = (int) y*Map->DY/Map->DMASS + ii;
+	      xx = (int) x*Map->DX/Map->DMASS + jj;
+	      ((unsigned char *) Array)[y * Map->NX+ x] +=
+		(unsigned char) ((FineMap[yy][xx].DeltaDepth - Offset) / Range * MAXUCHAR);
+	    }
+	  }
+	}
+      }
+      Write2DMatrix(DMap->FileName, Array, NC_BYTE, Map->NY, Map->NX, DMap,
+		    Index);
+    }
+    else
+      ReportError((char *) Routine, 26);
+    break;
+
+  case 805:
+    if (!Options->Sediment) {
+      ReportError((char *) Routine, 26);
+    }
+    if (DMap->Resolution == MAP_OUTPUT) {
+      for (y = 0; y < Map->NY; y++) {
+	for (x = 0; x < Map->NX; x++) {
+	  ((float *) Array)[y * Map->NX+ x] = 0.0;
+	  // FineMap quantities must be aggregated to coarse grid
+	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+	      yy = (int) y*Map->DY/Map->DMASS + ii;
+	      xx = (int) x*Map->DX/Map->DMASS + jj;
+	      ((float *) Array)[y * Map->NX+ x] += FineMap[yy][xx].Probability;
+	    }
+	  }
+	}
+      }
+      Write2DMatrix(DMap->FileName, Array, DMap->NumberType, Map->NY, Map->NX,
+		    DMap, Index);
+    }
+    else if (DMap->Resolution == IMAGE_OUTPUT) {
+      for (y = 0; y < Map->NY; y++) {
+	for (x = 0; x < Map->NX; x++) {
+	  ((float *) Array)[y * Map->NX+ x] = 0.0;
+	  // FineMap quantities must be aggregated to coarse grid
+	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+	      yy = (int) y*Map->DY/Map->DMASS + ii;
+	      xx = (int) x*Map->DX/Map->DMASS + jj;
+	      ((unsigned char *) Array)[y * Map->NX+ x] +=
+		(unsigned char) ((FineMap[yy][xx].Probability - Offset) / Range * MAXUCHAR);
+	    }
+	  }
+	}
+      }
+      Write2DMatrix(DMap->FileName, Array, NC_BYTE, Map->NY, Map->NX, DMap,
+		    Index);
+    }
+    else
+      ReportError((char *) Routine, 26);
+    break;
+
+  case 806:
+    if (!Options->Sediment) {
+      ReportError((char *) Routine, 26);
+    }
+    if (DMap->Resolution == MAP_OUTPUT) {
+      for (y = 0; y < Map->NY; y++) {
+	for (x = 0; x < Map->NX; x++) {
+	  ((float *) Array)[y * Map->NX+ x] = 0.0;
+	  // FineMap quantities must be aggregated to coarse grid
+	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+	      yy = (int) y*Map->DY/Map->DMASS + ii;
+	      xx = (int) x*Map->DX/Map->DMASS + jj;
+	      ((float *) Array)[y * Map->NX+ x] += FineMap[yy][xx].SedimentToChannel;
+	    }
+	  }
+	}
+      }
+      Write2DMatrix(DMap->FileName, Array, DMap->NumberType, Map->NY, Map->NX,
+		    DMap, Index);
+    }
+    else if (DMap->Resolution == IMAGE_OUTPUT) {
+      for (y = 0; y < Map->NY; y++) {
+	for (x = 0; x < Map->NX; x++) {
+	  ((float *) Array)[y * Map->NX+ x] = 0.0;
+	  // FineMap quantities must be aggregated to coarse grid
+	  for (ii=0; ii< Map->DY/Map->DMASS; ii++) {
+	    for (jj=0; jj< Map->DX/Map->DMASS; jj++) {
+	      yy = (int) y*Map->DY/Map->DMASS + ii;
+	      xx = (int) x*Map->DX/Map->DMASS + jj;
+	      ((unsigned char *) Array)[y * Map->NX+ x] +=
+		(unsigned char) ((FineMap[yy][xx].SedimentToChannel - Offset) / Range * MAXUCHAR);
+	    }
+	  }
+	}
+      }
+      Write2DMatrix(DMap->FileName, Array, NC_BYTE, Map->NY, Map->NX, DMap,
+		    Index);
+    }
+    else
+      ReportError((char *) Routine, 26);
+    break;
+
   case 901:
     if (!Options->Sediment) {
       ReportError((char *) Routine, 26);
@@ -1039,7 +1332,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
     if (DMap->Resolution == MAP_OUTPUT) {
       for (y = 0; y < Map->NY; y++)
 	for (x = 0; x < Map->NX; x++)
-	  ((float *) Array)[y * Map->NX + x] = SedMap[y][x].TotalSediment;
+	  ((float *) Array)[y * Map->NX + x] = SedMap[y][x].SedFluxOut;
       Write2DMatrix(DMap->FileName, Array, DMap->NumberType, Map->NY, Map->NX,
 		    DMap, Index);
     }
@@ -1047,7 +1340,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
       for (y = 0; y < Map->NY; y++)
 	for (x = 0; x < Map->NX; x++)
 	  ((unsigned char *) Array)[y * Map->NX + x] =
-	    (unsigned char) ((SedMap[y][x].TotalSediment - Offset) / Range * MAXUCHAR);
+	    (unsigned char) ((SedMap[y][x].SedFluxOut - Offset) / Range * MAXUCHAR);
       Write2DMatrix(DMap->FileName, Array, NC_BYTE, Map->NY, Map->NX, DMap,
 		    Index);
     }
@@ -1091,8 +1384,8 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 *****************************************************************************/
 void DumpPix(DATE * Current, int first, FILES * OutFile, FILES * OutFileSediment,
              EVAPPIX * Evap, PRECIPPIX * Precip, RADCLASSPIX * Rad, SNOWPIX * Snow,
-	     SOILPIX * Soil, SEDPIX * SedMap, float SedimentOverlandInflow, int NSoil,
-             int NVeg, OPTIONSTRUCT *Options)
+	     SOILPIX * Soil, SEDPIX * SedMap, float SedimentOverlandInflow,
+	     FINEPIX * FineMap, int NSoil, int NVeg, OPTIONSTRUCT *Options)
 {
   int i;			/* counter */
   int j;			/* counter */
@@ -1138,7 +1431,8 @@ void DumpPix(DATE * Current, int first, FILES * OutFile, FILES * OutFileSediment
     // Sediment Values File
     if (Options->Sediment) {
       fprintf(OutFileSediment->FilePtr, "Date ");
-      fprintf(OutFileSediment->FilePtr, "Erosion TotalSediment OverlandInflow\n");
+      fprintf(OutFileSediment->FilePtr, "Erosion SedFluxOut OverlandInflow ");
+      fprintf(OutFileSediment->FilePtr, "SatThickness DeltaDepth Probability TotalMassWasting TotalMassDeposition TotalSedimentToChannel\n");
     }
 
   }
@@ -1197,8 +1491,10 @@ void DumpPix(DATE * Current, int first, FILES * OutFile, FILES * OutFileSediment
     PrintDate(Current, OutFileSediment->FilePtr);
 
     // Sediment
-    fprintf(OutFileSediment->FilePtr, " %g %g %g\n", SedMap->Erosion, SedMap->TotalSediment,
-      SedimentOverlandInflow);
+    fprintf(OutFileSediment->FilePtr, " %g %g %g %g %g %g %g %g %g\n", SedMap->Erosion,
+      SedMap->SedFluxOut, SedimentOverlandInflow, FineMap->SatThickness,
+      FineMap->DeltaDepth, FineMap->Probability, FineMap->MassWasting,
+      FineMap->MassDeposition, FineMap->SedimentToChannel);
     
   }
 

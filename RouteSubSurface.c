@@ -98,6 +98,7 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
   const char *Routine = "RouteSubSurface";
   int x;			/* counter */
   int y;			/* counter */
+  int i,j;			/* counters for FineMap initialization */
   float BankHeight;
   float *Adjust;
   float fract_used;
@@ -267,6 +268,16 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
   }
 
   /**********************************************************************/
+  // Initialize the mass wasting variables for this time step
+  for (i = 0; i < Map->NYfine; i++) {
+    for (j  = 0; j < Map->NXfine; j++) {
+      (*FineMap)[i][j].Probability = 0.0;
+      (*FineMap)[i][j].MassDeposition = 0.0;
+      (*FineMap)[i][j].MassWasting = 0.0;
+      (*FineMap)[i][j].SedimentToChannel = 0.0;
+    }
+  }
+
   /* Call the mass wasting algorithm; currently not very intelligent */
   
   if(Options->Sediment && Time->Current.Hour == 00) {
@@ -274,26 +285,26 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
     count =0;
     totalcount = 0;
     for (y = 0; y < Map->NY; y++) {
-		for (x = 0; x < Map->NX; x++) {
-			if (INBASIN(TopoMap[y][x].Mask)) {
-				mgrid = (SoilMap[y][x].Depth - SoilMap[y][x].TableDepth)/SoilMap[y][x].Depth;
-				if(mgrid > MTHRESH) count += 1;
-				totalcount +=1;
-			}
-		}
+      for (x = 0; x < Map->NX; x++) {
+	if (INBASIN(TopoMap[y][x].Mask)) {
+	  mgrid = (SoilMap[y][x].Depth - SoilMap[y][x].TableDepth)/SoilMap[y][x].Depth;
+	  if(mgrid > MTHRESH) count += 1;
+	  totalcount +=1;
+	}
+      }
     }
     
     /* If Greater than SATPERCENT of the pixels have a water table that is at least 85% of 
        soil depth, call the mass wasting model. */
-
+    
     if((float)count/((float)totalcount) > SATPERCENT) 
       {
 	MainMWM(SedMap, FineMap, VType, SedType, ChannelData, DumpPath, SoilMap, Time,
-	    Map, TopoMap, SType, VegMap, MaxStreamID, SnowMap);
+		Map, TopoMap, SType, VegMap, MaxStreamID, SnowMap);
       }
   }
- 
-    /**********************************************************************/
+  
+  /**********************************************************************/
     /* End added code. */
 
 }

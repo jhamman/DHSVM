@@ -552,7 +552,7 @@ typedef struct {
 } MET_MAP_PIX;
 
 typedef struct {
-  float TotalSediment;          /* Time step total sediment flux from the 
+  float SedFluxOut;             /* Time step total sediment flux from the 
 				   grid cell (m3/m3). */
   float OldSedIn;               /* Sediment inflow to grid cell from previous time 
 				   step (m3/m3). */
@@ -587,7 +587,10 @@ typedef struct {
   float sediment;                /* Sediment thickness in m */
   float SatThickness;            /* Water table thickness (m) */
   float DeltaDepth;
-  float probability;             /* Pixel failure probability. */
+  float Probability;             /* Pixel failure probability. */
+  float MassWasting;             /* Sediment (m3) lost due to mass wasting */
+  float MassDeposition;          /* Sediment (m3) deposited in grid cell from mass wasting elsewhere */
+  float SedimentToChannel;       /* Sediment (m3) deposited in channel from mass wasting elsewhere */
   float TableDepth;              /* Water table depth (m bgs) */
   float TopoIndex;               /* Topographic Index used for soil
 				    moisture redistribution from coarse 
@@ -602,6 +605,7 @@ typedef struct {
   SNOWPIX Snow;
   SOILPIX Soil;
   SEDPIX Sediment;
+  FINEPIX Fine;
   float SedimentOverlandInflow;
   float SoilWater;
   float CanopyWater;

@@ -198,7 +198,7 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
 
   
   /* RainFall impact */
- /* 3600 is conversion factor (number of seconds per hour) */
+  /* 3600 is conversion factor (number of seconds per hour) */
   if (LocalPrecip->RainFall > 0.) {
     RainfallIntensity = LocalPrecip->RainFall * (1./MMTOM) * (3600./Dt);
     

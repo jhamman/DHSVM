@@ -24,7 +24,8 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
 	       LAYER *Soil, LAYER *Veg, VEGPIX **VegMap, EVAPPIX **Evap,
 	       PRECIPPIX **Precip, RADCLASSPIX **RadMap, SNOWPIX **Snow,
 	       SOILPIX **SoilMap, AGGREGATED *Total, VEGTABLE *VType,
-	       ROADSTRUCT **Network, SEDPIX **SedMap, CHANNEL *ChannelData);
+	       ROADSTRUCT **Network, SEDPIX **SedMap, FINEPIX **FineMap,
+	       CHANNEL *ChannelData);
 
 void Alloc_Chan_Sed_Mem(float ** DummyVar);
 
@@ -61,11 +62,11 @@ void CheckOut(int CanopyRadAttOption, LAYER Veg, LAYER Soil,
 
 unsigned char dequal(double a, double b);
 
-void draw(DATE *Day, int first, int DayStep, int NX, int NY, int NGraphics,
+void draw(DATE *Day, int first, int DayStep, MAPSIZE *Map, int NGraphics,
 	  int *which_graphics,
 	  VEGTABLE *VType, SOILTABLE *SType,
-	  SNOWPIX **SnowMap, SOILPIX **SoilMap, SEDPIX **Sedmap, VEGPIX **VegMap,
-	  TOPOPIX **TopoMap, PRECIPPIX **PrecipMap, float **PrismMap,
+	  SNOWPIX **SnowMap, SOILPIX **SoilMap, SEDPIX **SedMap, FINEPIX **FineMap,
+	  VEGPIX **VegMap, TOPOPIX **TopoMap, PRECIPPIX **PrecipMap, float **PrismMap,
 	  float **SkyViewMap, unsigned char ***ShadowMap, EVAPPIX **EvapMap,
 	  RADCLASSPIX **RadMap, MET_MAP_PIX **MetMap, OPTIONSTRUCT *Options);
 
@@ -73,20 +74,20 @@ void DistributeSedimentDiams(float SedDiams[NSEDSIZES]);
 
 void DumpMap(MAPSIZE *Map, DATE *Current, MAPDUMP *DMap, TOPOPIX **TopoMap,
 	     EVAPPIX **EvapMap, PRECIPPIX **PrecipMap, RADCLASSPIX **RadMap,
-	     SNOWPIX **Snowap, SOILPIX **SoilMap, SEDPIX **SedMap, LAYER *Soil,
-	     VEGPIX **VegMap, LAYER *Veg, OPTIONSTRUCT *Options);
+	     SNOWPIX **Snowap, SOILPIX **SoilMap, SEDPIX **SedMap, FINEPIX **FineMap,
+	     LAYER *Soil, VEGPIX **VegMap, LAYER *Veg, OPTIONSTRUCT *Options);
 
 void DumpPix(DATE *Current, int first, FILES *OutFile, FILES *OutFileSediment,
 	     EVAPPIX *Evap, PRECIPPIX *Precip, RADCLASSPIX *Rad, SNOWPIX *Snow,
 	     SOILPIX *Soil, SEDPIX *SedMap, float SedimentOverlandInflow,
-	     int NSoil, int NVeg, OPTIONSTRUCT *Options); 
+	     FINEPIX *FineMap, int NSoil, int NVeg, OPTIONSTRUCT *Options); 
 
 void ExecDump(MAPSIZE *Map, DATE *Current, DATE *Start,
 	      OPTIONSTRUCT *Options, DUMPSTRUCT *Dump, TOPOPIX **TopoMap,
 	      EVAPPIX **EvapMap, PRECIPPIX **PrecipMap,
 	      RADCLASSPIX **RadMap, SNOWPIX **SnowMap, MET_MAP_PIX **MetMap,
 	      VEGPIX **VegMap, LAYER *Veg, SOILPIX **SoilMap, SEDPIX ** SedMap,
-	      CHANNEL *ChannelData, LAYER *Soil, AGGREGATED *Total,
+	      CHANNEL *ChannelData, FINEPIX **FineMap, LAYER *Soil, AGGREGATED *Total,
 	      UNITHYDRINFO *HydrographInfo, float *Hydrograph);
 
 unsigned char fequal(float a, float b);

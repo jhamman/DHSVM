@@ -50,10 +50,10 @@ int yneighbor[NDIRS] = {
 #endif
 };
 
-float temp_aspect[NDIRS] = {
-#if  NDIRS == 4
+float temp_aspect[NDIRSfine] = {
+#if  NDIRSfine == 4
   180., 270., 0., 90.
-#elif NDIRS == 8
+#elif NDIRSfine == 8
  135., 180., 225., 270., 315., 0., 45., 90.
 #endif
 };
@@ -418,8 +418,8 @@ float ElevationSlope(MAPSIZE *Map, FINEPIX ***FineMap, int y, int x, int *nexty,
   /* fill neighbor array */
   
   for (n = 0; n < NDIRSfine; n++) {
-    int xn = x + xneighbor[n];
-    int yn = y + yneighbor[n];
+    int xn = x + xneighborfine[n];
+    int yn = y + yneighborfine[n];
           
     if (valid_cell_fine(Map, xn, yn)) 
       neighbor_elev[n] = (*FineMap)[yn][xn].bedrock + (*FineMap)[yn][xn].sediment;
@@ -484,14 +484,14 @@ float ElevationSlope(MAPSIZE *Map, FINEPIX ***FineMap, int y, int x, int *nexty,
   for (n = 0; n < NDIRSfine; n++){
     if (temp_slope[n] >= 0.) {
       if(temp_slope[n] > Slope) {
-	if((y + yneighbor[n]) == prevy && (x + xneighbor[n]) == prevx) {
+	if((y + yneighborfine[n]) == prevy && (x + xneighborfine[n]) == prevx) {
 	 /*  fprintf(stderr, "%d %d %d Not allowed to back track!\n", n, y, x); */
 	}
 	else {
 	  Slope = temp_slope[n];
 	  *Aspect = temp_aspect[n] * PI / 180.0;
-	  *nexty = y + yneighbor[n];
-	  *nextx = x + xneighbor[n];
+	  *nexty = y + yneighborfine[n];
+	  *nextx = x + xneighborfine[n];
 	}
       }
 
@@ -500,11 +500,6 @@ float ElevationSlope(MAPSIZE *Map, FINEPIX ***FineMap, int y, int x, int *nexty,
   
   if(Slope == -999.) {
     fprintf(stderr, "Sink encountered in cell y= %d x= %d, all routes from here go up!\n", y,x);
-    fprintf(stderr, "Celev= %4.1f Nelev= %4.1f %4.1f %4.1f %4.1f\n",
-	    celev, neighbor_elev[0], neighbor_elev[1], neighbor_elev[2], neighbor_elev[3]);
-    fprintf(stderr, "dem=   %4.1f        %4.1f %4.1f %4.1f %4.1f\n",(*FineMap)[y][x].Dem,(*FineMap)[y + yneighbor[0]][x + xneighbor[0]].Dem,(*FineMap)[y + yneighbor[1]][x + xneighbor[1]].Dem,(*FineMap)[y + yneighbor[2]][x + xneighbor[2]].Dem,(*FineMap)[y + yneighbor[3]][x + xneighbor[3]].Dem);    
-    fprintf(stderr, "temp_slope=         %3.2f %3.2f %3.2f %3.2f\n\n", 
-	    temp_slope[0], temp_slope[1], temp_slope[2], temp_slope[3]);
   }
 
   return Slope;

@@ -163,7 +163,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	x = Map->OrderedCells[k].x;
 	SoilMap[y][x].Runoff = 0.;
 	if(Options->Sediment){
-	  SedMap[y][x].TotalSediment = 0.;
+	  SedMap[y][x].SedFluxOut = 0.;
 	  SedMap[y][x].Erosion = 0.;
 	  SedOut=0.; /*COD*/
 	}
@@ -322,7 +322,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	      
 	      SedMap[y][x].OldSedOut = SedOut;
 	      SedMap[y][x].OldSedIn = SedIn[y][x];
-	      SedMap[y][x].TotalSediment += SedOut;
+	      SedMap[y][x].SedFluxOut += SedOut;
 	      SedMap[y][x].Erosion += (SedIn[y][x]*Runon[y][x] - SedOut*outflow)*
 		VariableDT/(Map->DX*Map->DY);
 	      
