@@ -146,7 +146,7 @@ void UnsaturatedFlow(int Dt, float DX, float DY, float Infiltration,
       Moist[NSoilLayers] += RoadbedInfiltration / 
 	(DeepLayerDepth * Adjust[NSoilLayers]);
     }
-    else {
+    else if (CutBankZone >= 0){
       Moist[CutBankZone] += RoadbedInfiltration / 
 	(RootDepth[CutBankZone] * Adjust[CutBankZone]);
     }

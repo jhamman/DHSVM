@@ -188,7 +188,10 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
 	  }
 /* 	  fract_used /= 255.0f; */
 /* 	  fract_used /= (float) TopoMap[y][x].TotalDir; */
-	  fract_used /= (float) SubTotalDir[y][x];
+	  if (SubTotalDir[y][x] > 0)
+	    fract_used /= (float) SubTotalDir[y][x];
+	  else
+	    fract_used = 0.;
 
 	  /* only bother calculating subsurface flow if water table is above bedrock */
 	  if (SoilMap[y][x].TableDepth < SoilMap[y][x].Depth) {
@@ -230,7 +233,12 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
 	      channel_grid_has_channel(ChannelData->road_map, x, y)) {
 /* 	    fract_used = ((float) Network[y][x].fraction / 255.0f); */
 /* 	    fract_used = ((float) Network[y][x].fraction / (float)TopoMap[y][x].TotalDir); */
-	    fract_used = ((float) Network[y][x].fraction / (float)SubTotalDir[y][x]);
+	    if (SubTotalDir[y][x] > 0)
+	      fract_used = ((float) Network[y][x].fraction /
+			    (float)SubTotalDir[y][x]);
+	    else
+	      fract_used = 0.;
+
 	    Transmissivity =
 	      CalcTransmissivity(BankHeight, SoilMap[y][x].TableDepth,
 				 SType[SoilMap[y][x].Soil - 1].KsLat,
@@ -267,7 +275,10 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
 
 /* 	  OutFlow /= 255.0f; */
 /* 	  OutFlow /= (float) TopoMap[y][x].TotalDir; */
-	  OutFlow /= (float) SubTotalDir[y][x];
+	  if (SubTotalDir[y][x] > 0)
+	    OutFlow /= (float) SubTotalDir[y][x];
+	  else
+	    OutFlow = 0.;
 
 	  for (k = 0; k < NDIRS; k++) {
 	    int nx = xneighbor[k] + x;
