@@ -6,7 +6,7 @@
 
 OBJS = AdjustStorage.o Aggregate.o AggregateRadiation.o	CalcAerodynamic.o \
 CalcAvailableWater.o CalcBagnold.o CalcDistance.o CalcEffectiveKh.o \
-CalcKhDry.o CalcSafetyFactor.o CalcSatDensity.o CalcSnowAlbedo.o \
+CalcKhDry.o CalcKinViscosity.o CalcSafetyFactor.o CalcSatDensity.o CalcSnowAlbedo.o \
 CalcSolar.o CalcTopoIndex.o \
 CalcTotalWater.o CalcTransmissivity.o CalcWeights.o Calendar.o	     \
 CanopyResistance.o ChannelState.o CheckOut.o CutBankGeometry.o	     \
@@ -94,6 +94,9 @@ CalcEffectiveKh.o: CalcEffectiveKh.c settings.h constants.h \
  channel.h channel_grid.h
 CalcKhDry.o: CalcKhDry.c settings.h functions.h data.h Calendar.h \
  DHSVMChannel.h getinit.h channel.h channel_grid.h
+CalcKinViscosity.o: CalcKinViscosity.c functions.h data.h channel.h \
+ DHSVMChannel.h settings.h Calendar.h getinit.h channel.h \
+ channel_grid.h
 CalcSafetyFactor.o: CalcSafetyFactor.c DHSVMerror.h settings.h \
  constants.h data.h Calendar.h
 CalcSatDensity.o: CalcSatDensity.c settings.h functions.h constants.h
