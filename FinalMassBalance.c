@@ -126,32 +126,11 @@ OPTIONSTRUCT * Options)
     SedOutput = Mass->CumSedimentOutflow - 
       (Mass->CumCulvertSedToChannel + Mass->CumCulvertReturnSedFlow) ; 
     
-    SedMassError = (Total->ChannelSedimentStorage+Total->ChannelSuspendedSediment - 
+    SedMassError = (Total->ChannelSedimentStorage + 
+		    Total->ChannelSuspendedSediment - 
 		    Mass->StartChannelSedimentStorage) + 
       SedOutput - SedInput;  
     
-   /*  fprintf(stderr, " \nChannel Erosion"); */
-/*     fprintf(stderr, " \nInflow %.2e:\n", SedInput);  */
-/*     fprintf(stderr, " DebrisInflow (kg): %.2e\n", Mass->CumDebrisInflow);  */
-/*     fprintf(stderr, " OverlandInflow (kg): %.0f\n",  */
-/* 	    Mass->CumSedOverlandInflow); */
-    
-/*     fprintf(stderr, " \nOutflow %.0e:\n",  SedOutput); */
-/*     fprintf(stderr, " SedimentOutflow (kg): %.2e\n", Mass->CumSedimentOutflow); */
-    
-/*     fprintf(stderr, " \nStorage:\n"); */
-/*     fprintf(stderr, " Initial Storage (kg): %.2e\n",  */
-/* 	    Mass->StartChannelSedimentStorage);  */
-/*     fprintf(stderr, " End of Run Storage (kg): %.2e\n",  */
-/* 	    Total->ChannelSedimentStorage + Total->ChannelSuspendedSediment);  */
-/*     fprintf(stderr, " \tFinal Bed Storage (kg): %.2e\n",  */
-/* 	    Total->ChannelSedimentStorage);  */
-/*     fprintf(stderr, " \tFinal Suspended Sediment (kg): %.0f\n",  */
-/* 	    Total->ChannelSuspendedSediment);  */
-/*     fprintf(stderr, " \nMass Error (kg): %f\n", SedMassError);  */
-
-
-
     fprintf(stderr, " \nChannel Erosion");
     fprintf(stderr, " \nInflow %.2e:\n", SedInput); 
     fprintf(stderr, " DebrisInflow (kg): %e\n", Mass->CumDebrisInflow); 
@@ -160,26 +139,6 @@ OPTIONSTRUCT * Options)
     fprintf(stderr, " OverroadInflow (kg): %e\n", 
 	     Mass->CumSedOverroadInflow);
     
-/* <<<<<<< FinalMassBalance.c */
-/*     fprintf(stderr, " \nStorage:\n"); */
-/*     fprintf(stderr, " Initial Storage (kg): %.0f\n",  */
-/* 	    Mass->StartChannelSedimentStorage);  */
-/*     fprintf(stderr, " End of Run Storage (kg): %.0f\n",  */
-/* 	    Total->ChannelSedimentStorage + Total->ChannelSuspendedSediment);  */
-/*     fprintf(stderr, " \tFinal Bed Storage (kg): %.0f\n",  */
-/* 	    Total->ChannelSedimentStorage);  */
-/*     fprintf(stderr, " \tFinal Suspended Sediment (kg): %.0f\n",  */
-/* 	    Total->ChannelSuspendedSediment);  */
-/*     fprintf(stderr, " \nMass Error (kg): %f\n", SedMassError);  */
-
-/*     fprintf(stderr, " \nMass Error (percent of input): %f\n", SedMassError/SedInput*100);  */
-
-/*     fprintf(stderr, " \nMass Error from dMdt (kg): %f\n", Total->mass_error);  */
-
-/*     fprintf(stderr, " \nMass Error (percent of input): %f\n", Total->mass_error/SedInput*100);  */
-
-
-/* ======= */
     if (Options->ChannelRouting){
       fprintf(stderr, " \nOutflow %.2e:\n",  SedOutput);
       fprintf(stderr, " SedimentOutflow (kg): %e\n", Mass->CumSedimentOutflow);

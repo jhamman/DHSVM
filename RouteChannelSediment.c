@@ -150,8 +150,6 @@ void RouteChannelSediment(Channel * Head, TIMESTRUCT Time,
   int order;
   int order_count;
  
-  Total->ChannelSedimentStorage =0.0;
-
   /* the next 5 lines are from channel_route_network - used to order streams */
   for (order = 1;; order += 1) {
     order_count = 0;
@@ -164,7 +162,6 @@ void RouteChannelSediment(Channel * Head, TIMESTRUCT Time,
 	
 	if (Current->outlet != NULL)
 	  Current->outlet->sediment.totalmass = 0.;
-
 	
 	/* rate of inflow and outflow change over model time step*/
 	dIdt = (Current->inflow - Current->last_inflow)/(float) Time.Dt;
@@ -187,17 +184,11 @@ void RouteChannelSediment(Channel * Head, TIMESTRUCT Time,
 	DT_sed = (float) Time.Dt/numinc;
 
 
-	/* Initialize sediment.outflow for this segment */
+	/* Initialize sediment.outflow for this segment 
+	 and calculate inflow from upstream reach */
 
 	for(i=0;i<NSEDSIZES;i++) {
 	  Current->sediment.outflow[i]=0.0;
-
-	  /****************************************/
-	  /* Calculate segment sed inflows        */
-	  /****************************************/
-	  
-	  /* inflow from upstream reach */
-
 	  Current->sediment.inflowrate[i] = Current->sediment.inflow[i]/(float) Time.Dt;
 	}
 	
@@ -220,21 +211,20 @@ void RouteChannelSediment(Channel * Head, TIMESTRUCT Time,
 	    dMdt=0;
 
 	    /* lateral inflow for the reach per second kg/s */
-
-	    lateral_sed_inflow_rate = (Current->sediment.debrisinflow[i] + Current->sediment.overlandinflow[i])/(float) Time.Dt;
+	    lateral_sed_inflow_rate = (Current->sediment.debrisinflow[i] + 
+				       Current->sediment.overlandinflow[i] +
+				       Current->sediment.overroadinflow[i])/(float) Time.Dt;
 	    
 	    /****************************************/
 	    /* Find rate of bed change and new mass */
 	    /****************************************/
 
 	    /* Set theta to 1.0 to prevent instabilities during mass wasting inflow  */ 
-	    
 	    if(Current->sediment.debrisinflow[i]>0)
 	      theta=1.0;
-	    /* 	      printf(" %f ", theta); */
-	    /* 	    } */
 	    
- 	    /*  Set theta to 1.0 to prevent instabilities during large differences between current and previous steps */
+ 	    /*  Set theta to 1.0 to prevent instabilities during large differences 
+		between current and previous steps */
 	    if(Current->sediment.inflowrate[i]>0 || Current->sediment.last_inflowrate[i]>0 ){
 	      if(abs(1-Current->sediment.last_inflowrate[i]/Current->sediment.inflowrate[i])>0.75 || abs(1-Current->sediment.inflowrate[i]/Current->sediment.last_inflowrate[i])>0.75 || abs(1-Current->sediment.outflowrate[i]/Current->sediment.inflowrate[i])>0.7  )
 		theta=1.0;
@@ -286,16 +276,16 @@ void RouteChannelSediment(Channel * Head, TIMESTRUCT Time,
 	      Current->sediment.outflowrate[i]=TotalCapacity;
 	    }
 
-	    Total->mass_error+=(-(lateral_sed_inflow_rate+Current->sediment.inflowrate[i])+Current->sediment.outflowrate[i]+dMdt)*DT_sed;
+	    Total->mass_error += (-(lateral_sed_inflow_rate + 
+				    Current->sediment.inflowrate[i]) + 
+				  Current->sediment.outflowrate[i]+dMdt)*DT_sed;
 
 	    if(abs(Total->mass_error)>0){
 	      /* reset outflow for mass balance */
-	      Current->sediment.outflowrate[i]=lateral_sed_inflow_rate+ Current->sediment.inflowrate[i]-dMdt;
+	      Current->sediment.outflowrate[i] = lateral_sed_inflow_rate + 
+		Current->sediment.inflowrate[i]- dMdt;
 	    }
 
-	    if(abs(Current->sediment.inflowrate[i])>0 && Time.Current.Julian==Time.Start.Julian){
-	      printf("%d %d \n",Current->id, tstep );
-	      printf("la(%.4f) in(%.4f) out(%.4f) dMdt(%.3f) \n", lateral_sed_inflow_rate, Current->sediment.inflowrate[i],Current->sediment.outflowrate[i], dMdt);}
 	    /****************************************/
 	    /* Assign new values to next step old   */
 	    /****************************************/
@@ -311,11 +301,9 @@ void RouteChannelSediment(Channel * Head, TIMESTRUCT Time,
 	  
 	    Current->sediment.totalmass += Current->sediment.mass[i];
 	  
-	    /* calculate outflow concentration in mg/l */
-	  
-	    // Olivier - 2003/07/08 : We should add a condition on current->outflow
-	    // to avoid division by zero in the calculation of Current->sediment.outflowconc
-	    // It makes sense as the concentration should be 0 if there is no outflow
+	    /* Calculate outflow concentration in mg/l 
+	       Check for division by zero (concentration should be 0 if 
+	       there is no outflow) */
 	    if (Current->outflow >= 0.0) {
 	      if(Current->slope>0.0) 
 		flowdepth = pow(Current->outflow*Current->class->friction/(Current->class->width*sqrt(Current->slope)),0.6);
@@ -338,7 +326,7 @@ void RouteChannelSediment(Channel * Head, TIMESTRUCT Time,
 	      /* 	if(Vsed>V || SedDiams[i]<=0.062) Vsed=V; */
 	    
 	      /* 	if(Vsed<(0.2*V)) Vsed=0.2*V; */
-	      Vsed=V;	
+	      Vsed = V;	
 	      Current->sediment.outflowconc += 
 		(1000.0*Current->sediment.outflow[i]/(Current->outflow))*(V/Vsed);
 	    }	  
@@ -359,13 +347,6 @@ void RouteChannelSediment(Channel * Head, TIMESTRUCT Time,
 	  else{
 	    Total->SedimentOutflow += Current->sediment.outflow[i];
 	  }
-	  /* Mass Balance Variables */
-	  Total->DebrisInflow += Current->sediment.debrisinflow[i];
-	  Current->sediment.debrisinflow[i] = 0.;
-	  
-	  Total->SedimentOverlandInflow += Current->sediment.overlandinflow[i];
-	  Current->sediment.overlandinflow[i] = 0.;
-	  
 	  Total->ChannelSedimentStorage += Current->sediment.mass[i];	  
 	}
 	/* the next 7 lines are from channel_route_network -- closes the loop above */
