@@ -73,13 +73,16 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
   float VariableDT;            /* Maximum stable time step (s) */  
   float **SedIn, SedOut;       /* (m3/m3) */  
   float DR;                    /* Potential erosion due to leaf drip */ 
-  float DS;                    /* Median particle diameter (mm) */
+  float DS;                    /* Median particle diameter (m) */
+  float Cd;                      /* Drag coefficient */
+  float vs, vs_last;             /* Settling velocity (m/s)*/
+  float Rn;                      /* Particle Reynolds number */
   float h;                     /* Water depth (m) */
   float term1, term2, term3;
   float streampower;           /* Unit streampower from KINEROS (M/s) */
   float TC;                    /* Transport capacity (m3/m3) */
 
-  float settling;              /* Settling velocity (m/s) */
+  float settling;             /*  Settling velocity (m/s) */
   float Fw;                    /* Water depth correction factor */
   int sedbin;                  /* Particle bin that erosion is added to */
 
@@ -175,6 +178,8 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
  
       /* estimate kinematic viscosity through interpolation JSL */
       knviscosity=viscosity(Tair, Rh);
+      /* converting units to m2/sec */
+      knviscosity /= 1000. * 1000.;
 
       /* Must loop through surface routing multiple times within one DHSVM 
 	 model time step. */
@@ -310,13 +315,20 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 		
 		/* converting units to m3 m-1 s-1*/
 		DR = DR/PARTDENSITY * Map->DX;
+
+		/* Calculate settling velocity iteratively (kineros)
+		   initial guess */
+		vs = sqrt((4./3.) * G * ((PARTDENSITY/WATER_DENSITY) - 1.)*DS);
+		vs_last = 999.;
 		
-		/* from Julien particle settling velocity */
-		settling = (8.0*knviscosity/DS) *
-		  (sqrt(1.+ ((PARTDENSITY/WATER_DENSITY)-1.)*(G*1000)*DS*DS*DS/
-			(72.*knviscosity*knviscosity)) - 1.0)/1000.;
-		
-		/* calculate transport capacity eq. 7 kineros */
+		while (fabs(vs_last - vs) > (0.0001 * vs_last)) {
+		  vs_last = vs;
+		  Rn = (vs * DS) / knviscosity; 
+		  Cd = (24./Rn) + (3./(pow(Rn, 0.5))) + 0.34;
+		  vs = sqrt((4./3.) * G * ((PARTDENSITY/WATER_DENSITY) - 1.)*(DS/Cd));
+		}
+
+		/* calculate transport capacity (eq. 7 kineros) */
 		TC = 0.05/(DS*pow((PARTDENSITY/WATER_DENSITY-1),2.))*
 		  sqrt(slope*h/G)*(streampower-SETTLECRIT);
 		
@@ -330,8 +342,8 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 						  term3*SoilMap[y][x].startRunoff) +
 			  SedMap[y][x].OldSedIn*(term2*pow(SoilMap[y][x].startRunon, beta) + 
 						 term3*SoilMap[y][x].startRunon) +
-			  DR + Map->DY*settling*TC)/
-		  (term2*pow(sedoutflow, beta) + term1*sedoutflow + Map->DY*settling);
+			  DR + Map->DY*vs*TC)/
+		  (term2*pow(sedoutflow, beta) + term1*sedoutflow + Map->DY*vs);
 		
 		if(SedOut >= TC) SedOut = TC;
 		
@@ -633,6 +645,7 @@ void SedimentFlag(OPTIONSTRUCT *Options,  TIMESTRUCT * Time)
       printf("Turning off kinematic routing calculations.\n");
   }
 }
+
 
 
 
