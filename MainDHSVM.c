@@ -399,14 +399,14 @@ int main(int argc, char **argv)
 			      ChannelData.sedimentout,
 			      ChannelData.sedimentflowout, flag);
 
-      /* OutputChannelSediment(ChannelData.streams, Time, &Dump); */
+      /* OutputChannelSediment(ChannelData.streams, Time, &Dump; */
     }
 
     if (Options.Extent == BASIN)
       RouteSurface(&Map, &Time, TopoMap, SoilMap, &Options,
 		   UnitHydrograph, &HydrographInfo, Hydrograph,
 		   &Dump, VegMap, VType, SType, &ChannelData, SedMap,
-		   PrecipMap, SedType);
+		   PrecipMap, SedType, LocalMet.Tair);
 
 #endif
 

@@ -45,7 +45,8 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 		  UNITHYDRINFO * HydrographInfo, float *Hydrograph,
 		  DUMPSTRUCT *Dump, VEGPIX ** VegMap, VEGTABLE * VType, 
 		  SOILTABLE *SType, CHANNEL *ChannelData, SEDPIX **SedMap,
-		  PRECIPPIX **PrecipMap, SEDTABLE *SedType)
+		  PRECIPPIX **PrecipMap, SEDTABLE *SedType,
+		  float Tair)
 {
   const char *Routine = "RouteSurface";
   int Lag;			/* Lag time for hydrograph */
@@ -62,7 +63,8 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
   /* Kinematic wave routing: */
 
 /* JSL: slope is manning's slope; alpha is channel parameter including wetted perimeter, manning's n, and manning's slope.  Beta is 3/5 */
-
+  float knviscosity;           /* kinematic viscosity JSL */  
+float outflowmax=0;             /*max outflow observed JSL */
   double slope, alpha, beta;    
   double outflow;              /* Outflow of water from a pixel during a sub-time step */    
   float VariableDT;            /* Maximum stable time step (s) */  
@@ -167,6 +169,11 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	}
       }
       
+
+/* estimate kinematic viscosity through interpolation JSL */
+
+      knviscosity=viscosity(Tair);
+
       /* Must loop through surface routing multiple times within one DHSVM 
 	 model time step. */
 
@@ -203,6 +210,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	      outflow = 0.0;
 	    }
 	  else {
+	 
 	      if(Runon[y][x] > 0.0001 || outflow > 0.0001) {
 		outflow = ((VariableDT/Map->DX)*Runon[y][x] + 
 			   alpha*beta*outflow * pow((outflow+Runon[y][x])/2.0,
@@ -234,8 +242,8 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	  else
 	    SoilMap[y][x].IExcess += (Runon[y][x] - outflow)*
 	      VariableDT/(Map->DX*Map->DY);
-	  
-	  
+	  if (outflow<0){ outflowmax=outflow;
+	  printf("%f \n", outflow);}
 	  /*************************************************************/
 	  /* PERFORM HILLSLOPE SEDIMENT ROUTING.                       */
 	  /*************************************************************/
@@ -270,22 +278,26 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 
        	      /* from Everaert equations (5) */
 	      streampower= WATER_DENSITY*G*1000.*(outflow/Map->DX)*slope;
-	      
+
 	      effectivepower = pow(streampower,1.5)/pow(h*100.,2./3.);
-	      
 	      soliddischarge = (0.000001977) * pow(effectivepower, 1.044) * 
 		pow(SedType[SoilMap[y][x].Soil-1].d50, 0.478); 
+
+/* JSL: Convert mass solid discharge to volumetric w/ soil density */ 
 	      
 	      TC = (10. * soliddischarge)/((outflow/Map->DX) * PARTDENSITY);
 	      
 	      /* Find erosion due to overland flow after Morgan et al. (1998). */
 	      floweff = 0.79*exp(-0.85*SedType[SoilMap[y][x].Soil-1].Cohesion.mean);
-	      
+
+
+			  
 	      DS = SedType[SoilMap[y][x].Soil-1].d50/1000.;
-	      settling = (8.0*VISCOSITY/DS) *
+	      settling = (8.0*knviscosity/DS) *
 		(sqrt(1.+ ((PARTDENSITY/WATER_DENSITY)-1.)*(G*1000)*DS*DS*DS/
-		      (72.*VISCOSITY*VISCOSITY)) - 1.0)/1000.;
+		      (72.*knviscosity*knviscosity)) - 1.0)/1000.;
 	      
+	    
 	      /* Calculate sediment mass balance. */
 	      term1 = (TIMEWEIGHT/Map->DX);
 	      term2 = alpha/(2.*VariableDT);
@@ -365,7 +377,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	      }
 	    } /* end loop thru possible flow directions */
 	  }
-	  
+	 /*      printf("%d %d     %f\n",x, y, Runon[y][x]); */
 	  /* Initialize runon for next timestep. */
 	  Runon[y][x] = 0.0;
 	  /* Initialize SedIn for next timestep. */
@@ -490,3 +502,32 @@ float FindDT(SOILPIX **SoilMap, MAPSIZE *Map, TIMESTRUCT *Time,
   return DT;
 }
 
+float viscosity(float Tair)
+{
+  float knviscosity=0;
+
+/* estimate kinematic viscosity through interpolation JSL */
+
+  if (Tair<0.)
+    knviscosity=1.792;
+  else if (Tair<4. && Tair>=0.)
+    knviscosity=(1.792-(Tair-0.)/4.*(1.792-1.567));
+  else if  (Tair>=4. && Tair<10.)
+    knviscosity=(1.567-(Tair-4.)/6.*(1.567-1.371));
+  else if (Tair>=10. && Tair<20.)
+    knviscosity=(1.371-(Tair-10.)/10.*(1.371-1.007));        
+  else if  (Tair>=20. && Tair<25.)
+    knviscosity=(1.007-(Tair-20.)/5.*(1.007-.8963));
+  else if  (Tair>=25. && Tair<30.)
+    knviscosity=(.8963-(Tair-25.)/5.*(.8963-.8042));
+  else if  (Tair>=30. && Tair<40.)
+    knviscosity=(.8042-(Tair-30.)/10.*(.8042-.6611));
+  else
+    knviscosity=(.6611-(Tair-40.)/10.*(.6611-.556));
+  
+  printf("%f  \n", Tair);
+  
+  printf("%f  \n", knviscosity);
+  
+  return knviscosity;
+}

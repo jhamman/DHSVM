@@ -355,7 +355,7 @@ void RouteSurface(MAPSIZE *Map, TIMESTRUCT *Time, TOPOPIX **TopoMap,
 		  UNITHYDRINFO *HydrographInfo, float *Hydrograph,
 		  DUMPSTRUCT *Dump, VEGPIX **VegMap, VEGTABLE *VType,
 		  SOILTABLE *SType, CHANNEL *ChannelData, SEDPIX **SedMap,
-		  PRECIPPIX **PrecipMap, SEDTABLE *SedType);
+		  PRECIPPIX **PrecipMap, SEDTABLE *SedType, float Tair);
 
 float SatVaporPressure(float Temperature);
 
@@ -380,4 +380,7 @@ void StoreModelState(char *Path, DATE *Current, MAPSIZE *Map,
 		     VEGPIX **VegMap, LAYER *Veg, SOILPIX **SoilMap,
 		     LAYER *Soil, UNITHYDRINFO *HydrographInfo,
 		     float *Hydrograph);
+
+float viscosity(float Tair);
+
 #endif
