@@ -331,38 +331,7 @@ void RouteChannelSediment(Channel * Head, TIMESTRUCT Time,
 	      Current->sediment.outflow[i] += Current->sediment.outflowrate[i]*DT_sed;
 	      
 	      CapacityUsed += Current->sediment.outflowrate[i];
-	      
-	      Current->sediment.totalmass += Current->sediment.mass[i];
-	      
-	      /* Calculate outflow concentration in mg/l 
-		 Check for division by zero (concentration should be 0 if 
-		 there is no outflow) */
-	      if (Current->outflow >= 0.0) {
-		if(Current->slope>0.0) 
-		  flowdepth = pow(Current->outflow*Current->class->friction/(Current->class->width*sqrt(Current->slope)),0.6);
-		else flowdepth = 0.005;
-		
-		V = Current->outflow/(flowdepth*Current->class->width);
-		
-		if (Current->slope >= 0.0)
-		  Vshear = sqrt(G*flowdepth*Current->slope); /* approximate */
-		else Vshear = 0.0; /* could calculate with friction slope */ 
-		
-		if(SedDiams[i] < 15) Vshearcrit = -0.0003*SedDiams[i]*SedDiams[i]+0.0109*SedDiams[i]+0.0106;
-		else Vshearcrit = 0.0019*SedDiams[i]+0.0926; /* both in m/s */
 	    
-	      /* 		if (Vshearcrit > 0.95*Vshear) */
-	      /*	  Vsed = 8.5*Vshear*sqrt(0.05); arbitrary - substituted Vshearcrit = 0.95*Vshear in equation below */
-	      /*	else sed velocity per Wicks and Bathurst, fine particles travel at flow velocity */
-	      /* 	  Vsed = 8.5*Vshear*sqrt(1-(Vshearcrit/Vshear)); */
-	    
-	      /* 	if(Vsed>V || SedDiams[i]<=0.062) Vsed=V; */
-	    
-	      /* 	if(Vsed<(0.2*V)) Vsed=0.2*V; */
-		Vsed = V;	
-		Current->sediment.outflowconc += 
-		  (1000.0*Current->sediment.outflow[i]/(Current->outflow))*(V/Vsed);
-	      }	  
 	    } /* close loop for each sediment size */	  	  
 	  } /* end of sub-time step loop */
 	  
@@ -380,7 +349,14 @@ void RouteChannelSediment(Channel * Head, TIMESTRUCT Time,
 	    else{
 	      Total->SedimentOutflow += Current->sediment.outflow[i];
 	    }
-	    Total->ChannelSedimentStorage += Current->sediment.mass[i];	  
+	    
+	    Total->ChannelSedimentStorage += Current->sediment.mass[i];	 
+	    
+	    /* For output */
+	    Current->sediment.totalmass += Current->sediment.mass[i];
+	    /* outflow concentration in mg/l */
+	    Current->sediment.outflowconc += 1000.0*Current->sediment.outflow[i]/Current->outflow;
+	    
 	  }
 	} /* end 	if(Qavg > 0){ */
 	else {/* if Qvag < 0 */
@@ -413,7 +389,7 @@ void RouteCulvertSediment(CHANNEL * ChannelData, MAPSIZE * Map,
   int x, y;
   float CulvertSedFlow;   /* culvert flow of sediment, kg */
   int i;
-  float temp = 0.;
+
   Total->CulvertReturnSedFlow = 0.0;
 
   for (y = 0; y < Map->NY; y++) {

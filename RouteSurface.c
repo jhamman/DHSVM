@@ -329,7 +329,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 		}
 
 		/* calculate transport capacity (eq. 7 kineros) */
-		TC = 0.05/(DS*pow((PARTDENSITY/WATER_DENSITY-1),2.))*
+		TC = 0.05/(DS*pow((PARTDENSITY/WATER_DENSITY-1.),2.))*
 		  sqrt(slope*h/G)*(streampower-SETTLECRIT);
 		
 		/* Calculate sediment mass balance. */
