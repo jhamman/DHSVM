@@ -283,9 +283,10 @@ float outflowmax=0;             /*max outflow observed JSL */
 	      soliddischarge = (0.000001977) * pow(effectivepower, 1.044) * 
 		pow(SedType[SoilMap[y][x].Soil-1].d50, 0.478); 
 
-/* JSL: Convert mass solid discharge to volumetric w/ soil density */ 
+	      /* JSL: Convert mass solid discharge to volumetric w/ soil density */ 
+	      /* 0.1 is a conversion factor to get TC in m3/m3*/
 	      
-	      TC = (10. * soliddischarge)/((outflow/Map->DX) * PARTDENSITY);
+	      TC = (0.1 * soliddischarge)/((outflow/Map->DX) * PARTDENSITY);
 	      
 	      /* Find erosion due to overland flow after Morgan et al. (1998). */
 	      floweff = 0.79*exp(-0.85*SedType[SoilMap[y][x].Soil-1].Cohesion.mean);
