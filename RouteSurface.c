@@ -476,23 +476,23 @@ float FindDT(SOILPIX **SoilMap, MAPSIZE *Map, TIMESTRUCT *Time,
   
   for (y = 0; y < Map->NY; y++) {
     for (x = 0; x < Map->NX; x++) {
-      
-      slope = TopoMap[y][x].Slope;
-      
-      if (slope <= 0) slope = 0.0001;
-      beta = 3./5.;
-      alpha = pow(SType[SoilMap[y][x].Soil-1].Manning*pow(Map->DX,2./3.)/sqrt(slope),beta);
-
-      /* Calculate flow velocity from discharge  using manning's equation. */
-      Ck = 1./(alpha*beta*pow(SoilMap[y][x].Runoff, beta -1.));
-      
-      if(SoilMap[y][x].Runoff > maxRunoff) {
-	maxRunoff = SoilMap[y][x].Runoff;
+      if (INBASIN(TopoMap[y][x].Mask)) {
+	slope = TopoMap[y][x].Slope;
+	
+	if (slope <= 0) slope = 0.0001;
+	beta = 3./5.;
+	alpha = pow(SType[SoilMap[y][x].Soil-1].Manning*pow(Map->DX,2./3.)/sqrt(slope),beta);
+	
+	/* Calculate flow velocity from discharge  using manning's equation. */
+	Ck = 1./(alpha*beta*pow(SoilMap[y][x].Runoff, beta -1.));
+	
+	if(SoilMap[y][x].Runoff > maxRunoff) {
+	  maxRunoff = SoilMap[y][x].Runoff;
+	}
+	
+	if(Map->DX/Ck < minDT)
+	  minDT = Map->DX/Ck;
       }
-      
-      if(Map->DX/Ck < minDT)
-	minDT = Map->DX/Ck;
-      
     }
   }
   
