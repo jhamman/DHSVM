@@ -354,10 +354,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 
 		  LocalSlope = ElevationSlope(Map, TopoMap, FineMap, y, x, &nexty, &nextx, y, x, &SlopeAspect);
 	
-		  /* Slopes >55 are not likely to have soil. Also, factor of safety 
-		     increases (indicating slope is more stable) with slope for slopes 
-		     greater than 55 degrees. */
-		  if(LocalSlope >= 10. && LocalSlope <= 55.) { 
+		  if(LocalSlope >= 10.) { 
 		    factor_safety = CalcSafetyFactor(LocalSlope, SoilMap[i][j].Soil, 
 						     (*FineMap[y][x]).sediment, 
 						     VegMap[i][j].Veg, SedType, VType, 
@@ -373,8 +370,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 		      /* Update sediment depth. All sediment leaves failed fine pixel */
 		      SedToDownslope = (*FineMap[y][x]).sediment;
 		      (*FineMap[y][x]).sediment = 0.0;
-		      //fprintf(stdout,"y %d x %d primary failure; SedToDownslope %f\n",y,x,SedToDownslope*(Map->DMASS*Map->DMASS));
-		      
+		   		      
 		      // Pass sediment down to next pixel
 		      SedFromUpslope = SedToDownslope;
 
@@ -407,12 +403,11 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 			  
 			  // Add sediment from upslope to current sediment
 			  (*FineMap[y][x]).sediment += SedFromUpslope;
-			  //fprintf(stdout,"y %d x %d depositing %f total sediment %f\n",y,x,SedFromUpslope*(Map->DMASS*Map->DMASS),(*FineMap[y][x]).sediment*(Map->DMASS*Map->DMASS));
-			  
+			 			  
 			  LocalSlope = ElevationSlope(Map, TopoMap, FineMap, y, x, &nexty, 
 					            &nextx, prevy, prevx, &SlopeAspect);
 			  /*  Check that not a sink */
-			  if(LocalSlope >= 0) {
+			  if(LocalSlope >= 0.) {
 			    
 			    factor_safety = CalcSafetyFactor(LocalSlope, SoilMap[coursei][coursej].Soil, 
 							     (*FineMap[y][x]).sediment, 
@@ -429,7 +424,6 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 			      /* Update sediment depth. All sediment leaves failed fine pixel */
 			      SedToDownslope = (*FineMap[y][x]).sediment;
 			      (*FineMap[y][x]).sediment = 0.0;
-			      //fprintf(stdout,"y %d x %d secondary failure; SedFromUpslope %f SedToDownslope %f\n",y,x,SedFromUpslope*(Map->DMASS*Map->DMASS),SedToDownslope*(Map->DMASS*Map->DMASS));
 			      
 			      // Pass sediment down to next pixel
 			      SedFromUpslope = SedToDownslope;
@@ -440,7 +434,6 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 			      // Remove the sediment we added for the slope calculation
 			      // and instead prepare to distribute this sediment along runout zone
 			      (*FineMap[y][x]).sediment -= SedFromUpslope;
-			      //fprintf(stdout,"y %d x %d no secondary failure; will redistribute %f in runout zone\n",y,x,SedFromUpslope*(Map->DMASS*Map->DMASS));
 			      
 			    }
 			  } /* end  if(LocalSlope >= 0) { */
@@ -449,8 +442,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 			    // Remove the sediment we added for the slope calculation
 			    // and instead prepare to distribute this sediment along runout zone
 			    //   (*FineMap[y][x]).sediment -= SedFromUpslope;
-			    //fprintf(stdout,"y %d x %d no secondary failure; will redistribute %f in runout zone\n",y,x,SedFromUpslope*(Map->DMASS*Map->DMASS));
-			    /* COD - if it reaches here, a sink exists. A sink can 
+			    /* If it reaches here, a sink exists. A sink can 
 			       not fail or run out, so move to the next pixel. */
 			    checksink++;
 			    
@@ -480,7 +472,6 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 		      
 		      // TotalVolume = depth (not volume) being redistributed
 		      TotalVolume = SedFromUpslope;
-		      //fprintf(stdout,"y %d x %d current total runout volume %f\n",y,x,TotalVolume*(Map->DMASS*Map->DMASS));
 		      
 		      cells = 1;
 		      
@@ -520,20 +511,15 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 			coursei = floor(y*Map->DMASS/Map->DY);
 			coursej = floor(x*Map->DMASS/Map->DX);
 			
-			//if (!INBASIN(TopoMap[coursei][coursej].Mask)) {
-			//fprintf(stdout,"OUTSIDE BASIN!! We shouldn't be here\n");
-			//}
 			
 			// If this node has a channel, then this MUST be the end of the queue
 			if(channel_grid_has_channel(ChannelData->stream_map, coursej, coursei)) {
 			  /* TotalVolume at this point is a depth in m over one fine
 			     map grid cell - convert to m3 */
 			  SedimentToChannel = TotalVolume*(Map->DMASS*Map->DMASS)/(float) cells;
-			  //fprintf(stdout,"count %d y %d x %d current SedimentToChannel %f\n",count,y,x,SedimentToChannel);
 			}
 			else {
 			  /* Redistribute sediment equally among all hillslope cells. */
-			  //fprintf(stdout,"count %d y %d x %d runout dep. %f\n",count,y,x,TotalVolume*(Map->DMASS*Map->DMASS)/cells);
 			  (*FineMap[y][x]).sediment += TotalVolume/cells;
 			}
 		      }
@@ -592,23 +578,9 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 	        (*FineMap[y][x]).sediment = InitialSediment[y][x];
 	        failure[y][x] = 0;
 	      }
-
 	    }
 	  }
-
 	}
-/* 	else { */
-
-/* 	  for(ii=0; ii<Map->DY/Map->DMASS; ii++) { */
-/* 	    for(jj=0; jj<Map->DX/Map->DMASS; jj++) { */
-/* 	      y = i*Map->DY/Map->DMASS + ii;  */
-/* 	      x = j*Map->DX/Map->DMASS + jj; */
-/* 	      (*FineMap[y][x]).Probability = -999.; */
-/* 	      (*FineMap[y][x]).DeltaDepth = -999.; */
-/* 	    } */
-/* 	  } */
-
-/* 	} */
       }
     }
 
@@ -652,12 +624,10 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 	    if ((*FineMap[y][x]).sediment > InitialSediment[y][x]) {
 	      (*FineMap[y][x]).MassDeposition = ((*FineMap[y][x]).sediment - InitialSediment[y][x])*(Map->DMASS*Map->DMASS);
 	      (*FineMap[y][x]).MassWasting = 0.0;
-//fprintf(stdout,"y %d x %d i %d j %d MassDeposition %f\n",y,x,i,j,(*FineMap[y][x]).MassDeposition);
 	    }
 	    else if ((*FineMap[y][x]).sediment < InitialSediment[y][x]) {
 	      (*FineMap[y][x]).MassDeposition = 0.0;
 	      (*FineMap[y][x]).MassWasting = (InitialSediment[y][x] - (*FineMap[y][x]).sediment)*(Map->DMASS*Map->DMASS);
-//fprintf(stdout,"y %d x %d i %d j %d MassWasting %f\n",y,x,i,j,(*FineMap[y][x]).MassWasting);
 	    }
 	    if((*FineMap[y][x]).Probability > 0)
 	      numfailedpixels +=1;
@@ -670,22 +640,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 
 	  }
 	}
-
       }
-/*       else { */
-
-/* 	for(ii=0; ii<Map->DY/Map->DMASS; ii++) { */
-/* 	  for(jj=0; jj<Map->DX/Map->DMASS; jj++) { */
-/* 	    y = i*Map->DY/Map->DMASS + ii;  */
-/* 	    x = j*Map->DX/Map->DMASS + jj; */
-/* 	    (*FineMap[y][x]).Probability = OUTSIDEBASIN; */
-/* 	    (*FineMap[y][x]).DeltaDepth = OUTSIDEBASIN; */
-/* 	    (*FineMap[y][x]).sediment = OUTSIDEBASIN; */
-/* 	  } */
-/* 	} */
-
-/*       } */
-
     }
   }
 
@@ -704,8 +659,6 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
   for(i=0; i<MaxStreamID; i++) {
     SegmentSediment[i] /= (float)massitertemp;
     if(SegmentSediment[i] < 0.0) SegmentSediment[i]=0.0;
-    /*    fprintf(stderr, "segment %d: segmentsediment = %f\n", i, 
-	  SegmentSediment[i]-InitialSegmentSediment[i]); */
   }
   update_sediment_array(ChannelData->streams, SegmentSediment);
   /* Take new sediment inflow and distribute it by representative diameters*/
