@@ -78,6 +78,7 @@ void InitParameters(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   if (strncmp(StrEnv[mass_wasting].VarStr, "TRUE", 4) == 0) {
     printf("Sediment Mass Wasting component will be run\n");
     Options->MassWaste = TRUE;
+    InitMassWaste(Input, Time);
   }
   else if (strncmp(StrEnv[mass_wasting].VarStr, "FALSE", 5) == 0)
     Options->MassWaste = FALSE;
@@ -97,7 +98,7 @@ void InitParameters(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   else
     ReportError(StrEnv[surface_erosion].KeyName, 51);
 
- /* Determine whether surface erosion model should be run */
+ /* Determine whether road erosion model should be run */
   if (strncmp(StrEnv[road_erosion].VarStr, "TRUE", 4) == 0){
     Options->RoadRouting = TRUE;
     if ((ChannelData->roads) == NULL) {
@@ -181,6 +182,69 @@ void InitParameters(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
 }
 
 /*******************************************************************************
+  Function name: InitMassWaste()
+
+  Purpose      : Read in the dates to run the mass wasting model. This information
+                 is in the [SEDTIME] section of the sediment input file
+
+  Required     : 
+    LISTPTR Input         - Linked list with input strings
+
+  Returns      : void
+
+  Modifies     : Members of Time
+
+  Comments     : 
+*******************************************************************************/
+void InitMassWaste(LISTPTR Input, TIMESTRUCT *Time)
+{
+  const char *Routine = "InitMassWaste";
+  int i,j;			/* counter */
+  char KeyName[mass_wasting_date+1][BUFSIZE + 1];
+  char *KeyStr[] = {
+    "MASS WASTING DATE", 
+   };
+
+  char SectionName[] = "SEDTIME";
+  char VarStr[mass_wasting_date+1][BUFSIZE+1];
+
+  /* Get the number of calculation periods */
+  GetInitString(SectionName, "MWM TIME STEPS", "", VarStr[0], 
+		(unsigned long) BUFSIZE, Input);
+
+  if (!CopyInt(&(Time->NMWMTotalSteps), VarStr[0], 1))
+    ReportError("MWM TIME STEPS", 51);
+
+  if ((Time->NMWMTotalSteps) < 0)
+    ReportError("MWM TIME STEPS", 51);
+ 
+  if(Time->NMWMTotalSteps > 0){
+
+    if (!((*Time).MWM = (DATE *) calloc(Time->NMWMTotalSteps, sizeof(DATE)))) 
+      ReportError((char *)Routine, 1);  
+    /* Read the key-entry pairs from the input file */
+    for (i = 0; i < Time->NMWMTotalSteps; i++) {
+      
+      /* Read the key-entry pairs from the input file */
+      for (j = 0; j <= mass_wasting_date; j++) {
+	sprintf(KeyName[j], "%s %d",KeyStr[j], i+1);
+	GetInitString(SectionName, KeyName[j], "", VarStr[j],
+		      (unsigned long) BUFSIZE, Input);
+      }
+      
+      if (!SScanDate(VarStr[mass_wasting_date], &((*Time).MWM[i])))
+	ReportError(KeyName[mass_wasting_date], 51);
+    }
+    
+    /* Initialize first run date */
+    if ((*Time).Start.Julian > (*Time).MWM[0].Julian)
+      ReportError("First Mass Wasting Date is before the beginning of the model run", 51);
+    
+    (*Time).MWMnext = (*Time).MWM[0];
+  }
+}
+
+/*******************************************************************************
   Function name: InitSurfaceSed()
 
   Purpose      : Initialize the image dumps.  This information is in the 
@@ -211,14 +275,14 @@ void InitSurfaceSed(LISTPTR Input, TIMESTRUCT *Time)
   char VarStr[erosion_end+1][BUFSIZE+1];
 
   /* Get the number of calculation periods */
-  GetInitString(SectionName, "TIME STEPS", "", VarStr[0], 
+  GetInitString(SectionName, "SE TIME STEPS", "", VarStr[0], 
 		(unsigned long) BUFSIZE, Input);
 
   if (!CopyInt(&(Time->NSETotalSteps), VarStr[0], 1))
-    ReportError("TIME STEPS", 51);
+    ReportError("SE TIME STEPS", 51);
 
   if ((Time->NSETotalSteps) < 0)
-    ReportError(SectionName, 51);
+    ReportError("SE TIME STEPS", 51);
 
   if (!((*Time).StartSed = (DATE *) calloc(Time->NSETotalSteps, sizeof(DATE)))) 
     ReportError((char *)Routine, 1);  
@@ -249,6 +313,3 @@ void InitSurfaceSed(LISTPTR Input, TIMESTRUCT *Time)
    }
 
 }
-
-
-

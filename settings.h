@@ -181,7 +181,7 @@ enum KEYS {
   /* Parameters */
   mass_spacing, max_iterations, channeld50, channeld90, debrisd50, debrisd90,
   /* Sedtime*/
-  erosion_start = 0, erosion_end,
+  mass_wasting_date = 0, erosion_start = 0, erosion_end,
   /* Sediment information */
   sed_description = 0, kindex, dfifty, cohesion, 
   coh_min, coh_max, coh_mean, coh_dev, coh_mode, friction_angle, fa_min, fa_max, fa_mean, 

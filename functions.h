@@ -153,6 +153,8 @@ void InitMapDump(LISTPTR Input, MAPSIZE *Map, int MaxSoilLayers,
 		 int MaxVegLayers, char *Path, int TotalMapImages, int NMaps,
 		 MAPDUMP **DMap);
 
+void InitMassWaste(LISTPTR Input, TIMESTRUCT *Time);
+
 void InitMetMaps(int NDaySteps, MAPSIZE *Map, MAPSIZE *Radar,
 		 OPTIONSTRUCT *Options, char *WindPath, char *PrecipLapsePath,
 		 float ***PrecipLapseMap, float ***PrismMap,

@@ -115,7 +115,10 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
 
   /* variables for mass wasting trigger. */
   int count, totalcount;
-  float mgrid;
+  float mgrid, sat;
+  char buffer[32];
+  char satoutfile[100];          /* Character arrays to hold file name. */ 
+  FILE *fs;                     /* File pointer. */
 
   /*****************************************************************************
    Allocate memory 
@@ -349,6 +352,35 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
   free(SubFlowGrad);
 
   /**********************************************************************/
+  /* Dump saturation extent file to screen for Mass Wasting dates.
+     Saturation extent is based on the number of pixels with a water table 
+     that is at least MTHRESH of soil depth. */ 
+  
+  count =0;
+  totalcount = 0;
+  for (y = 0; y < Map->NY; y++) {
+    for (x = 0; x < Map->NX; x++) {
+      if (INBASIN(TopoMap[y][x].Mask)) {
+	mgrid = (SoilMap[y][x].Depth - SoilMap[y][x].TableDepth)/SoilMap[y][x].Depth;
+	if(mgrid > MTHRESH) count += 1;
+	totalcount +=1;
+      }
+    }
+  }
+ 
+  sat = 100.*((float)count/(float)totalcount);
+  
+  sprintf(satoutfile, "%ssaturation_extent.txt", DumpPath);
+  
+  if((fs=fopen(satoutfile,"a")) == NULL){
+    printf("Cannot open saturation extent output file.\n");
+    exit(0);
+  }
+  
+  SPrintDate(&(Time->Current), buffer);
+  fprintf(fs, "%-20s %.4f \n", buffer, sat); 
+  fclose(fs);    
+  
   /* Initialize the mass wasting variables for all time steps
      to maintain the mass balance */
   if(Options->Sediment){
@@ -368,35 +400,34 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
 	}
       }
     }
-  }
-  
-  /* Call the mass wasting algorithm; currently not very intelligent */
-  
-  if(Options->MassWaste && Options->Sediment && Time->Current.Hour == 00) {
     
-    count =0;
-    totalcount = 0;
-    for (y = 0; y < Map->NY; y++) {
-      for (x = 0; x < Map->NX; x++) {
-	if (INBASIN(TopoMap[y][x].Mask)) {
-	  mgrid = (SoilMap[y][x].Depth - SoilMap[y][x].TableDepth)/SoilMap[y][x].Depth;
-	  if(mgrid > MTHRESH) count += 1;
-	  totalcount +=1;
+    /* Call the mass wasting algorithm */
+    if(Options->MassWaste){
+      if(Time->NMWMTotalSteps > 0){
+	if(Time->Current.Julian == Time->MWMnext.Julian){   
+	  MainMWM(SedMap, FineMap, VType, SedType, ChannelData, DumpPath, SoilMap,
+		  Time, Map, TopoMap, SType, VegMap, MaxStreamID, SnowMap);
+	  
+	  /* catch the next date */
+	  for (i = 0; i < Time->NMWMTotalSteps; i++){
+	    if(Time->MWMnext.Julian < Time->MWM[i].Julian){
+	      Time->MWMnext = Time->MWM[i];
+	      break;
+	    }
+	  }
 	}
       }
-    }
-    
-    /* If Greater than SATPERCENT of the pixels have a water table that is at least 85% of 
-       soil depth, call the mass wasting model. */
-    
-    if((float)count/((float)totalcount) > SATPERCENT) {
-      MainMWM(SedMap, FineMap, VType, SedType, ChannelData, DumpPath, SoilMap,
-	      Time, Map, TopoMap, SType, VegMap, MaxStreamID, SnowMap);
+      else{ /* Time->NMWMTotalSteps == 0 run the old way*/
+	if((float)count/((float)totalcount) > SATPERCENT) {
+	  MainMWM(SedMap, FineMap, VType, SedType, ChannelData, DumpPath, SoilMap,
+		  Time, Map, TopoMap, SType, VegMap, MaxStreamID, SnowMap);
+	}
+      }
     }
   }
   
   /**********************************************************************/
   /* End added code. */
-   
+  
 }
 

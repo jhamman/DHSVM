@@ -75,12 +75,13 @@
 
 #define RADPDEG     (PI/180.0)	/* radians per degree */
 
-#define ROADCROWN 0.02            /* This is the road crown, whether insloped, outsloped 
-				     or crowned, slope. This value was selected based 
+#define ROADCROWN 0.02            /* This is the road crown slope, whether insloped,  
+				     outsloped or crowned. This value was selected based 
 				     on the Road Preconstruction Handbook */
 
 #define SATPERCENT 0.2          /* Fraction of pixels which must exceed 
-				   MTHRESH in order to call the mass wasting algorithm. */
+				   MTHRESH in order to call the mass wasting algorithm
+				   when running in the old mode. */
 
 #define SEDEXPONENT 2.0          /* Exponent for exponential decrease in rainfall detachment 
 				    of soil particles with depth of overland flow, should 
