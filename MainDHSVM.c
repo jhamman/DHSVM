@@ -42,7 +42,7 @@ int (*Write2DMatrix) (char *FileName, void *Matrix, int NumberType, int NY,
 		      int NX, ...);
 
 /* global strings */
-char *version = "Version 2.0.1 Tues January 21, 2003"; /* store version string */
+char *version = "Version 3.0 Mon August 9, 2004"; /* store version string */
 char commandline[BUFSIZE + 1] = "";	/* store command line */
 char fileext[BUFSIZ + 1] = "";	/* file extension */
 char errorstr[BUFSIZ + 1] = "";	/* error message */
@@ -259,7 +259,6 @@ int main(int argc, char **argv)
   *****************************************************************************/
   if(Options.Sediment) {
 
-    printf("\nRunning sediment model version 0.0\n");
     printf("\nSTARTING SEDIMENT INITIALIZATION PROCEDURES\n\n");
 
     ReadInitFile(Options.SedFile, &Input);
