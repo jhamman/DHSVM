@@ -6,7 +6,7 @@
  * ORG:          University of Washington, Department of Civil Engineering
  * E-MAIL:       dhsvm@hydro.washington.edu
  * ORIG-DATE:    Sep-02
- * Last Change: Thu Jun 19 09:27:02 2003 by Ed Maurer <edm@u.washington.edu>
+ * Last Change: Wed Jun 18 10:14:39 2003 by Ed Maurer <edm@u.washington.edu>
  * DESCRIPTION:  Main routine to drive MWM - the Mass Wasting Module for DHSVM 
  * DESCRIP-END.cd
  * FUNCTIONS:    main()
@@ -563,7 +563,7 @@ void InitChannelSediment(Channel * Head)
 {
   Channel *Current = NULL;
   int i;
-  float InitialDepth = 0.010; /* initial depth of sediment in the channel, m */
+  float InitialDepth = 0.001; /* initial depth of sediment in the channel, m */
   float bulkporosity, initvol;
 
   bulkporosity = 0.245+0.14*pow(DEBRISd50,-0.21); /* Komura, 1961 relation */
@@ -577,11 +577,9 @@ void InitChannelSediment(Channel * Head)
       Current->sediment.debrisinflow[i]=0.0; 
       Current->sediment.overlandinflow[i]=0.0;
       Current->sediment.inflow[i]=0.0;
-      Current->sediment.inflowrate[i]=0.0;
-      Current->sediment.last_inflowrate[i]=0.0; 
+      Current->sediment.last_inflow[i]=0.0; 
       Current->sediment.outflow[i]=0.0;
-      Current->sediment.outflowrate[i]=0.0;
-      Current->sediment.last_outflowrate[i]=0.0; 
+      Current->sediment.last_outflow[i]=0.0; 
       Current->sediment.mass[i] = 
 	initvol*(1-bulkporosity)*((float) PARTDENSITY)*(1/((float) NSEDSIZES));
     }
@@ -678,17 +676,15 @@ void OutputChannelSediment(Channel * Head, TIMESTRUCT Time, DUMPSTRUCT *Dump)
 void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, DUMPSTRUCT *Dump)
 {
   Channel *Current = NULL;
-  float DS,DT_sed,Q,numinc;
-  float flowdepth,Qavg,V,dIdt,dOdt,dMdt,Vsed,Vshear,Vshearcrit;
-  float minDT_sed,TotalCapacityUp,TotalCapacityDown;
-  float lateral_sed_inflow_rate;
-  float TotalCapacity, CapacityUsed;
+  float DS;
+  float tempoutflow;
+  float flowdepth,Vshear,Vshearcrit,Vsed,V;
+  float TotalCapacity, CapacityUsed, sumoutflow;
   float SedDiam[NSEDSIZES];
-  float Qup,Qdown;
-  float phi=0.55, theta=0.55,term3,term4; /*space and time weighting factors*/
-  int i,tstep;
+  int i;
   int order;
   int order_count;
+  float alpha = 0.1;
 
   /* For each of the sediment diameters, calculate the mass balance */
   DistributeSedimentDiams(SedDiam); /* find diameter for each portion */
@@ -704,113 +700,63 @@ void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, DU
 	Current->sediment.outflowconc=0.0;
 	CapacityUsed = 0.0;
 	Current->outlet->sediment.totalmass=0;
-	/* rate of inflow and outflow change over model time step*/
-	dIdt = (Current->inflow - Current->last_inflow)/(float) Time.Dt;
-	dOdt = (Current->outflow - Current->last_outflow)/(float) Time.Dt;
-
-	/****************************************/
-	/* Estimate sub-time step for the reach */
-	/****************************************/
-	minDT_sed = 3600.;
-	/* Estimate flow velocity from discharge using manning's equation. */
-	Qavg = (Current->inflow+Current->outflow)/(2.0*(float) Time.Dt);
-	if(Current->slope>0.0) {
-	  flowdepth = pow(Qavg*Current->class->friction/(Current->class->width*sqrt(Current->slope)),0.6);
-	  V = Q/(flowdepth*Current->class->width);
-	}
-	else V=0.01;
-	if(Current->length/V < minDT_sed) minDT_sed = Current->length/V;
-	numinc = (float) ceil((double)Time.Dt/minDT_sed);
-	if(numinc<1) numinc=1;
-	DT_sed = (float) Time.Dt/numinc;
-
-	/****************************************/
-	/* Loop for each particle size          */
-	/****************************************/
+	/* current particle size -- convert to m */
 	/*DO NOT USE BAGNOLD's EQ. FOR D<0.015 mm - this is wash load anyway*/
 	for(i=0;i<NSEDSIZES;i++) {
-	  Current->sediment.outflow[i]=0.0;
-	  DS = SedDiam[i]*((float) MMTOM); /* convert from mm to m */
 
-	  /****************************************/
-    	  /* Calculate segment sed inflows        */
-	  /****************************************/
+	  DS = SedDiam[i]*((float) MMTOM);
+	  /* TotalCapacity is in kg/s */
+	  TotalCapacity = Bagnold(DS,&Time,Current->outflow,Current->class->width,
+				  Current->class->friction,Current->slope);
+	  TotalCapacity -= CapacityUsed; /* Avoid mult use of avail streampower */
+	  if(TotalCapacity<=0) TotalCapacity=0.0;
+
+	  /* if(Current->id == 751 || Current->id == 1267)
+		    printf("id %d size %d mass %.2f TotalCapacity=%.2f upstrin %.2f
+	    debrisin %.2f overlandin %.2f  \n",Current->id,
+	    i,Current->sediment.mass[i],TotalCapacity,Current->sediment.inflow[i],Current->sediment.debrisinflow[i],Current->sediment.overlandinflow[i]); */
 	  /*exclude the slug of sediment from the first time step */
-	  if(IsEqualTime(&(Time.Current), &(Time.Start))) 
-	    lateral_sed_inflow_rate = 0.0;
-     	  /* lateral inflow for the reach per second kg/s */
-	  else lateral_sed_inflow_rate = (Current->sediment.debrisinflow[i] + Current->sediment.overlandinflow[i])/(float) Time.Dt;
+	  if(IsEqualTime(&(Time.Current), &(Time.Start))) Current->sediment.inflow[i]=0.0;
+	  else Current->sediment.inflow[i] += Current->sediment.debrisinflow[i] + Current->sediment.overlandinflow[i];
 
-	  /* inflow from upstream reach */
-	  Current->sediment.inflowrate[i] = Current->sediment.inflow[i]/(float) Time.Dt;
-
-	  /****************************************/
-	  /* Loop for each sub-timestep           */
-	  /****************************************/
-	  for(tstep=0;tstep<numinc;tstep++) {
-
-	    Qup = Current->last_inflow + dIdt*tstep*DT_sed;
-	    Qdown = Current->last_outflow + dOdt*tstep*DT_sed;
-
-	    /****************************************/
-	    /* Find rate of bed change and new mass */
-	    /****************************************/
-	    /* TotalCapacity is in kg/s */
-	    if(SedDiam[i] < 0.062) { /* per Wicks and Bathurst, wash load */
-	      TotalCapacity = 
-		Current->sediment.inflowrate[i]+Current->sediment.mass[i]/DT_sed;
+	  /* per Wicks and Bathurst 1996, finer than 0.062 mm is wash load */
+	  if(SedDiam[i] < 0.062) {
+	    tempoutflow = Current->sediment.inflow[i];
+	  }
+	  else {	    
+	    if(TotalCapacity*Time.Dt >= Current->sediment.mass[i]+Current->sediment.inflow[i]) {
+	      tempoutflow = Current->sediment.mass[i]+Current->sediment.inflow[i];
+	      CapacityUsed += (Current->sediment.mass[i]+Current->sediment.inflow[i])/((float) Time.Dt);
 	    }
 	    else {
-	      TotalCapacityUp = Bagnold(DS,&Time,Qup,Current->class->width,
-					Current->class->friction,Current->slope);
-	      TotalCapacityDown = Bagnold(DS,&Time,Qdown,Current->class->width,
-					  Current->class->friction,Current->slope);
-	      TotalCapacity=phi*TotalCapacityDown + (1.0-phi)*TotalCapacityUp;
-	      TotalCapacity -= CapacityUsed; /* Avoid mult use of streampower */
+	      tempoutflow = TotalCapacity*Time.Dt;
+	      CapacityUsed += TotalCapacity;
 	    }
-	    if(TotalCapacity<=0) TotalCapacity=0.0;
-	    if(TotalCapacity*DT_sed >= Current->sediment.mass[i]) {
-	      dMdt = Current->sediment.mass[i]/DT_sed;
-	      Current->sediment.mass[i] = 0;
-	    }
-	    else {
-	      dMdt = TotalCapacity;
-	      Current->sediment.mass[i] -=  TotalCapacity*DT_sed;
-	    }
+	  }
 
-	    /****************************************/
-	    /* Calculate reach sed outflow rate     */
-	    /****************************************/
-	    /* limit it to the total available sediment transport capacity */
-	    term3 = (1.-theta) * 
-	      (Current->sediment.last_outflowrate[i]-Current->sediment.last_inflowrate[i]);
-	    term4 = theta * Current->sediment.inflowrate[i];
-	    Current->sediment.outflowrate[i] = 
-	      (1./theta)*(lateral_sed_inflow_rate-dMdt-term3+term4);
-	    if(Current->sediment.outflowrate[i]<0.0) Current->sediment.outflowrate[i]=0.0;
-	    if(Current->sediment.outflowrate[i]>TotalCapacity) {
-	      Current->sediment.mass[i] += 
-		(Current->sediment.outflowrate[i]-TotalCapacity)*DT_sed;
-	      dMdt -= Current->sediment.outflowrate[i]-TotalCapacity;
-	      Current->sediment.outflowrate[i]=TotalCapacity;
-	    }
-	    
-	    /****************************************/
-	    /* Assign new values to next step old   */
-	    /****************************************/
-	    Current->sediment.last_outflowrate[i]=Current->sediment.outflowrate[i];
-	    Current->sediment.last_inflowrate[i]=Current->sediment.inflowrate[i];
+	  /*	  if(Current->id == 751)
+	    printf("id %d size %d TotalCapacity=%.2f Q %.2f in %.2f out %.2f
+	    CapacityUsed=%.2f
+	    mass=%.2f\n",Current->id,i,TotalCapacity,Current->outflow,Current->sediment.inflow[i],Current->sediment.outflow[i], CapacityUsed,Current->sediment.mass[i]); */
 
-	    /****************************************/
-	    /* Accumulate reach sed outflow mass    */
-	    /****************************************/
-	    Current->sediment.outflow[i] += Current->sediment.outflowrate[i]*DT_sed;
+	  /* put in a stupid delay for the sediment transport */
+	  Current->sediment.outflow[i] = 
+	    Current->sediment.last_outflow[i]*alpha + tempoutflow*(1-alpha);
 
-	    CapacityUsed += dMdt;
+	  if(Current->sediment.outflow[i]>TotalCapacity*Time.Dt) 
+	    Current->sediment.outflow[i] = TotalCapacity*Time.Dt;
+	  if(Current->sediment.outflow[i]>Current->sediment.mass[i]+Current->sediment.inflow[i])
+	    Current->sediment.outflow[i] = Current->sediment.mass[i]+Current->sediment.inflow[i];
 
-	  } /* end of sub-time step loop */
+	  Current->sediment.mass[i] += Current->sediment.inflow[i]-Current->sediment.outflow[i] ;
+	  Current->sediment.last_outflow[i] = Current->sediment.outflow[i];
 
-	  Current->sediment.totalmass += Current->sediment.mass[i];
+	  /* pass the sediment mass outflow to the next downstream reach */
+	  if(Current->outlet != NULL) {
+	    Current->outlet->sediment.inflow[i] += Current->sediment.outflow[i];
+	  }
+
+	  Current->sediment.totalmass += Current->sediment.mass[i];  
 
 	  /* calculate outflow concentration in mg/l */
 	  if(Current->slope>0.0) 
@@ -828,21 +774,17 @@ void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, DU
 	  Current->sediment.outflowconc += 
 	    (1000.0*Current->sediment.outflow[i]/(Current->outflow))*(V/Vsed);
 
-	  /* pass the sediment mass outflow to the next downstream reach */
-	  if(Current->outlet != NULL)
-	    Current->outlet->sediment.inflow[i] += Current->sediment.outflow[i];
-	  
-	} /* close loop for each sediment size */
-	
-      } /* close if statement checking for stream order */
-      
-	/* the next 7 lines are from channel_route_network -- closes the loop above */
-      order_count += 1;
-    } /* close while statement checking that CURRENT != NULL */
-    Current = Current->next;
+	}
 
+       	if(Current->id == 257) printf("id %d outc=
+		%.2f Q= %.2f\n",Current->id,Current->sediment.outflowconc,Current->outflow);
+	/* the next 7 lines are from channel_route_network -- closes the loop above */
+	order_count += 1;
+      }
+      Current = Current->next;
+    }
     if (order_count == 0)
       break;
-  } /* close loop for the stream order */
+  }
 }
 

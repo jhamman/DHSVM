@@ -4,7 +4,7 @@
 
 #	$Id$	
 
-OBJS = AdjustStorage.o Aggregate.o AggregateRadiation.o		 \
+OBJS = AdjustStorage.o Aggregate.o AggregateRadiation.o	Bagnold.o	 \
 CalcAerodynamic.o CalcAvailableWater.o CalcDistance.o		     \
 CalcEffectiveKh.o CalcKhDry.o CalcSafetyFactor.o CalcSnowAlbedo.o CalcSolar.o \
 CalcTotalWater.o CalcTransmissivity.o CalcWeights.o Calendar.o	     \

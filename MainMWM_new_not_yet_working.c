@@ -6,7 +6,7 @@
  * ORG:          University of Washington, Department of Civil Engineering
  * E-MAIL:       dhsvm@hydro.washington.edu
  * ORIG-DATE:    Sep-02
- * Last Change: Thu Jun 19 09:27:02 2003 by Ed Maurer <edm@u.washington.edu>
+ * Last Change: Thu Jun 19 09:25:22 2003 by Ed Maurer <edm@u.washington.edu>
  * DESCRIPTION:  Main routine to drive MWM - the Mass Wasting Module for DHSVM 
  * DESCRIP-END.cd
  * FUNCTIONS:    main()
@@ -840,9 +840,8 @@ void RouteChannelSediment(Channel * Head, Channel *RoadHead, TIMESTRUCT Time, DU
       order_count += 1;
     } /* close while statement checking that CURRENT != NULL */
     Current = Current->next;
-
-    if (order_count == 0)
-      break;
   } /* close loop for the stream order */
+  if (order_count == 0)
+    break;
 }
 

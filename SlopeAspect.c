@@ -391,6 +391,7 @@ float ElevationSlope(MAPSIZE *Map, FINEPIX ***FineMap, int y, int x, int *nexty,
   float temp_slope[8];
   double length_diagonal;
   float dx, dy, celev;
+  float elevsink=0.0;
 
   /* fill neighbor array */
   
@@ -411,12 +412,26 @@ float ElevationSlope(MAPSIZE *Map, FINEPIX ***FineMap, int y, int x, int *nexty,
 
   length_diagonal = sqrt((pow(dx, 2)) + (pow(dy, 2))); 
 
+/* added to remove sinks. Will be removed when this becomes a preprocessing step */
+ 
+     if(celev < neighbor_elev[0] && celev < neighbor_elev[1] && celev < neighbor_elev[2] && celev < neighbor_elev[3]){
+      elevsink=neighbor_elev[0];
+      for (n = 1; n < NDIRS; n++) {
+          if (neighbor_elev[n] < elevsink && neighbor_elev[n] != OUTSIDEBASIN)
+               elevsink= neighbor_elev[n];
+      }
+      celev=elevsink;
+     }
+/* end of added text */
+
+/*changed to reflect that currently DHSVM can only be run in 4 directions */
+
   for (n = 0; n < NDIRS; n++) {
     if (neighbor_elev[n] == OUTSIDEBASIN) 
       neighbor_elev[n] = celev;
-    if(n==0 || n==2 || n==4 || n==6)
-      temp_slope[n] = (atan((celev - neighbor_elev[n]) / length_diagonal)) * DEGPRAD;
-    else if(n==1 || n==5)
+/*    if(n==0 || n==2 || n==4 || n==6) */
+/*      temp_slope[n] = (atan((celev - neighbor_elev[n]) / length_diagonal)) * DEGPRAD; */
+    if(n==1 || n==3)
       temp_slope[n] = (atan((celev - neighbor_elev[n]) / dy)) * DEGPRAD;
     else
       temp_slope[n] = (atan((celev - neighbor_elev[n]) / dx)) * DEGPRAD;

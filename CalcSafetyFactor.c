@@ -48,8 +48,11 @@ float CalcSafetyFactor(float Slope, int Soil, float SoilDepth, int Veg, SEDTABLE
   float safetyfactor;
 
   if (Slope >= 0. && Slope <= 90.) { 
-    
+
+    if(SoilDepth<=0.0) SoilDepth=0.001;
+
     M = M/SoilDepth;
+    if(M>=1.0) M=0.99;
 
     /* Get stochastic parameter values. */
     /* Need to check for valid soil and vegetation types ! */

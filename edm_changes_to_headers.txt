@@ -1,0 +1,66 @@
+Calendar.h
+DHSVMChannel.h
+36,37d35
+<   FILE *sedimentout;
+<   FILE *sedimentflowout;
+46d43
+< void InitSedimentDump(CHANNEL *channel, char *DumpPath);
+DHSVMerror.h
+brent.h
+channel.h
+16,17d15
+< #define NSEDSIZES 3 /* number of sediment sizes used for transport */
+< 
+45,59d42
+<    structure for storing the channel sediment information 
+<    ------------------------------------------------------------- */
+< typedef struct {
+<   float mass[NSEDSIZES];             /* stored mass, kg, of sediment in channel by D */
+<   float debrisinflow[NSEDSIZES];     /* inflow of sediment from mass wasting, kg, by D */
+<   float overlandinflow[NSEDSIZES];   /* inflow of sediment from overland
+< 					  flow erosion, kg, by D */
+<   float inflow[NSEDSIZES];           /* inflow from upstream reach, kg, by D */
+<   float outflow[NSEDSIZES];          /* outflow to downstream reach, kg, by D */
+<   float tempvol;           /*volume of debris inflow - total. Temporary space */
+<   float totalmass;         /* total sediment mass in reach */
+<   float outflowconc;       /* outflow concentration in ppm */
+< } CHANSED;
+< 
+< /* -------------------------------------------------------------
+89,90c72
+< 
+<   CHANSED sediment;            /* sediment sub-structure */
+---
+>   float sediment;               /* cubic meters */
+118,119d99
+< int channel_save_sed_outflow_text(char *tstring, Channel * net, FILE * out,
+< 			      FILE * out2, int flag);
+128d107
+< void sed_vol_to_distrib_mass(Channel * head, float *volumearray);
+channel_grid.h
+constants.h
+90c90
+< #define VISCOSITY 1.0 /* kinematic viscosity of water in mm2/s */
+---
+> #define VISCOSITY 1.0 /* kinematic viscosity of water in mm/s */
+data.h
+573c573
+<   float sediment;                /* sediment thickness in m */
+---
+>   float sediment;
+errorhandler.h
+fifoNetCDF.h
+fifobin.h
+fileio.h
+functions.h
+getinit.h
+lookuptable.h
+massenergy.h
+rad.h
+settings.h
+sizeofnt.h
+slopeaspect.h
+snow.h
+soilmoisture.h
+tableio.h
+varid.h

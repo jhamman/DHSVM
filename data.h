@@ -570,7 +570,7 @@ typedef struct {
   float Dem; 
   float Slope;
   float bedrock;
-  float sediment;
+  float sediment;                /* sediment thickness in m */
   float SatThickness;            /* Water table thickness (m) */
   float DeltaDepth;
   float probability;             /* Pixel failure probability. */

@@ -204,8 +204,8 @@ void InitStations(LISTPTR Input, MAPSIZE * Map, int NDaySteps,
   if (Options->Outside == TRUE && Options->Prism == TRUE) {
 
     for (i = 0; i < *NStats; i++) {
-      sprintf(tempfilename, "%s%s", (*Stat)[i].MetFile.FileName,
-	      Options->PrismDataExt);
+      sprintf(tempfilename, "%s.prism", (*Stat)[i].MetFile.FileName);
+      /* Options->PrismDataExt); */
       OpenFile(&PrismStatFile, tempfilename, "rt", FALSE);
       for (k = 0; k < 12; k++) {
 	fscanf(PrismStatFile, "%f ", &(*Stat)[i].PrismPrecip[k]);

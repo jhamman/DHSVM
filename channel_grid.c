@@ -61,7 +61,7 @@ void RouteDebrisFlow(float *SedimentToChannel, int y, int x, float SlopeAspect,
 
   /* Debris flow hits head wall; all sediment is deposited in channel. */
   if(Continue == FALSE) {
-    CurrentSeg->sediment += *SedimentToChannel;
+    CurrentSeg->sediment.tempvol += *SedimentToChannel;
     *SedimentToChannel = 0.0;
   }
 
@@ -159,20 +159,20 @@ Channel *Find_Next_Segment(ChannelMapPtr ** map, int col, int row, int CurrentID
     
   if(test <= 70. && NextPtr->slope > 0.061) {
     *Continue = TRUE;
-    *SedimentToChannel += CurrPtr->sediment;
-    CurrPtr->sediment = 0.0;
+    *SedimentToChannel += CurrPtr->sediment.tempvol;
+    CurrPtr->sediment.tempvol = 0.0;
   }
   else {
     *Continue = FALSE;
-    *SedimentToChannel += CurrPtr->sediment;
-    CurrPtr->sediment = 0.;
+    *SedimentToChannel += CurrPtr->sediment.tempvol;
+    CurrPtr->sediment.tempvol = 0.;
     if(test > 70.) { 
-      NextPtr->sediment += *SedimentToChannel/2.;
-      CurrPtr->sediment = *SedimentToChannel/2.;
+      NextPtr->sediment.tempvol += *SedimentToChannel/2.;
+      CurrPtr->sediment.tempvol = *SedimentToChannel/2.;
       *SedimentToChannel = 0.0;
     }
     else {
-      NextPtr->sediment += *SedimentToChannel;
+      NextPtr->sediment.tempvol += *SedimentToChannel;
       *SedimentToChannel = 0.0;
     }
   }
@@ -795,3 +795,7 @@ int main(int argc, char **argv)
 
 }
 #endif
+
+
+
+

@@ -129,6 +129,20 @@ void InitChannelDump(CHANNEL * channel, char *DumpPath)
 
   }
 }
+/* -------------------------------------------------------------
+   InitSedimentDump
+   ------------------------------------------------------------- */
+void InitSedimentDump(CHANNEL * channel, char *DumpPath)
+{
+  char buffer[NAMESIZE];
+
+  if (channel->streams != NULL) {
+    sprintf(buffer, "%sSediment.Flow", DumpPath);
+    OpenFile(&(channel->sedimentout), buffer, "w", TRUE);
+    sprintf(buffer, "%sSedimentflow.Only", DumpPath);
+    OpenFile(&(channel->sedimentflowout), buffer, "w", TRUE);
+  }
+}
 
 /* -------------------------------------------------------------
    ChannelCulvertFlow    

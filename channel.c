@@ -17,6 +17,7 @@
 #include <errno.h>
 #include "errorhandler.h"
 #include "channel.h"
+#include "constants.h"
 #include "tableio.h"
 #include "settings.h"
 
@@ -269,10 +270,8 @@ Channel *channel_find_segment(Channel * head, SegmentID id)
    ------------------------------------------------------------- */
 void initialize_sediment_array(Channel * head, float *InitialSegmentSediment)
 {
-  for (; head != NULL; head = head->next) {
-    InitialSegmentSediment[head->id] += head->sediment;
-  }
-
+  for (; head != NULL; head = head->next) 
+    InitialSegmentSediment[head->id] += head->sediment.tempvol; 
 }
 
 /* -------------------------------------------------------------
@@ -280,13 +279,25 @@ void initialize_sediment_array(Channel * head, float *InitialSegmentSediment)
    ------------------------------------------------------------- */
 void update_sediment_array(Channel * head, float *InitialSegmentSediment)
 {
-  for (; head != NULL; head = head->next) {
-    head->sediment = InitialSegmentSediment[head->id];
-  }
-
+  for (; head != NULL; head = head->next)
+    head->sediment.tempvol = InitialSegmentSediment[head->id];
 }
-
-
+/* -------------------------------------------------------------
+   sed_vol_to_distrib_mass
+   ------------------------------------------------------------- */
+  /* sediment volume inflow distribute by sediment size, convert to mass */
+void sed_vol_to_distrib_mass(Channel * head, float *volumearray)
+{
+  int i;
+  float bulkporosity;
+  bulkporosity = 0.245+0.14*pow(DEBRISd50,-0.21); /* Komura, 1961 relation */
+  for (; head != NULL; head = head->next) {
+    for(i=0;i<NSEDSIZES;i++) {
+      head->sediment.debrisinflow[i] = 
+	volumearray[head->id]*(1-bulkporosity)*PARTDENSITY*(1/(float)NSEDSIZES);
+    }
+  }
+}
 /* -------------------------------------------------------------
    channel_routing_parameters
    ------------------------------------------------------------- */
@@ -817,3 +828,68 @@ int main(int argc, char **argv)
   exit(0);
 }
 #endif
+
+/* -------------------------------------------------------------
+   channel_save_sed_outflow_text
+   Saves the channel sediment outflow using a text string as the time field
+   ------------------------------------------------------------- */
+int
+channel_save_sed_outflow_text(char *tstring, Channel * net, FILE * out,
+			  FILE * out2, int flag)
+{
+  int err = 0;
+
+  /* print header line first time through */
+  if (flag == 1) {
+    fprintf(out2, "DATE ");
+    for (; net != NULL; net = net->next) {
+      if (net->record)
+	fprintf(out2, "%s ", net->record_name);
+    }
+    fprintf(out2, "\n");
+  }
+
+  if (fprintf(out2, "%15s ", tstring) == EOF) {
+    error_handler(ERRHDL_ERROR,
+		  "channel_save_outflow: write error:%s", strerror(errno));
+    err++;
+  }
+
+  for (; net != NULL; net = net->next) {
+    if (net->record) {
+      if (fprintf(out, "%15s %10d %12.5g %12.5g",
+		  tstring, net->id, net->sediment.totalmass, net->sediment.outflowconc) == EOF) {
+	error_handler(ERRHDL_ERROR,
+		      "channel_save_sed_outflow: write error:%s", strerror(errno));
+	err++;
+      }
+      if (fprintf(out2, "%12.5g ", net->sediment.outflowconc) == EOF) {
+	error_handler(ERRHDL_ERROR,
+		      "channel_save_outflow: write error:%s", strerror(errno));
+	err++;
+      }
+      if (net->record_name != NULL) {
+	if (fprintf(out, "   \"%s\"\n", net->record_name) == EOF) {
+	  error_handler(ERRHDL_ERROR,
+			"channel_save_outflow: write error:%s",
+			strerror(errno));
+	  err++;
+	}
+
+      }
+      else {
+	if (fprintf(out, "\n") == EOF) {
+	  error_handler(ERRHDL_ERROR,
+			"channel_save_outflow: write error:%s",
+			strerror(errno));
+	  err++;
+	}
+      }
+    }
+  }
+  fprintf(out2, "\n");
+
+  return (err);
+}
+
+

@@ -13,6 +13,8 @@
 #ifndef _channel_h_
 #define _channel_h_
 
+#define NSEDSIZES 3 /* number of sediment sizes used for transport */
+
 typedef unsigned short int SegmentID, ClassID;
 
 /* -------------------------------------------------------------
@@ -38,6 +40,28 @@ typedef struct _channel_class_rec_ {
   struct _channel_class_rec_ *next;
 
 } ChannelClass;
+
+/* -------------------------------------------------------------
+   structure for storing the channel sediment information 
+   ------------------------------------------------------------- */
+typedef struct {
+  float mass[NSEDSIZES];             /* stored mass, kg, of sediment in channel by D */
+  float last_mass[NSEDSIZES];      
+  float debrisinflow[NSEDSIZES];     /* inflow of sediment from mass wasting, kg, by D */
+  float overlandinflow[NSEDSIZES];   /* inflow of sediment from overland
+					  flow erosion, kg, by D */
+  float inflow[NSEDSIZES];           /* inflow from upstream reach, kg, by D */
+  float last_inflow[NSEDSIZES];           /* inflow from upstream reach, kg, by D */
+  float inflowrate[NSEDSIZES];           /* inflow from upstream reach, kg/s, by D */
+  float last_inflowrate[NSEDSIZES]; 
+  float outflow[NSEDSIZES];          /* outflow to downstream reach, kg, by D */
+  float last_outflow[NSEDSIZES];          /* outflow to downstream reach, kg, by D */
+  float outflowrate[NSEDSIZES];          /* outflow to downstream reach, kg/s, by D */
+  float last_outflowrate[NSEDSIZES]; 
+  float tempvol;           /*volume of debris inflow - total. Temporary space */
+  float totalmass;         /* total sediment mass in reach */
+  float outflowconc;       /* outflow concentration in ppm */
+} CHANSED;
 
 /* -------------------------------------------------------------
    struct Channel
@@ -69,7 +93,8 @@ struct _channel_rec_ {
   float outflow;		/* cubic meters */
   float storage;		/* cubic meters */
   float last_lateral_inflow;	/* cubic meters */
-  float sediment;               /* cubic meters */
+
+  CHANSED sediment;            /* sediment sub-structure */
 
   struct _channel_rec_ *outlet;	/* NULL if does not drain to another segment */
 
@@ -97,6 +122,8 @@ int channel_route_network(Channel * net, int deltat);
 int channel_save_outflow(double time, Channel * net, FILE * file, FILE * file2);
 int channel_save_outflow_text(char *tstring, Channel * net, FILE * out,
 			      FILE * out2, int flag);
+int channel_save_sed_outflow_text(char *tstring, Channel * net, FILE * out,
+			      FILE * out2, int flag);
 void channel_free_network(Channel * net);
 
 				/* Module */
@@ -105,5 +132,6 @@ void channel_init(void);
 void channel_done(void);
 void initialize_sediment_array(Channel * head, float *InitialSegmentSediment);
 void update_sediment_array(Channel * head, float *InitialSegmentSediment);
+void sed_vol_to_distrib_mass(Channel * head, float *volumearray);
 
 #endif

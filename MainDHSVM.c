@@ -59,6 +59,7 @@ int main(int argc, char **argv)
   float ***WindModel = NULL;
   int MaxStreamID, MaxRoadID;
 
+  int flag;
   int i;
   int j;
   int x;			/* row counter */
@@ -72,6 +73,7 @@ int main(int argc, char **argv)
 
   int NGraphics;		/* number of graphics for X11 */
   int *which_graphics;		/* which graphics for X11 */
+  char buffer[32];
 
   AGGREGATED Total = {		/* Total or average value of a 
 				   variable over the entire basin */
@@ -215,6 +217,10 @@ int main(int argc, char **argv)
     ReadChannelState(Dump.InitStatePath, &(Time.Start), ChannelData.streams);
   }
 
+  if (Options.Sediment) {
+    InitSedimentDump(&ChannelData, Dump.Path);
+  }
+
   InitSnowMap(&Map, &SnowMap);
   InitAggregated(Veg.MaxLayers, Soil.MaxLayers, &Total);
 
@@ -257,8 +263,10 @@ int main(int argc, char **argv)
     InitFineMaps(Input, &Options, &Map, &Soil, &TopoMap, &SoilMap, 
 		  &FineMap);
 
+    printf("\n initializing channel sediment\n");
     InitChannelSediment(ChannelData.streams);
 
+    printf("\n done...\n");
     /* Allocate memory for the sediment grid */
     if (!(SedMap = (SEDPIX **) calloc(Map.NY, sizeof(SEDPIX *))))
       ReportError("MainDHSVM", 1);
@@ -363,6 +371,9 @@ int main(int argc, char **argv)
 
 #ifndef SNOW_ONLY
 
+    /* set sediment inflows to zero - they are incremented elsewhere */
+    if(Options.Sediment) InitChannelSedInflow(ChannelData.streams);
+
     RouteSubSurface(Time.Dt, &Map, TopoMap, VType, VegMap, Network,
 		    SType, SoilMap, &ChannelData, &Time, &Options, Dump.Path,
 		    SedMap, &FineMap, SedType, MaxStreamID);
@@ -370,9 +381,16 @@ int main(int argc, char **argv)
     if (Options.HasNetwork)
       RouteChannel(&ChannelData, &Time, &Map, TopoMap, SoilMap, &Total);
 
+    /* Sediment Routing in Channel and output to sediment files */
     if(Options.Sediment) {
-      // RouteChannelSediment(ChannelData.streams, ChannelData.roads, Time, &Dump);
-    //   OutputChannelSediment(ChannelData.streams, Time, &Dump);
+      RouteChannelSediment(ChannelData.streams, ChannelData.roads, Time, &Dump);
+      SPrintDate(&(Time.Current), buffer);
+      flag = IsEqualTime(&(Time.Current), &(Time.Start));
+      channel_save_sed_outflow_text(buffer, ChannelData.streams,
+			      ChannelData.sedimentout,
+			      ChannelData.sedimentflowout, flag);
+
+      /* OutputChannelSediment(ChannelData.streams, Time, &Dump); */
     }
 
     if (Options.Extent == BASIN)
@@ -420,3 +438,13 @@ int main(int argc, char **argv)
   return EXIT_SUCCESS;
 
 }
+
+
+
+
+
+
+
+
+
+

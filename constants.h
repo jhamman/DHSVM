@@ -87,7 +87,7 @@
 
 #define TIMEWEIGHT 0.65
 
-#define VISCOSITY 1.0 /* kinematic viscosity of water in mm/s */
+#define VISCOSITY 1.0 /* kinematic viscosity of water in mm2/s */
 
 /**************** extern constants - see globals.c ****************/
 

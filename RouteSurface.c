@@ -175,7 +175,13 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	
 	  outflow = SoilMap[y][x].startRunoff;
 
-	  slope = TopoMap[y][x].Slope;
+	  slope = TopoMap[y][x].Slope; /*large grid cell slope.*/
+          if (slope == 0) slope=0.0001;
+	  else if (slope < 0) {
+	    printf("negative slope in RouteSurface.c\n");
+	    exit(0);
+	  }
+
 	  beta = 3./5.;
 	  alpha = pow(SedType[SoilMap[y][x].Soil-1].Manning*pow(Map->DX,2/3)/sqrt(slope),beta);
 	  
