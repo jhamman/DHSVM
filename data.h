@@ -385,7 +385,8 @@ typedef struct {
   float TSurf;			/* Temperature of snow pack surface layer */
   float ColdContent;		/* Cold content of snow pack */
   float Albedo;			/* Albedo of snow pack */
-  float Depth;			/* Snow depth */
+  float Depth;			/* Snow depth; Does not appear to be calculated
+				 or used anywhere */
   float VaporMassFlux;		/* Vapor mass flux to/from snow pack
 				   (m/timestep) */
   float CanopyVaporMassFlux;	/* Vapor mass flux to/from intercepted snow in

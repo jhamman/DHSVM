@@ -69,9 +69,11 @@ float CalcSafetyFactor(float Slope, int Soil, float SoilDepth, int Veg,
     FrictionAngle = FindValue(SedType[Soil - 1].Friction);
     SoilCohesion = FindValue(SedType[Soil - 1].Cohesion);
     Surcharge = FindValue(VType[Veg - 1].VegSurcharge);
-  
+
+    /* Depth is not calculated anywhwere, so SnowDensity
+       is not included in the Factor of Safety calculation */
     SnowDensity = (Swq - Depth) * WATER_DENSITY;
-    Surcharge += SnowDensity;
+ /*    Surcharge += SnowDensity; */
 
 /*     if(SnowDensity>0) printf("Surcharge w/  snow %4.3f SnowDensity %4.3f\n",  */
 /* 			     Surcharge, SnowDensity);  */
