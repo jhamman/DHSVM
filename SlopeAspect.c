@@ -7,7 +7,7 @@
  * E-MAIL:       perk@clio.muse.pnl.gov
  * ORIG-DATE:    21-May-96
  * DESCRIPTION:  This module contains two routines to compute "slope" and
- *               "aspect"  direction of slope): one which uses only terrain
+ *               "aspect"  (direction of slope): one which uses only terrain
  *               elevations and another which uses water table elevations.
  * DESCRIP-END.
  * FUNCTIONS:    valid_cell()
@@ -51,26 +51,18 @@ int yneighbor[NDIRS] = {
 };
 
 float temp_aspect[NDIRSfine] = {
-#if  NDIRSfine == 4
-  180., 270., 0., 90.
-#elif NDIRSfine == 8
  135., 180., 225., 270., 315., 0., 45., 90.
-#endif
 };
 
+
+/* NDIRS fine used for redistribution of subsurface flow in topoindex
+ * and for slope/aspect calculations, must equal 8. */
 int xneighborfine[NDIRSfine] = {
-#if NDIRSfine == 4
-  0, 1, 0, -1
-#elif NDIRSfine == 8
-  -1, 0, 1, 1, 1, 0, -1, -1
-#endif
+-1, 0, 1, 1, 1, 0, -1, -1
 };
+
 int yneighborfine[NDIRSfine] = {
-#if NDIRSfine == 4
-  -1, 0, 1, 0
-#elif NDIRSfine == 8
-  1, 1, 1, 0, -1, -1, -1, 0
-#endif
+ 1, 1, 1, 0, -1, -1, -1, 0
 };
 
 /* -------------------------------------------------------------
@@ -267,7 +259,7 @@ void ElevationSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap)
 	    neighbor_elev[n] = ((TopoMap[yn][xn].Mask) ? TopoMap[yn][xn].Dem : (float) OUTSIDEBASIN);
 	  }
 	  else {
-	    neighbor_elev[n] = OUTSIDEBASIN;
+	    neighbor_elev[n] = (float) OUTSIDEBASIN;
 	  }
 	}
 	
@@ -423,10 +415,10 @@ void HeadSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap, SOILPIX ** SoilMap,
 	  if (valid_cell(Map, xn, yn)) {
 	    neighbor_elev[n] =
 	      ((TopoMap[yn][xn].Mask) ? SoilMap[yn][xn].WaterLevel :
-	       OUTSIDEBASIN);
+	       (float) OUTSIDEBASIN);
 	  }
 	  else {
-	    neighbor_elev[n] = OUTSIDEBASIN;
+	    neighbor_elev[n] = (float) OUTSIDEBASIN;
 	  }
 	}
 
@@ -449,99 +441,92 @@ void HeadSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap, SOILPIX ** SoilMap,
 float ElevationSlope(MAPSIZE *Map, FINEPIX ***FineMap, int y, int x, int *nexty, 
 		     int *nextx, int prevy, int prevx, float *Aspect) 
 {
-  int n;
-  float neighbor_elev[NDIRSfine];
+  int n, direction;
+  float soil_elev[NDIRSfine];
+  float bedrock_elev[NDIRSfine];
   float Slope;
   float temp_slope[NDIRSfine];
   double length_diagonal;
   float dx, dy, celev;
-  float elevsink=0.0;
 
   /* fill neighbor array */
   
   for (n = 0; n < NDIRSfine; n++) {
     int xn = x + xneighborfine[n];
     int yn = y + yneighborfine[n];
-          
-    if (valid_cell_fine(Map, xn, yn)) 
-      neighbor_elev[n] = (*FineMap)[yn][xn].bedrock + (*FineMap)[yn][xn].sediment;
-    else 
-      neighbor_elev[n] = OUTSIDEBASIN;
-  }
-        
+   
+    if (valid_cell_fine(Map, xn, yn)) {
+      bedrock_elev[n] = (((*FineMap)[yn][xn].Mask) ? (*FineMap)[yn][xn].bedrock : (float) OUTSIDEBASIN);
+      soil_elev[n] = (((*FineMap)[yn][xn].Mask) ? (*FineMap)[yn][xn].bedrock+(*FineMap)[yn][xn].sediment : (float) OUTSIDEBASIN);
+      
+    }
+    else {
+      soil_elev[n] = (float) OUTSIDEBASIN;
+      bedrock_elev[n] = (float) OUTSIDEBASIN;
+    }
+
+    
+  }       
+  /*  Find bedrock slope in all directions. Negative slope = ascent, positive slope = descent.  */     
   dx = Map->DMASS;
   dy = Map->DMASS;
-  celev = (*FineMap)[y][x].bedrock + (*FineMap)[y][x].sediment;
+  celev = (*FineMap)[y][x].bedrock;
+
 
   length_diagonal = sqrt((pow(dx, 2)) + (pow(dy, 2))); 
 
-  switch (NDIRSfine){
-  case 8:     
-    for (n = 0; n < NDIRSfine; n++) {
-      if (neighbor_elev[n] == OUTSIDEBASIN) 
-	neighbor_elev[n] = celev;
-      if(n==0 || n==2 || n==4 || n==6)
-	temp_slope[n] = (atan((celev - neighbor_elev[n]) / length_diagonal))
-	  * DEGPRAD;
-      else if(n==1 || n==5)
-	temp_slope[n] = (atan((celev - neighbor_elev[n]) / dy)) * DEGPRAD;
-      else
-	temp_slope[n] = (atan((celev - neighbor_elev[n]) / dx)) * DEGPRAD;
-    }
-    break;
-  
-  case 4:
-    ReportError("ElevationSlope",65);
-    assert(0); 
+  for (n = 0; n < NDIRSfine; n++) {
+    if (bedrock_elev[n] == OUTSIDEBASIN) 
+      bedrock_elev[n] = DHSVM_HUGE;
     
-    /* Removes sinks since preprocessing does not remove sinks in 4 directions. 
-       This is WORK IN PROGRESS, thus the assert(0) prior to it. */
-       if(celev < neighbor_elev[0] && celev < neighbor_elev[1] && celev < neighbor_elev[2] && celev < neighbor_elev[3]){
-      elevsink=neighbor_elev[0];
-      for (n = 1; n < NDIRSfine; n++) {
-	if (neighbor_elev[n] < elevsink && neighbor_elev[n] != OUTSIDEBASIN)
-	  elevsink= neighbor_elev[n];
-      }
-      celev=elevsink;
-    } 
-  
-    for (n = 0; n < NDIRSfine; n++) {
-      if (neighbor_elev[n] == OUTSIDEBASIN) 
-	neighbor_elev[n] = celev;
-      if(n==1 || n==3)
-	temp_slope[n] = (atan((celev - neighbor_elev[n]) / dy)) * DEGPRAD;
-      else
-	temp_slope[n] = (atan((celev - neighbor_elev[n]) / dx)) * DEGPRAD;
-    }
-    break;
-  default:
-    ReportError("ElevationSlope",65);
-    assert(0);	/* nothing else works */
-    break;
+    if(n==0 || n==2 || n==4 || n==6)
+      temp_slope[n] = (atan((celev - bedrock_elev[n]) / length_diagonal))
+	* DEGPRAD;
+    else if(n==1 || n==5)
+      temp_slope[n] = (atan((celev - bedrock_elev[n]) / dy)) * DEGPRAD;
+    else
+      temp_slope[n] = (atan((celev - bedrock_elev[n]) / dx)) * DEGPRAD;
   }
-  
+    
+ /* Find largest (positive) slope, this is the direction of failure along bedrock plain.  
+     Backtracking isn't a problem if using the bedrock, but sinks may exist. */ 
+   
   Slope = -999.;
   *Aspect = -99.;
 
   for (n = 0; n < NDIRSfine; n++){
-    if (temp_slope[n] >= 0.) {
-      if(temp_slope[n] > Slope) {
-	if((y + yneighborfine[n]) == prevy && (x + xneighborfine[n]) == prevx) {
-	 /*  fprintf(stderr, "%d %d %d Not allowed to back track!\n", n, y, x); */
-	}
-	else {
-	  Slope = temp_slope[n];
-	  *Aspect = temp_aspect[n] * PI / 180.0;
-	  *nexty = y + yneighborfine[n];
-	  *nextx = x + xneighborfine[n];
-	}
-      }
-
+    if(temp_slope[n] > Slope) {
+      Slope = temp_slope[n];
+      *Aspect = temp_aspect[n] * PI / 180.0;
+      direction = n;
+      *nexty = y + yneighborfine[n];
+      *nextx = x + xneighborfine[n];
     }
   }
+
+  /* If no positive slope found, a bedrock sink was encountered.  Assuming the sink should be filled to 
+     the lowest "pour elevation", aspect should have already been assigned correctly. */
+
+  /* Find dynamic slope in direction of steepest descent. */
   
-  if(Slope == -999.) {
-    fprintf(stderr, "Sink encountered in cell y= %d x= %d, all routes from here go up!\n", y,x);
+  celev = (*FineMap)[y][x].bedrock + (*FineMap)[y][x].sediment;
+  if(direction==0 || direction==2 || direction==4 || direction==6)
+    Slope = (atan((celev - soil_elev[direction]) / length_diagonal))
+      * DEGPRAD;
+  else if(n==1 || n==5)
+    Slope = (atan((celev - soil_elev[direction]) / dy)) * DEGPRAD;
+  else
+    Slope = (atan((celev - soil_elev[direction]) / dx)) * DEGPRAD;
+
+  /* It is possible that a "soil" sink could be encountered at this point.  
+     This is not really an error, and is checked for in MainMWM. */
+  // if(Slope < 0.0 ) {
+  // fprintf(stderr, "Sink encountered in cell y= %d x= %d, all routes from here go up!\n", y,x);
+  // }
+
+  if(Slope == -999. || *Aspect == -99.) {
+    fprintf(stderr, "Aspect not assigned, this shouldn't have happened.\n");
+    exit(0);
   }
 
   return Slope;
@@ -550,47 +535,18 @@ float ElevationSlope(MAPSIZE *Map, FINEPIX ***FineMap, int y, int x, int *nexty,
 /* -------------------------------------------------------------
    ElevationSlopeAspectfine
    ------------------------------------------------------------- */
-void ElevationSlopeAspectfine(MAPSIZE * Map, FINEPIX ** FineMap)
+void ElevationSlopeAspectfine(MAPSIZE * Map, FINEPIX ** FineMap, TOPOPIX **TopoMap)
 {
   const char *Routine = "ElevationSlopeAspectfine";
   int x;
   int y;
  /*  int n; */
   int k;
+  int coarsei, coarsej;
  /*  float neighbor_elev[NDIRSfine]; */
 
-  /*fill neighbor array */
-
-  for (x = 0; x < Map->NXfine; x++) { 
-    for (y = 0; y < Map->NYfine; y++) {
-      if (INBASIN(FineMap[y][x].Mask)) { 
-	
-	/* Count the number of cells in the basin.  Need this to allocate memory for
-	   the new, smaller Elev[] and Coords[][].  */
-	Map->NumCellsfine++;
-	
-/* 	for (n = 0; n < NDIRSfine; n++) { */
-/* 	  int xn = x + xneighborfine[n]; */
-/* 	  int yn = y + yneighborfine[n]; */
-	  
-/* 	  if (valid_cell_fine(Map, xn, yn)) { */
-/* 	    neighbor_elev[n] = ((FineMap[yn][xn].Mask) ? FineMap[yn][xn].Dem : (float) OUTSIDEBASIN); */
-/* 	  } */
-/* 	  else { */
-/* 	    neighbor_elev[n] = OUTSIDEBASIN; */
-/* 	  } */
-/* 	} */
-	
-/* 	slope_aspect(Map->DMASS, Map->DMASS, FineMap[y][x].Dem, neighbor_elev, */
-/* 		     &(FineMap[y][x].Slope), &(FineMap[y][x].Aspect)); */
-	
-      }/*  end if (INBASIN(FineMap[y][x].Mask)) { */
-	
-    }
-  }  /* end of for loops */
-  
-  /* Create a structure to hold elevations of only those cells
-     within the basin and the y,x of those cells.*/
+  /* Create a structure to hold elevations of all cells within the coarse
+     resolution mask and the y,x of those cells.*/
   
   if (!(Map->OrderedCellsfine = (ITEM *) calloc(Map->NumCellsfine, sizeof(ITEM))))
     ReportError((char *) Routine, 1);
@@ -598,8 +554,12 @@ void ElevationSlopeAspectfine(MAPSIZE * Map, FINEPIX ** FineMap)
   k = 0;
   for (y = 0; y < Map->NYfine; y++) {
     for (x = 0; x < Map->NXfine; x++) {
+      
+      coarsei = floor(y*Map->DMASS/Map->DY);
+      coarsej = floor(x*Map->DMASS/Map->DX);
+      
       /* Save the elevation, y, and x in the ITEM structure. */
-      if (INBASIN(FineMap[y][x].Mask)) {
+      if (INBASIN(TopoMap[coarsei][coarsej].Mask)) {
 	Map->OrderedCellsfine[k].Rank = FineMap[y][x].Dem;
 	Map->OrderedCellsfine[k].y = y;
 	Map->OrderedCellsfine[k].x = x;

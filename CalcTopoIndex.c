@@ -71,7 +71,7 @@
                  31 (5), 1315-1324.
 *****************************************************************************/
 
-void CalcTopoIndex(MAPSIZE *Map, FINEPIX **FineMap)
+void CalcTopoIndex(MAPSIZE *Map, FINEPIX **FineMap, TOPOPIX **TopoMap)
 {
   FILE *fo;
   char topoindexmap[100];
@@ -86,7 +86,8 @@ void CalcTopoIndex(MAPSIZE *Map, FINEPIX **FineMap)
   float **a;                    /* Area of hillslope per unit contour (m2) */
   float **tanbeta;
   float **contour_length;
-  
+  int coarsei, coarsej;
+
   /* These indices are so neighbors can be looked up quickly */
   int xneighbor[NDIRSfine] = {
 #if NDIRSfine == 4
@@ -146,11 +147,16 @@ void CalcTopoIndex(MAPSIZE *Map, FINEPIX **FineMap)
     for (n = 0; n < NDIRSfine; n++) {
       int xn = x + xneighbor[n];
       int yn = y + yneighbor[n];
+   
+      coarsei = floor(yn*Map->DMASS/Map->DY);
+      coarsej = floor(xn*Map->DMASS/Map->DX);
       
-      if (valid_cell_fine(Map, xn, yn))
-	neighbor_elev[n] = ((FineMap[yn][xn].Mask) ? FineMap[yn][xn].Dem : (float) OUTSIDEBASIN);
+      if(valid_cell_fine(Map,xn,yn)) {
+	// Solve for all grid cells within the coarse mask, not just the fine mask. 
+	neighbor_elev[n] = ((TopoMap[coarsei][coarsej].Mask) ? FineMap[yn][xn].Dem : (float) OUTSIDEBASIN);
+      }
       else 
-	neighbor_elev[n] = OUTSIDEBASIN;
+	neighbor_elev[n] = (float) OUTSIDEBASIN;
     }
     
     celev = FineMap[y][x].Dem; 
@@ -159,8 +165,9 @@ void CalcTopoIndex(MAPSIZE *Map, FINEPIX **FineMap)
     case 8:
       lower = 0;
       for (n = 0; n < NDIRSfine; n++) {
-	if(neighbor_elev[n] == OUTSIDEBASIN) 
+	if(neighbor_elev[n] == OUTSIDEBASIN) {
 	  neighbor_elev[n] = celev;
+	}
 	
 	/* Calculating tanbeta as tanbeta * length of cell boundary between
 	   the cell of interest and downsloping neighbor. */

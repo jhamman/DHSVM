@@ -94,9 +94,10 @@ typedef unsigned int unint;
 #define NAMESIZE     127
 
 #define NDIRS          4	/* Number of directions in which water can 
-				   flow */
+				   flow,  must equal 4 */
 #define NDIRSfine      8 /* Number of directions in which water and 
-			    sediment can flow based on fine grid */
+			    sediment can flow based on fine grid,
+			    must equal 8 */
 
 #define NA          -9999	/* Not applicable */
 
@@ -107,12 +108,12 @@ typedef unsigned int unint;
 
 enum KEYS {
 /* Options *//* list order must match order in InitConstants.c */
-  format = 0, extent, gradient, flow_routing, sensible_heat_flux, sediment,sed_input_file,
- erosion_period, mass_wasting,surface_erosion, routing, road_routing, infiltration,
-  interpolation, mm5, qpf, prism, canopy_radatt, shading, snotel, outside, 
-  rhoverride, precipitation_source, wind_source, temp_lapse, precip_lapse, 
-  cressman_radius, cressman_stations, prism_data_path, prism_data_ext, 
-  shading_data_path, shading_data_ext, skyview_data_path, 
+  format = 0, extent, gradient, flow_routing, sensible_heat_flux, sediment,
+  sed_input_file, erosion_period, mass_wasting, surface_erosion, routing, 
+  road_routing, infiltration, interpolation, mm5, qpf, prism, canopy_radatt, 
+  shading, snotel, outside, rhoverride, precipitation_source, wind_source, 
+  temp_lapse, precip_lapse, cressman_radius, cressman_stations, prism_data_path, 
+  prism_data_ext, shading_data_path, shading_data_ext, skyview_data_path, 
   /* Area */
   coordinate_system, extreme_north, extreme_west, center_latitude,
   center_longitude, time_zone_meridian, number_of_rows,
