@@ -42,7 +42,8 @@ void draw(DATE * Day, int first, int DayStep, MAPSIZE *Map, int NGraphics,
 	  SNOWPIX ** SnowMap, SOILPIX ** SoilMap, SEDPIX ** SedMap, FINEPIX *** FineMap,
 	  VEGPIX ** VegMap, TOPOPIX ** TopoMap, PRECIPPIX ** PrecipMap, float **PrismMap,
 	  float **SkyViewMap, unsigned char ***ShadowMap, EVAPPIX ** EvapMap,
-	  RADCLASSPIX ** RadMap, MET_MAP_PIX ** MetMap, OPTIONSTRUCT * Options)
+	  RADCLASSPIX ** RadMap, MET_MAP_PIX ** MetMap, ROADSTRUCT **Network,
+	  OPTIONSTRUCT * Options)
 {				/*begin */
   int i, j, k, ie, je, ir, jr;
   int ii, jj, yy, xx;
@@ -672,7 +673,7 @@ void draw(DATE * Day, int first, int DayStep, MAPSIZE *Map, int NGraphics,
 	    }
 	  }
 
-	  if (MapNumber == 30 && Options->Sediment) {
+	  if (MapNumber == 30 && Options->MassWaste) {
 	    text = "Sediment to Channel (m)";
 	    length = 23;
 	    for (i = 0; i < Map->NX; i++) {
@@ -787,9 +788,9 @@ void draw(DATE * Day, int first, int DayStep, MAPSIZE *Map, int NGraphics,
 	    }
 	  }
 
-	  if (MapNumber == 36 && Options->Sediment) {
-	    text = "Elevation (m)";
-	    length = 13;
+	  if (MapNumber == 36 && Options->MassWaste) {
+	    text = "Fine Map Elevation (m)";
+	    length = 20;
 	    for (i = 0; i < Map->NX; i++) {
 	      for (j = 0; j < Map->NY; j++) {
 
@@ -847,7 +848,7 @@ void draw(DATE * Day, int first, int DayStep, MAPSIZE *Map, int NGraphics,
 /* 	    } */
 /* 	  } */
 
-	  if (MapNumber == 38 && Options->Sediment) {
+	  if (MapNumber == 37 && Options->MassWaste) {
 	    text = "Water Table Thickness (m)";
 	    length = 25;
 	    for (i = 0; i < Map->NX; i++) {
@@ -877,7 +878,7 @@ void draw(DATE * Day, int first, int DayStep, MAPSIZE *Map, int NGraphics,
 	    }
 	  }
 
-	  if (MapNumber == 39 && Options->Sediment) {
+	  if (MapNumber == 38 && Options->MassWaste) {
 	    text = "Change in Sediment Depth (m)";
 	    length = 28;
 	    for (i = 0; i < Map->NX; i++) {
@@ -907,7 +908,7 @@ void draw(DATE * Day, int first, int DayStep, MAPSIZE *Map, int NGraphics,
 	    }
 	  }
 
-	  if (MapNumber == 40 && Options->Sediment) {
+	  if (MapNumber == 39 && Options->MassWaste) {
 	    text = "Failure Probability";
 	    length = 19;
 	    for (i = 0; i < Map->NX; i++) {
@@ -1045,7 +1046,7 @@ void draw(DATE * Day, int first, int DayStep, MAPSIZE *Map, int NGraphics,
 	    }
 	  }
 
-	  if (MapNumber == 47 && Options->Sediment) {
+	  if (MapNumber == 47 && Options->InitSedFlag) {
 	    text = "Total Sediment (m3)";
 	    length = 22;
 	    for (i = 0; i < Map->NX; i++) {
@@ -1063,9 +1064,9 @@ void draw(DATE * Day, int first, int DayStep, MAPSIZE *Map, int NGraphics,
 	    }
 	  }
 
-	  if (MapNumber == 48 && Options->Sediment) {
+	  if (MapNumber == 48 && Options->InitSedFlag) {
 	    text = "Erosion (mm)";
-	    length = 22;
+	    length = 12;
 	    for (i = 0; i < Map->NX; i++) {
 	      for (j = 0; j < Map->NY; j++) {
 
@@ -1080,6 +1081,25 @@ void draw(DATE * Day, int first, int DayStep, MAPSIZE *Map, int NGraphics,
 	      }
 	    }
 	  }
+
+	  if (MapNumber == 49 && Options->RoadRouting) {
+	    text = "Road Erosion (mm)";
+	    length = 17;
+	    for (i = 0; i < Map->NX; i++) {
+	      for (j = 0; j < Map->NY; j++) {
+
+		if (INBASIN(TopoMap[j][i].Mask)) {
+		  temp = Network[j][i].Erosion * 1000.;
+		  if (temp > max)
+		    max = temp;
+		  if (temp < min)
+		    min = temp;
+		}
+		temp_array[j][i] = temp;
+	      }
+	    }
+	  }
+
 
 	  if (MapNumber == 50) {
 	    text = "Channel Sub Surf Int (mm)";

@@ -242,6 +242,10 @@ struct {
       "Erosion", "%.4g",
       "m/timestep", "Change in Grid Cell Elevation due to Erosion",
       NC_FLOAT, FALSE, FALSE, FALSE, 0}, {
+  903, "Network.Erosion",
+      "Road Erosion", "%.4g",
+      "m/timestep", "Change in Road Elevation due to Erosion",
+      NC_FLOAT, FALSE, FALSE, FALSE, 0}, {
   ENDOFLIST, "", "", "", "", "",
       ENDOFLIST, ENDOFLIST, ENDOFLIST, ENDOFLIST, ENDOFLIST}
 };

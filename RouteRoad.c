@@ -94,7 +94,7 @@ void RouteRoad(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
   float SedOut;                  /* Current local sediment concentration (m3/m3) */
   float *SedIn;                   /* Current inflow sediment concentration (m3/m3) */
   float term1, term2, term3;
-  int sedbin;                   /* Particle bin that road erosin is added to */
+  int sedbin;                   /* Particle bin that road erosion is added to */
 
   if ((Runon = (float *) calloc(CELLFACTOR, sizeof(float))) == NULL)
     ReportError((char *) Routine, 1);

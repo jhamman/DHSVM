@@ -134,14 +134,11 @@ void UnsaturatedFlow(int Dt, float DX, float DY, float Infiltration,
 
   /* first take care of infiltration through the roadbed/channel, then through the
      remaining surface */
-
-  /* If the Road Erosion Module is running and RoadbedInfiltration > 0,
-     the code (here and possible after WaterTableDepth is called) should be 
-     changed. Currently, if water did infiltrate, but then the water 
-     table is above the road surface, that infiltrated water would
-     get added to Runoff, instead of Network Iexcess. */
   if (*TableDepth <= BankHeight) { /* watertable above road/channel surface */
-    *Runoff += RoadbedInfiltration;
+    if(RoadRouteOption)
+      *RoadIExcess += RoadbedInfiltration;
+    else
+      *Runoff += RoadbedInfiltration;
   }
   
   else {

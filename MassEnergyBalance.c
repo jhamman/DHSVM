@@ -512,7 +512,7 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
   
   if (RoadRouteOption == FALSE)
     LocalSoil->IExcess = SurfaceWater - Infiltration + 
-      RoadWater + RoadbedInfiltration;
+      RoadWater - RoadbedInfiltration;
   else {
     LocalSoil->IExcess = SurfaceWater - Infiltration;
     LocalNetwork->IExcess = RoadWater - RoadbedInfiltration;

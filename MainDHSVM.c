@@ -59,7 +59,7 @@ int main(int argc, char **argv)
   float **SkyViewMap = NULL;
   float ***WindModel = NULL;
   int MaxStreamID, MaxRoadID;
-  float SedDiams[NSEDSIZES];
+  float SedDiams[NSEDSIZES];     /* Sediment particle diameters (mm) */
   float roadarea;
   
   int flag;
@@ -94,7 +94,7 @@ int main(int argc, char **argv)
     { 0.0, 0.0, 0.0, 0.0}, /*SEDPIX */
     { 0.0, NULL, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, /*FINEPIX */
     0.0, 0.0, 0.0, 0.0, 0.0, 0l, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-    0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+    0.0, 0.0, 0.0, 0.0
   };
   CHANNEL ChannelData = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
   DUMPSTRUCT Dump;
@@ -448,7 +448,7 @@ int main(int argc, char **argv)
       RouteSurface(&Map, &Time, TopoMap, SoilMap, &Options,
 		   UnitHydrograph, &HydrographInfo, Hydrograph,
 		   &Dump, VegMap, VType, SType, &ChannelData, SedMap,
-		   PrecipMap, SedType, LocalMet.Tair, LocalMet.Rh );
+		   PrecipMap, SedType, LocalMet.Tair, LocalMet.Rh, SedDiams);
 
 #endif
 
@@ -456,7 +456,8 @@ int main(int argc, char **argv)
       draw(&(Time.Current), IsEqualTime(&(Time.Current), &(Time.Start)),
 	   Time.DayStep, &Map, NGraphics, which_graphics, VType,
 	   SType, SnowMap, SoilMap, SedMap, FineMap, VegMap, TopoMap, PrecipMap,
-	   PrismMap, SkyViewMap, ShadowMap, EvapMap, RadMap, MetMap, &Options);
+	   PrismMap, SkyViewMap, ShadowMap, EvapMap, RadMap, MetMap, Network,
+	   &Options);
     
     Aggregate(&Map, &Options, TopoMap, &Soil, &Veg, VegMap, EvapMap, PrecipMap,
 	      RadMap, SnowMap, SoilMap, &Total, VType, Network, SedMap, FineMap,

@@ -46,7 +46,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 		  DUMPSTRUCT *Dump, VEGPIX ** VegMap, VEGTABLE * VType, 
 		  SOILTABLE *SType, CHANNEL *ChannelData, SEDPIX **SedMap,
 		  PRECIPPIX **PrecipMap, SEDTABLE *SedType,
-		  float Tair, float Rh)
+		  float Tair, float Rh, float *SedDiams)
 {
   const char *Routine = "RouteSurface";
   int Lag;			/* Lag time for hydrograph */
@@ -81,6 +81,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 
   float settling;              /* Settling velocity (m/s) */
   float Fw;                    /* Water depth correction factor */
+  int sedbin;                  /* Particle bin that erosion is added to */
 
   /* Check to see if calculations for surface erosion should be done */
   if (Options->SurfaceErosion) {
@@ -171,8 +172,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	  SedMap[y][x].Erosion = 0.;
 	}
       }
-      SedOut = 0.;       
-
+ 
       /* estimate kinematic viscosity through interpolation JSL */
       knviscosity=viscosity(Tair, Rh);
 
@@ -268,79 +268,87 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	  /*************************************************************/
 	  /* PERFORM HILLSLOPE SEDIMENT ROUTING.                       */
 	  /*************************************************************/
-	  
+	  SedOut = 0.;   
 	  if(Options->SurfaceErosion) {
-	    
-	    DS = SedType[SoilMap[y][x].Soil-1].d50;
-	    
-            /* calculate unit streampower = u*S (m/s)  */
-	    streampower = (sedoutflow/Map->DX/h)*slope;
-	    
-            /* avoid dividing by zero */
-	    if (h <= 0.) streampower = 0.;
-	    
-	    /* Only perform sediment routing if there is depth greater than the 
-	       particle diameter, there is outflow, and streampower is greater than 
-	       critical streampower */
-	    if((sedoutflow > 0.) && (h > DS) && (streampower > SETTLECRIT)){
+	    /* Only perform sediment routing if there is outflow, and 
+	       and for erodibility sil types */
+	    if((sedoutflow > 0.) && (SedType[SoilMap[y][x].Soil-1].KIndex > -999.)){
 	      
-	      /* First find potential erosion due to rainfall Morgan et al. (1998). 
-		 Momentum squared of the precip is determined in MassEnergyBalance.c
-		 Converting from (kg/m2*s) to (m3/s*m) */
+	      DS = SedType[SoilMap[y][x].Soil-1].d50 * (float)MMTOM;
 	      
-	      if (h <= PrecipMap[y][x].Dm)
-		Fw = 1.;
-	      else
-		Fw = exp(1 - (h/PrecipMap[y][x].Dm));
+	      /* calculate unit streampower = u*S (m/s)  */
+	      streampower = (sedoutflow/Map->DX/h)*slope;
 	      
-	      /* If there is an understory, it is assumed to cover the entire
-		 grid cell. Fract = 1 and DR = 0. */
-	      if (VType->OverStory == TRUE) 
-		/* Then (1-VType->Fract[1]) is the fraction of understory */
-		DR = SedType->KIndex * Fw * (1-VType->Fract[1]) *
-		  PrecipMap[y][x].MomentSq; /* (kg/m^2*s) */
-	      else
-		/* There is no Overstory, then (1-VType->Fract[0]) is the 
-		   fraction of understory */
-		DR = SedType->KIndex * Fw * (1-VType->Fract[0]) *
-		  PrecipMap[y][x].MomentSq; /* (kg/m^2*s) */
+	      /* avoid dividing by zero */
+	      if (h <= 0.) streampower = 0.;
 	      
-	      /* converting units to m3 m-1 s-1*/
-	      DR = DR/PARTDENSITY * Map->DX;
-	      
-       	      /* from Julien particle settling velocity */
-	      settling = (8.0*knviscosity/DS) *
-		(sqrt(1.+ ((PARTDENSITY/WATER_DENSITY)-1.)*(G*1000)*DS*DS*DS/
-		      (72.*knviscosity*knviscosity)) - 1.0)/1000.;
-	      
-	      /* calculate transport capacity eq. 7 kineros */
-	      TC = 0.05/(DS*pow((PARTDENSITY/WATER_DENSITY-1),2.))*
-		sqrt(slope*h/G)*(streampower-SETTLECRIT);
-	      
-	      /* Calculate sediment mass balance. */
-	      term1 = (TIMEWEIGHT/Map->DX);
-	      term2 = alpha/(2.*VariableDT);
-	      term3 = (1.-TIMEWEIGHT)/Map->DX;
-	      
-	      SedOut = (SedIn[y][x]*(term1*Runon[y][x]-term2*pow(Runon[y][x], beta)) +
-			SedMap[y][x].OldSedOut*(term2*pow(SoilMap[y][x].startRunoff, beta) -
-						term3*SoilMap[y][x].startRunoff) +
-			SedMap[y][x].OldSedIn*(term2*pow(SoilMap[y][x].startRunon, beta) + 
-					       term3*SoilMap[y][x].startRunon) +
-			DR + Map->DY*settling*TC)/
-		(term2*pow(sedoutflow, beta) + term1*sedoutflow + Map->DY*settling);
-	      
-	      
-	      if(SedOut >= TC) SedOut = TC;
-	      
-	      SedMap[y][x].OldSedOut = SedOut;
-	      SedMap[y][x].OldSedIn = SedIn[y][x];
-	      SedMap[y][x].SedFluxOut += (SedOut*sedoutflow*
-					  VariableDT);  /* total sediment (m3) */
-	      SedMap[y][x].Erosion += (SedIn[y][x]*Runon[y][x] - SedOut*sedoutflow)*
-		VariableDT/(Map->DX*Map->DY)*1000.;  /* total depth of erosion (mm) */
-	      
-	    } /* end if sedoutflow > 0. */
+	      /* Only continue sediment routing if there is depth greater 
+		 than the particle diameter and streampower is greater than 
+		 critical streampower */
+	      if((h > DS) && (streampower > SETTLECRIT)){
+		
+		/* First find potential erosion due to rainfall Morgan et al. (1998). 
+		   Momentum squared of the precip is determined in MassEnergyBalance.c
+		   Converting from (kg/m2*s) to (m3/s*m) */
+		
+		if (h <= PrecipMap[y][x].Dm)
+		  Fw = 1.;
+		else
+		  Fw = exp(1 - (h/PrecipMap[y][x].Dm));
+		
+		/* If there is an understory, it is assumed to cover the entire
+		   grid cell. Fract = 1 and DR = 0. */
+		if (VType->OverStory == TRUE) 
+		  /* Then (1-VType->Fract[1]) is the fraction of understory */
+		  DR = SedType[SoilMap[y][x].Soil-1].KIndex * Fw * (1-VType->Fract[1]) *
+		    PrecipMap[y][x].MomentSq; /* (kg/m^2*s) */
+		else
+		  /* There is no Overstory, then (1-VType->Fract[0]) is the 
+		     fraction of understory */
+		  DR = SedType[SoilMap[y][x].Soil-1].KIndex * Fw * (1-VType->Fract[0]) *
+		    PrecipMap[y][x].MomentSq; /* (kg/m^2*s) */
+		
+		/* converting units to m3 m-1 s-1*/
+		DR = DR/PARTDENSITY * Map->DX;
+		
+		/* from Julien particle settling velocity */
+		settling = (8.0*knviscosity/DS) *
+		  (sqrt(1.+ ((PARTDENSITY/WATER_DENSITY)-1.)*(G*1000)*DS*DS*DS/
+			(72.*knviscosity*knviscosity)) - 1.0)/1000.;
+		
+		/* calculate transport capacity eq. 7 kineros */
+		TC = 0.05/(DS*pow((PARTDENSITY/WATER_DENSITY-1),2.))*
+		  sqrt(slope*h/G)*(streampower-SETTLECRIT);
+		
+		/* Calculate sediment mass balance. */
+		term1 = (TIMEWEIGHT/Map->DX);
+		term2 = alpha/(2.*VariableDT);
+		term3 = (1.-TIMEWEIGHT)/Map->DX;
+		
+		SedOut = (SedIn[y][x]*(term1*Runon[y][x]-term2*pow(Runon[y][x], beta)) +
+			  SedMap[y][x].OldSedOut*(term2*pow(SoilMap[y][x].startRunoff, beta) -
+						  term3*SoilMap[y][x].startRunoff) +
+			  SedMap[y][x].OldSedIn*(term2*pow(SoilMap[y][x].startRunon, beta) + 
+						 term3*SoilMap[y][x].startRunon) +
+			  DR + Map->DY*settling*TC)/
+		  (term2*pow(sedoutflow, beta) + term1*sedoutflow + Map->DY*settling);
+		
+		if(SedOut >= TC) SedOut = TC;
+		
+		SedMap[y][x].OldSedOut = SedOut;
+		SedMap[y][x].OldSedIn = SedIn[y][x];
+		SedMap[y][x].SedFluxOut += (SedOut*sedoutflow*
+					    VariableDT);  /* total sediment (m3) */
+		SedMap[y][x].Erosion += (SedIn[y][x]*Runon[y][x] - SedOut*sedoutflow)*
+		  VariableDT/(Map->DX*Map->DY)*1000.;  /* total depth of erosion (mm) */
+		
+	      } /* end if((h > DS) && (streampower > SETTLECRIT){ */
+	      else {
+		SedMap[y][x].OldSedOut = 0.;
+		SedMap[y][x].OldSedIn = 0.;
+		SedOut = 0.;
+	      }	    
+	    } /*   end if((sedoutflow > 0.) */
 	    else {
 	      SedMap[y][x].OldSedOut = 0.;
 	      SedMap[y][x].OldSedIn = 0.;
@@ -367,24 +375,36 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	     unlike the other "map"-type variables. */
 	 
 	  if((Options->SurfaceErosion)&&(SedOut > 0.)){
+
+	    /* Determine which particle bin sediment gets added to 
+	       SedDiams */
+	    sedbin = 0;
+	    if (SedType[SoilMap[y][x].Soil-1].d50 > SedDiams[NSEDSIZES-1])
+	      sedbin = NSEDSIZES-1;
+	    else {
+	      for (j=0; j < NSEDSIZES; j++){
+		if (SedType[SoilMap[y][x].Soil-1].d50 <= SedDiams[j]){
+		  sedbin = j - 1;
+		  break;
+		}
+	      }
+	      if (sedbin < 0) sedbin = 0;
+	    }
+
+	    printf("bin %d soil %d DS %.2f K %f SedDiams[%.4f][%.4f][%.4f]\n", sedbin, SoilMap[y][x].Soil, SedType[SoilMap[y][x].Soil-1].d50, SedType[SoilMap[y][x].Soil-1].KIndex, SedDiams[0],SedDiams[1], SedDiams[2]); 
+
 	    if (channel_grid_has_channel(ChannelData->stream_map, x, y)) {
-	      
 	      /* Converting SedOut from m3/m3 to kg for channel routing */
-	      ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[0] += 
+	      ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[sedbin] += 
 		(SedOut*sedoutflow*VariableDT*PARTDENSITY)/(Map->DX*Map->DY);
 	      SedOut = 0.;
-	      for (i = 1; i < NSEDSIZES; i++)
-		ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[i] = 0.0;
 	    }
 	    
 	    if (channel_grid_has_channel(ChannelData->road_map, x, y)) {
-	      
 	      /* Converting SedOut from m3/m3 to kg for channel routing */
- 	      ChannelData->road_map[x][y]->channel->sediment.overlandinflow[0] += 
+ 	      ChannelData->road_map[x][y]->channel->sediment.overlandinflow[sedbin] += 
  		(SedOut*sedoutflow*VariableDT*PARTDENSITY)/(Map->DX*Map->DY); 
  	      SedOut = 0.; 
-	      for (i = 1; i < NSEDSIZES; i++) 
-		ChannelData->road_map[x][y]->channel->sediment.overlandinflow[i] = 0.0;	 
  	    } 
 	  }	  
 	  

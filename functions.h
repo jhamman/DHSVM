@@ -70,18 +70,21 @@ void draw(DATE *Day, int first, int DayStep, MAPSIZE *Map, int NGraphics,
 	  SNOWPIX **SnowMap, SOILPIX **SoilMap, SEDPIX **SedMap, FINEPIX ***FineMap,
 	  VEGPIX **VegMap, TOPOPIX **TopoMap, PRECIPPIX **PrecipMap, float **PrismMap,
 	  float **SkyViewMap, unsigned char ***ShadowMap, EVAPPIX **EvapMap,
-	  RADCLASSPIX **RadMap, MET_MAP_PIX **MetMap, OPTIONSTRUCT *Options);
+	  RADCLASSPIX **RadMap, MET_MAP_PIX **MetMap, ROADSTRUCT **Network,
+	  OPTIONSTRUCT *Options);
 
 void DistributeSedimentDiams(float SedDiams[NSEDSIZES]);
 
 void DumpMap(MAPSIZE *Map, DATE *Current, MAPDUMP *DMap, TOPOPIX **TopoMap,
 	     EVAPPIX **EvapMap, PRECIPPIX **PrecipMap, RADCLASSPIX **RadMap,
 	     SNOWPIX **Snowap, SOILPIX **SoilMap, SEDPIX **SedMap, FINEPIX ***FineMap,
-	     LAYER *Soil, VEGPIX **VegMap, LAYER *Veg, OPTIONSTRUCT *Options);
+	     LAYER *Soil, VEGPIX **VegMap, LAYER *Veg, ROADSTRUCT **Network,
+	     OPTIONSTRUCT *Options);
 
 void DumpPix(DATE *Current, int first, FILES *OutFile, FILES *OutFileSediment,
 	     EVAPPIX *Evap, PRECIPPIX *Precip, RADCLASSPIX *Rad, SNOWPIX *Snow,
-	     SOILPIX *Soil, SEDPIX *SedMap, float SedimentOverlandInflow,
+	     SOILPIX *Soil, SEDPIX *SedMap, ROADSTRUCT *Network,
+	     float SedimentOverlandInflow, float SedimentOverroadInflow,
 	     FINEPIX *FineMap, int NSoil, int NVeg, OPTIONSTRUCT *Options); 
 
 void ExecDump(MAPSIZE * Map, DATE * Current, DATE * Start, OPTIONSTRUCT * Options,
@@ -376,7 +379,8 @@ void RouteSurface(MAPSIZE *Map, TIMESTRUCT *Time, TOPOPIX **TopoMap,
 		  UNITHYDRINFO *HydrographInfo, float *Hydrograph,
 		  DUMPSTRUCT *Dump, VEGPIX **VegMap, VEGTABLE *VType,
 		  SOILTABLE *SType, CHANNEL *ChannelData, SEDPIX **SedMap,
-		  PRECIPPIX **PrecipMap, SEDTABLE *SedType, float Tair, float Rh);
+		  PRECIPPIX **PrecipMap, SEDTABLE *SedType, float Tair, 
+		  float Rh, float *SedDiams);
 
 float SatVaporPressure(float Temperature);
 

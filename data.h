@@ -238,27 +238,25 @@ typedef struct {
 				   STATION */
   int HeatFlux;			/* Specifies whether a sensible heat flux 
 				   should be calculated, TRUE or FALSE */
-  int Sediment;                 /* Specifies whether sediment variables should be output,
-				   TRUE or FALSE. */
-
+  int Routing;                   /* Overland flow routing indicator, either CONVENTIONAL
+				   or KINEMATIC */
+  int OldRouteFlag;              /* Initial Overland flow routing indicator, either 
+				   CONVENTIONAL or KINEMATIC */
+  int Sediment;                  /* Specifies whether sediment is run and variables 
+				    are output, TRUE or FALSE */
   int MassWaste;                 /* Specifies whether mass wasting model should be run
-				    variables should be output, TRUE or FALSE. */
-  int ErosionPeriod;                 /* Specifies dates during erosion model should be run
-				    variables should be output, FULL or PARTIAL. */
-  
-  int OldSedFlag;                 /* Sediment flag from previous timestep; */
-  int OldRouteFlag;               /* Initial routing flag */
-  int InitSedFlag;                /* Initial Sediment Flag for dumping purposes */
+				    and variables should be output, TRUE or FALSE */
   int SurfaceErosion;            /* Specifies whether surface erosion model should be run
-				       variables should be output, TRUE or FALSE. */
-  int Routing;                  /* Overland flow routing indicator, either CONVENTIONAL
-				   or KINEMATIC. */
-  int RoadRouting;              /* Road flow routing indicator, either CONVENTIONAL
-				   or KINEMATIC. */
-  int ChannelRouting;           /* Specifies whether sediment should be routed through
-				   the channel network */
-  int Infiltration;             /* Specifies static or dynamic maximum infiltration 
-				  rate */
+				    variables should be output, TRUE or FALSE */
+  int ErosionPeriod;             /* Specifies dates when erosion model should be run
+				    and variables should be output, TRUE or FALSE */
+  int OldSedFlag;                /* Surface erosion flag from previous timestep */
+  int InitSedFlag;               /* Initial Surface erosion flag for dumping purposes */
+  int RoadRouting;               /* Road Erosion indicator, either TRUE or FALSE */
+  int ChannelRouting;            /* Specifies whether sediment should be routed through
+				   the channel network, either TRUE or FALSE */
+  int Infiltration;              /* Specifies static or dynamic maximum infiltration 
+				   rate */
   int FlowGradient;		/* Specifies whether the flow gradient is based
 				   on the terrain elevation (TOPOGRAPHY) or the 
 				   water table elevation (WATERTABLE).  The 
@@ -345,26 +343,26 @@ typedef struct {
 				     the road surface (m) */
   float FlowSlope;               /* Representative road surface slope along the flow
 				    path (m/m) */
-  ChannelClass *RoadClass;       /* Class of road with most area in the pixel */
+  ChannelClass *RoadClass;      /* Class of road with most area in the pixel */
   float *h;                      /* Infiltration excess on road grid cell (m)*/
   float *startRunoff;            /* Surface water flux from the previus (sub) time 
-				    step. Used for kinematic wave routing.*/
+				    step. Used for road kinematic wave routing.*/
   float *startRunon;             /* Surface water flux from the previus (sub) time 
-				    step. Used for kinematic wave routing.*/
+				    step. Used for road kinematic wave routing.*/
   float *OldSedIn;               /* Sediment inflow to road cell from previous time 
 				   step (m3/m3). */
   float *OldSedOut;              /* Sediment outflow from road cell from previous time 
 				   step (m3/m3). */
-  float Erosion;                /* Change in road elevation/call area due to erosion 
+  float Erosion;                 /* Change in road elevation/call area due to erosion 
 				    (m/timestep). */
 } ROADSTRUCT;
 
 typedef struct {
   float SolarAzimuth;		/* solar azimuth */
-  float Latitude;		/* Latitude of center of study area */
+  float Latitude;		        /* Latitude of center of study area */
   float Longitude;		/* Longitude of center of study area */
-  float StandardMeridian;	/* Standard meridian for current time zone */
-  float NoonHour;		/* Time at which solar noon occurs for
+  float StandardMeridian;	        /* Standard meridian for current time zone */
+  float NoonHour;		        /* Time at which solar noon occurs for
 				   current location */
   float Declination;		/* Solar declination */
   float HalfDayLength;		/* Length of half day in hours */
@@ -420,7 +418,6 @@ typedef struct {
   float SatFlow;		        /* amount of saturated flow generated */
   float IExcess;		        /* amount of surface runoff (m) generated from
 				   HOF and Return flow */
- 
   float Runoff;                  /* Surface water flux (m) from the grid cell. */
   float ChannelInt;		/* amount of subsurface flow intercepted by
 				   the channel */
@@ -469,8 +466,8 @@ typedef struct {
   float *Ch;			/* Heat capacity for soil medium */
   float MaxInfiltrationRate;	/* Maximum infiltration rate for upper layer
 				   (m/s) */
-  float G_Infilt;                /* Mean capillary drive for dynamic infiltration
-                                            capacity (m)   */
+  float G_Infilt;                /* Mean capillary drive for dynamic maximum 
+				    infiltration rate (m)   */
 } SOILTABLE;
 
 typedef struct {
@@ -601,23 +598,24 @@ typedef struct {
 } MET_MAP_PIX;
 
 typedef struct {
-  float SedFluxOut;             /* Time step total sediment flux from the 
+  float SedFluxOut;              /* Time step total sediment flux from the 
 				   grid cell (m3). */
-  float OldSedIn;               /* Sediment inflow to grid cell from previous time 
+  float OldSedIn;                /* Sediment inflow to grid cell from previous time 
 				   step (m3/m3). */
-  float OldSedOut;              /* Sediment outflow from grid cell from previous time 
+  float OldSedOut;               /* Sediment outflow from grid cell from previous time 
 				   step (m3/m3). */
-  float Erosion;                /* Change in grid cell elevation due to erosion 
+  float Erosion;                 /* Change in grid cell elevation due to erosion 
 				   (mm/timestep). */
-  float RoadSed;                /* Time step total sediment flux from the 
+  float RoadSed;                 /* Time step total sediment flux from the 
 				  road surface to hillslope (m3). */
 } SEDPIX;
 
 typedef struct {
   char Desc[BUFSIZE + 1];	/* Soil type */
-  float KIndex;                  /* Index of soil detachability via raindrop impact (1/J) */
+  float KIndex;                  /* Index of soil detachability via raindrop impact 
+				    (1/J) */
   STATSTABLE Cohesion;		/* Soil cohesion (kPa)  */
-  STATSTABLE Friction;		/* Angle of internal friction  (degrees)*/	
+  STATSTABLE Friction;		/* Angle of internal friction (degrees)*/	
   float SatDensity;	        /* Saturated density for each layer (kg/m3) */
   float d50;                     /* Median grainsize diameter for surface erosion (mm) */ 
 } SEDTABLE;
@@ -633,22 +631,20 @@ typedef struct {
   float Dem;                     /* Elevations */
   uchar Mask;                   /* Mask for modeled area */
   float bedrock;                 /* Bedrock elevation (m) */
-  float sediment;                /* Sediment thickness in m */
+  float sediment;                /* Sediment thickness (m) */
   float SatThickness;            /* Water table thickness (m) */
-  float DeltaDepth;
+  float DeltaDepth;              /* Change in sediment thickness (m) */
   float Probability;             /* Pixel failure probability. */
   float MassWasting;             /* Sediment (m3) lost due to mass wasting */
-  float MassDeposition;          /* Sediment (m3) deposited in grid cell from mass wasting elsewhere */
-  float SedimentToChannel;       /* Sediment (m3) deposited in channel from mass wasting elsewhere */
+  float MassDeposition;          /* Sediment (m3) deposited in grid cell from mass 
+				    wasting elsewhere */
+  float SedimentToChannel;       /* Sediment (m3) deposited in channel from mass 
+				    wasting */
   float TopoIndex;               /* Topographic Index used for soil
 				    moisture redistribution from coarse 
-				    grid to dinfe grid */
+				    grid to fine grid */
 } FINEPIX; 
  
-/* These are not needed */
-/* float Slope;                    Land surface slope */  
-/* float Aspect;  */                 
-
 typedef struct {
   EVAPPIX Evap;
   PRECIPPIX Precip;
@@ -676,8 +672,6 @@ typedef struct {
   float CulvertReturnSedFlow;
   float CulvertSedToChannel;
   float SedimentOutflow;
-  float SurfaceErosion;
-  float mass_error;
 } AGGREGATED;
 
 #endif

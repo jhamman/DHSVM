@@ -274,15 +274,6 @@ void RouteChannelSediment(Channel * Head, TIMESTRUCT Time,
 	      Current->sediment.outflowrate[i]=TotalCapacity;
 	    }
 
-	    Total->mass_error += (-(lateral_sed_inflow_rate + 
-				    Current->sediment.inflowrate[i]) + 
-				  Current->sediment.outflowrate[i]+dMdt)*DT_sed;
-
-	    if(abs(Total->mass_error)>0){
-	      /* reset outflow for mass balance */
-	      Current->sediment.outflowrate[i] = lateral_sed_inflow_rate + 
-		Current->sediment.inflowrate[i]- dMdt;
-	    }
 
 	    /****************************************/
 	    /* Assign new values to next step old   */
