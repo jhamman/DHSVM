@@ -17,6 +17,7 @@
 /******************************************************************************/
 /*				    INCLUDES                                  */
 /******************************************************************************/
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -61,7 +62,7 @@ int main(int argc, char **argv)
   int MaxStreamID, MaxRoadID;
   float SedDiams[NSEDSIZES];     /* Sediment particle diameters (mm) */
   float roadarea;
-  
+  time_t tloc;
   int flag;
   int i;
   int j;
@@ -258,6 +259,14 @@ int main(int argc, char **argv)
   Sediment Initialization Procedures 
   *****************************************************************************/
   if(Options.Sediment) {
+     time (&tloc);
+     srand48 (tloc);
+  /* Randomize Random Generator */
+ 
+  /* Commenting the line above and uncommenting the line below 
+     allows for the comparison of scenarios. */
+  /*  srand48 (0);  */
+ 
 
     printf("\nSTARTING SEDIMENT INITIALIZATION PROCEDURES\n\n");
 

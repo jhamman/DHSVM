@@ -39,18 +39,17 @@ float FindValue(STATSTABLE Stats, int iter) {
   time_t tloc;
 
   /* Randomize Random Generator */
-  time (&tloc);
-/*   srand48 (tloc); */
+ 
   /* Commenting the line above and uncommenting the line below 
      allows for the comparison of scenrios. For each single iteration,
      the same soil and veg paramters will be assigned, i.e. veg type 1 in iter
      1 will have the same parameters. Using the above seeding method, veg type 1 in
      inter 1 will have different values in each grid cell it exists */ 
-   srand48 (iter); 
+  /*  srand48 (iter);  */
  
   /** Generate **/
   temp  = drand48();
-
+  printf("%f\n", temp);
   if(strcmp(Stats.Distribution,"NORMAL")==0) {
     if(MASSITER == 0) /*EDM - for specifying the mean */
       y= Stats.mean;
