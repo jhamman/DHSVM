@@ -61,13 +61,15 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
   float **Runon;                /* (m3/s) */
 
   /* Kinematic wave routing: */
-
-  /* JSL: slope is manning's slope; alpha is channel parameter including wetted perimeter,
-     manning's n, and manning's slope.  Beta is 3/5 */
   float knviscosity;           /* kinematic viscosity JSL */  
-  double slope, alpha, beta;    
+  double slope, alpha, beta;   /* Slope is manning's slope; 
+				  alpha is channel parameter including wetted perimeter,
+				  manning's n, and manning's slope.  
+				  Beta is 3/5 */
   double outflow;              /* Outflow of water from a pixel during a sub-time 
-				  step (m3/s)*/    
+				  step (m3/s)*/   
+  double sedoutflow;           /* Outflow used for sediment routing purposes 
+				  (m3/s) */
   float VariableDT;            /* Maximum stable time step (s) */  
   float **SedIn, SedOut;       /* (m3/m3) */  
   float DR;                    /* Potential erosion due to leaf drip */ 
@@ -167,18 +169,15 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	if(Options->Sediment){
 	  SedMap[y][x].SedFluxOut = 0.;
 	  SedMap[y][x].Erosion = 0.;
-	  SedOut=0.; /*COD*/
 	}
       }
-      
+      SedOut = 0.;       
 
       /* estimate kinematic viscosity through interpolation JSL */
-
       knviscosity=viscosity(Tair, Rh);
 
       /* Must loop through surface routing multiple times within one DHSVM 
 	 model time step. */
-
       
       while (Before(&(VariableTime.Current), &(NextTime.Current))) {
 
@@ -195,40 +194,39 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	    printf("negative slope in RouteSurface.c\n");
 	    exit(0);
 	  }
-	  
 	
 	  beta = 3./5.;
 	  alpha = pow(SType[SoilMap[y][x].Soil-1].Manning*pow(Map->DX,2./3.)/sqrt(slope),beta);
 
 	  /* Calculate discharge (m3/s) from the grid cell using an explicit 
 	     finite difference solution of the linear kinematic wave. */
+	  if(Runon[y][x] > 0.0001 || outflow > 0.0001) {
+	    outflow = ((VariableDT/Map->DX)*Runon[y][x] + 
+		       alpha*beta*outflow * pow((outflow+Runon[y][x])/2.0,beta-1.) +
+		       SoilMap[y][x].IExcess*Map->DX*VariableDT/Time->Dt)/
+	      ((VariableDT/Map->DX) + alpha*beta*pow((outflow+
+						      Runon[y][x])/2.0, beta-1.));
+	  }
+	  else if(SoilMap[y][x].IExcess > 0.0)
+	    outflow = SoilMap[y][x].IExcess*Map->DX*Map->DY/Time->Dt; 
 	  
-	  if (channel_grid_has_channel(ChannelData->stream_map, x, y)  
-	      || (channel_grid_has_channel(ChannelData->road_map, x, y) 
-		  && !channel_grid_has_sink(ChannelData->road_map, x, y))) {
-	      outflow = 0.0;
-	    }
-	  else {
-	 
-	      if(Runon[y][x] > 0.0001 || outflow > 0.0001) {
-		outflow = ((VariableDT/Map->DX)*Runon[y][x] + 
-			   alpha*beta*outflow * pow((outflow+Runon[y][x])/2.0,beta-1.) +
-			   SoilMap[y][x].IExcess*Map->DX*VariableDT/Time->Dt)/
-		  ((VariableDT/Map->DX) + alpha*beta*pow((outflow+
-							Runon[y][x])/2.0, beta-1.));
-	      }
-	      else if(SoilMap[y][x].IExcess > 0.0)
-		outflow = SoilMap[y][x].IExcess*Map->DX*Map->DY/Time->Dt; 
-		
-	      else
-		outflow = 0.0; 
-	    }
+	  else
+	    outflow = 0.0; 
 	  
 	  if(outflow < 0.0) 
 	    outflow = 0.0; 
 	  
-	  /* Save flow depth for sediment routing */
+	  /* Save flow depth and outflow for sediment routing */
+	  sedoutflow = outflow;
 	  h = SoilMap[y][x].IExcess;
+	  
+	  if (channel_grid_has_channel(ChannelData->stream_map, x, y)  
+	      || (channel_grid_has_channel(ChannelData->road_map, x, y) 
+		  && !channel_grid_has_sink(ChannelData->road_map, x, y))) {
+	    outflow = 0.0;
+	    h = SoilMap[y][x].IExcessSed;
+	    SoilMap[y][x].IExcessSed = 0.;
+	  }
 
 	   /*Make sure calculated outflow doesn't exceed available water, 
 	     and update surface water storage */
@@ -248,18 +246,16 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 
 	    DS = SedType[SoilMap[y][x].Soil-1].d50/1000000.;
 
-            /* calculate unit streampower =u*S (m/s)  */
-
-	    streampower= (outflow/Map->DX/h)*slope;
+            /* calculate unit streampower = u*S (m/s)  */
+	    streampower = (sedoutflow/Map->DX/h)*slope;
 
             /* avoid dividing by zero */
-
-	    if (h<=0.) streampower=0.;
+	    if (h <= 0.) streampower = 0.;
 
 	    /* Only perform sediment routing if there is depth greater than the 
 	       particle diameter, there is outflow, and streampower is greater than 
 	       critical streampower */
-	    if((outflow > 0.) && (h > DS ) && (streampower>SETTLECRIT)){
+	    if((sedoutflow > 0.) && (h > DS) && (streampower > SETTLECRIT)){
 	      
 	      /* First find potential erosion due to rainfall Morgan et al. (1998). 
 		 Momentum squared of the precip is determined in MassEnergyBalance.c
@@ -317,10 +313,11 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	      SedMap[y][x].Erosion += (SedIn[y][x]*Runon[y][x] - SedOut*outflow)*
 		VariableDT/(Map->DX*Map->DY)*1000.;  /* total depth of erosion (mm) */
 	      
-	    } /* end if outflow > 0. */
+	    } /* end if sedoutflow > 0. */
 	    else {
 	      SedMap[y][x].OldSedOut = 0.;
 	      SedMap[y][x].OldSedIn = 0.;
+	      SedOut = 0.;
 	    }	    
 	  } /* end of if Options->Sediment */
 	  
@@ -330,6 +327,22 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	  
 	  /* Calculate total runoff in m/dhsvm timestep. */
 	  SoilMap[y][x].Runoff += outflow*VariableDT/(Map->DX*Map->DY); 
+
+	  /* Sediment from pixels with channels goes into the 
+	     channel.  This assumes that all the sediments belong to the smallest  
+	     category of sediment particle sizes (first size, index 0) */
+	  /* Note that stream_map and road_map are indexed by [x][y],
+	     unlike the other "map"-type variables. */
+
+	  if((Options->Sediment)&&(SedOut > 0.)&&
+	     (channel_grid_has_channel(ChannelData->stream_map, x, y))) {
+	    
+	    ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[0] += SedOut; 
+	    
+	    for (i = 1; i < NSEDSIZES; i++)
+	      ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[i] = 0.0;	
+	    
+	  }	  
 	  
 	  /* Redistribute surface water to downslope pixels. */
 	  if(outflow > 0.) {  
@@ -346,32 +359,15 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 					      (float) TopoMap[y][x].TotalDir);
 		  
 		  /* No need to distribute sediment if there isn't any*/
-		  if((Options->Sediment)&&(SedOut > 0.)) {	
-		    
-		    /* If grid cell has a channel, sediment is intercepted by the channel */
-		    if (channel_grid_has_channel(ChannelData->stream_map, xn, yn)) {
-		      
-		      /* Assume that all the sediments belong to the smallest  
-			 category of sediment particle sizes (first size, index 0) */
-		      /* Note that stream_map and road_map are indexed by [x][y],
-			 unlike the other "map"-type variables. */
-		      ChannelData->stream_map[xn][yn]->channel->sediment.overlandinflow[0] += 
-			SedOut * ((float) TopoMap[y][x].Dir[n] /(float) TopoMap[y][x].TotalDir); 
-		      
-		      for (i = 1; i < NSEDSIZES; i++){
-			ChannelData->stream_map[xn][yn]->channel->sediment.overlandinflow[i] = 0.0;				
-		      }
-		    }
-		    else 
+		  if((Options->Sediment)&&(SedOut > 0.)) 	
 		      SedIn[yn][xn] += SedOut * ((float) TopoMap[y][x].Dir[n] /
 						 (float) TopoMap[y][x].TotalDir);
 		    
-		  }
 		}
 	      }
 	    } /* end loop thru possible flow directions */
 	  }
-	 /*      printf("%d %d     %f\n",x, y, Runon[y][x]); */
+	 
 	  /* Initialize runon for next timestep. */
 	  Runon[y][x] = 0.0;
 	  /* Initialize SedIn for next timestep. */

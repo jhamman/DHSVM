@@ -189,6 +189,7 @@ RouteChannel(CHANNEL * ChannelData, TIMESTRUCT * Time, MAPSIZE * Map,
 	    SoilMap[y][x].RoadInt += SoilMap[y][x].IExcess;
 	    channel_grid_inc_inflow(ChannelData->road_map, x, y,
 				    SoilMap[y][x].IExcess * Map->DX * Map->DY);
+	    SoilMap[y][x].IExcessSed = SoilMap[y][x].IExcess;
 	    SoilMap[y][x].IExcess = 0.0f;
 	  }
 	}
@@ -227,6 +228,7 @@ RouteChannel(CHANNEL * ChannelData, TIMESTRUCT * Time, MAPSIZE * Map,
 		  
 	  Total->CulvertToChannel += CulvertFlow;
 	  Total->RunoffToChannel += SoilMap[y][x].IExcess;
+	  SoilMap[y][x].IExcessSed = SoilMap[y][x].IExcess;
 	  SoilMap[y][x].IExcess = 0.0f;
 	}
 	else {

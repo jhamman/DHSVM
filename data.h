@@ -407,6 +407,9 @@ typedef struct {
 				    step. Used for kinematic wave routing.*/
   float startRunon;              /* Surface water flux from the previus (sub) time 
 				    step. Used for kinematic wave routing.*/
+  float IExcessSed;              /* amount of surface runoff (m) generated from
+				    HOF and Return flow  - saved for sediment
+				    routing */
 } SOILPIX;
 
 typedef struct {
