@@ -426,7 +426,7 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
   else {
     SurfaceWater = LocalNetwork->PercArea[0] * 
       (LocalPrecip->RainFall + LocalSnow->Outflow) + LocalSoil->IExcess;
-    RoadWater = (1 - LocalNetwork->PercArea[0])  * 
+    RoadWater = (1. - LocalNetwork->PercArea[0])  * 
       (LocalPrecip->RainFall + LocalSnow->Outflow)
       + LocalNetwork->IExcess; 
   }
@@ -434,7 +434,7 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
   MaxInfiltration = 0.;
 
   if(InfiltOption == STATIC)
-    MaxInfiltration = (1 - VType->ImpervFrac) * LocalNetwork->PercArea[0] * 
+    MaxInfiltration = (1. - VType->ImpervFrac) * LocalNetwork->PercArea[0] * 
     SType->MaxInfiltrationRate * Dt; 
    
   else { /* InfiltOption == DYNAMIC 
@@ -456,14 +456,14 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
 	B = (SType->Porosity[0] - LocalSoil->MoistInit) * 
 	  (SType->G_Infilt + SurfaceWater);
 	Infiltrability = SType->Ks[0] * exp((LocalSoil->InfiltAcc)/B) / 
-	  (exp((LocalSoil->InfiltAcc)/B) - 1);
+	  (exp((LocalSoil->InfiltAcc)/B) - 1.);
       }
 
       else 
 	Infiltrability = SurfaceWater/Dt ; 
         
       MaxInfiltration = Infiltrability * LocalNetwork->PercArea[0] *
-                                        (1 - VType->ImpervFrac) *  Dt;
+                                        (1. - VType->ImpervFrac) *  Dt;
       
       LocalPrecip->PrecipStart = FALSE; 
     }/* end  if (SurfaceWater > 0.) */
@@ -473,20 +473,20 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
   } /* end Dynamic MaxInfiltration calculation */ 
   
   if (RoadRouteOption == FALSE)
-    Infiltration = (1 - VType->ImpervFrac) * LocalNetwork->PercArea[0] * 
+    Infiltration = (1. - VType->ImpervFrac) * LocalNetwork->PercArea[0] * 
     SurfaceWater; 
   else
-    Infiltration = (1 - VType->ImpervFrac) * SurfaceWater;
+    Infiltration = (1. - VType->ImpervFrac) * SurfaceWater;
 
   
   if (Infiltration > MaxInfiltration) 
     Infiltration = MaxInfiltration;
   
-  MaxRoadbedInfiltration = (1 - LocalNetwork->PercArea[0]) * 
+  MaxRoadbedInfiltration = (1. - LocalNetwork->PercArea[0]) * 
     LocalNetwork->MaxInfiltrationRate * Dt; 
 
   if (RoadRouteOption == FALSE)
-    RoadbedInfiltration = (1 - LocalNetwork->PercArea[0]) * 
+    RoadbedInfiltration = (1. - LocalNetwork->PercArea[0]) * 
     SurfaceWater; 
   else
     RoadbedInfiltration = RoadWater;

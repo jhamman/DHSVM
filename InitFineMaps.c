@@ -183,7 +183,8 @@ void InitFineMaps(LISTPTR Input, OPTIONSTRUCT *Options, MAPSIZE *Map,
     free(tempMask);
   }
   
-  /* Create fine resolution mask, sediment and bedrock maps. */
+  /* Create fine resolution mask, sediment and bedrock maps.
+   Initialize other variables*/
   
   for (y = 0, i = 0; y < Map->NY; y++) {
     for (x = 0; x < Map->NX; x++, i++) {
@@ -203,7 +204,13 @@ void InitFineMaps(LISTPTR Input, OPTIONSTRUCT *Options, MAPSIZE *Map,
 	 /*    } */
 	    (*(*FineMap)[yy][xx]).bedrock = (*(*FineMap)[yy][xx]).Dem - (*SoilMap)[y][x].Depth;
 	    (*(*FineMap)[yy][xx]).sediment = (*SoilMap)[y][x].Depth;
-	  
+	    (*(*FineMap)[yy][xx]).SatThickness = 0.;
+	    (*(*FineMap)[yy][xx]).DeltaDepth = 0.;
+	    (*(*FineMap)[yy][xx]).Probability = 0.;
+	    (*(*FineMap)[yy][xx]).MassWasting = 0.;
+	    (*(*FineMap)[yy][xx]).MassDeposition = 0.;
+	    (*(*FineMap)[yy][xx]).SedimentToChannel = 0.;
+	    (*(*FineMap)[yy][xx]).TopoIndex = 0.;
 	  }
 	}
       }
