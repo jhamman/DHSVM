@@ -45,6 +45,10 @@ void InitNetwork(int NY, int NX, float DX, float DY, TOPOPIX **TopoMap,
   int sx, sy;
   int minx, miny;
   int doimpervious;
+  int numroads;          /* Counter of number of pixels
+			    with a road and channel */
+  int numroadschan;      /* Counter of number of pixels
+			    with a road */
   FILE *inputfile;
 
   /* Allocate memory for network structure */
@@ -81,6 +85,27 @@ void InitNetwork(int NY, int NX, float DX, float DY, TOPOPIX **TopoMap,
       }
     }
   }
+
+  numroadschan = 0;
+  numroads = 0;
+
+  for (y = 0; y < NY; y++) {
+    for (x = 0; x < NX; x++) {
+      if (INBASIN(TopoMap[y][x].Mask)) {
+	if (channel_grid_has_channel(ChannelData->stream_map, x, y)) {
+	  if (channel_grid_has_channel(ChannelData->road_map, x, y))
+	    numroadschan++;
+	}
+	if (channel_grid_has_channel(ChannelData->road_map, x, y))
+	    numroads++;
+      }
+    }
+  }
+
+  if (numroads > 0)
+    fprintf(stderr, 
+	    "There are %d pixels with a road and %d with a road and a channel.\n",
+	    numroads, numroadschan);
 
   if ((ChannelData->roads) == NULL) {
     if(Options->RoadRouting){
