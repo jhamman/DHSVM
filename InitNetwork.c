@@ -103,14 +103,12 @@ void InitNetwork(int NY, int NX, float DX, float DY, TOPOPIX **TopoMap,
   }
 
   if (numroads > 0)
-    fprintf(stderr, 
-	    "There are %d pixels with a road and %d with a road and a channel.\n",
+    printf("There are %d pixels with a road and %d with a road and a channel.\n",
 	    numroads, numroadschan);
 
   if ((ChannelData->roads) == NULL) {
     if(Options->RoadRouting){
-      fprintf(stderr, 
-	      "InitNetwork: Cannot route the road network without the network files!\n");
+      printf("InitNetwork: Cannot route the road network without the network files!\n");
       Options->RoadRouting = FALSE;
     }
   }
@@ -130,6 +128,7 @@ void InitNetwork(int NY, int NX, float DX, float DY, TOPOPIX **TopoMap,
 			(*Network)[y][x].PercArea,
 			(*Network)[y][x].Adjust,
 			&((*Network)[y][x].CutBankZone));
+	  (*Network)[y][x].IExcess = 0.;
 	  if (channel_grid_has_channel(ChannelData->road_map, x, y)) {
 	    (*Network)[y][x].fraction =
 	      ChannelFraction(&(TopoMap[y][x]), ChannelData->road_map[x][y]);
@@ -139,10 +138,11 @@ void InitNetwork(int NY, int NX, float DX, float DY, TOPOPIX **TopoMap,
 	      channel_grid_flowslope(ChannelData->road_map, x, y);
 	    (*Network)[y][x].FlowLength = 
 	      channel_grid_flowlength(ChannelData->road_map, x, y,(*Network)[y][x].FlowSlope);
-
+	    (*Network)[y][x].RoadArea = channel_grid_cell_width(ChannelData->road_map, x, y) * channel_grid_cell_length(ChannelData->road_map, x, y);
 	  }
 	  else {
 	    (*Network)[y][x].MaxInfiltrationRate = DHSVM_HUGE;
+	    (*Network)[y][x].RoadArea = 0.;
 	  }
 	}
       }
@@ -160,6 +160,8 @@ void InitNetwork(int NY, int NX, float DX, float DY, TOPOPIX **TopoMap,
 	    (*Network)[y][x].CutBankZone = NO_CUT;
 	    (*Network)[y][x].MaxInfiltrationRate = 0.;
 	  }
+	  (*Network)[y][x].RoadArea = 0.;
+	  (*Network)[y][x].IExcess = 0.;
 	}
       }
     }

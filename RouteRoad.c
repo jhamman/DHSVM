@@ -35,26 +35,25 @@ void RouteRoad(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
   float dx, dy;                  /* Road grid cell dimensions (m)*/
   float cells;                   /* Number of road grid cells in a basin grid 
 				    cell */
-  float roadwidth, roadlength;   /* Road dimensions in current basin grid 
-				    cell (m)*/
   float roadwater;               /* Depth (m) of water on the road surface */
-  float slope;                   /* Slope of road surface the water travels 
+  double slope;                   /* Slope of road surface the water travels 
 				    over (m/m)*/    
   float *Runon;                  /* Water on moving downslope along the road (m) */
-  float beta, alpha;             /* For Mannings. alpha is channel parameter 
+  double beta, alpha;             /* For Mannings. alpha is channel parameter 
 				    including wetted perimeter, n, and slope. */
-  float outflow;                 /* Flow out of a road grid cell in the 
+  double outflow;                 /* Flow out of a road grid cell in the 
 				    subtimestep (m3/s) */
     
   TIMESTRUCT NextTime;
   TIMESTRUCT VariableTime;
   float VariableDT;              /* Maximum stable time step (s) */  
 
+  double check;
   if ((Runon = (float *) calloc(CELLFACTOR, sizeof(float))) == NULL)
       ReportError((char *) Routine, 1);
   
   NextTime = *Time;
-  VariableTime = *Time;
+ 
   
   /* Holds the value of the next DHSVM time step. */ 
   IncreaseTime(&NextTime);
@@ -66,14 +65,14 @@ void RouteRoad(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
       if (INBASIN(TopoMap[y][x].Mask)) {
 	if (channel_grid_has_channel(ChannelData->road_map, x, y)) {
 	  
+	   VariableTime = *Time;
+
 	  /* Discretizing road into a grid for finite difference solution.
 	     This assume the cells are oriented with the direction of flow. */
 	  
 	  dx = Network[y][x].FlowLength/(float) CELLFACTOR;
 	  dy = dx; /* road grid cells are square */
-	  roadlength = channel_grid_cell_length(ChannelData->road_map, x, y);
-	  roadwidth = channel_grid_cell_width(ChannelData->road_map, x, y);
-	  cells = roadlength*roadwidth/(dx*dy);
+	  cells = Network[y][x].RoadArea/(dx*dy);
 
 	  slope = Network[y][x].FlowSlope;
 	  if (slope == 0) slope=0.0001;
@@ -87,10 +86,16 @@ void RouteRoad(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 
 	  /* Evenly distribute water over road surface. */
 	  roadwater = (Network[y][x].IExcess * Map->DX * Map->DY)/
-	    (roadlength*roadwidth);
-	  for (i = 0; i < CELLFACTOR; i++)
-	      Network[y][x].h[i] += roadwater;
-	  
+	    (Network[y][x].RoadArea);
+	   
+	  for (i = 0; i < CELLFACTOR; i++){
+	    if(Network[y][x].h[i] < 0){
+	      printf ( "RouteRoad: Negative Network.IExcess(%e)\n",Network[y][x].h[i]);
+	      exit(0);
+	    }
+	    Network[y][x].h[i] += roadwater;
+	     
+	  }
 	  /* Use the Courant condition to find the maximum stable time step 
 	     (in seconds). Must be an even increment of Dt. */
 	  VariableDT = FindDTRoad(Network, Time, y, x, dx, beta, alpha);  
@@ -114,7 +119,7 @@ void RouteRoad(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 		
 	      }
 	      else if(Network[y][x].h[i] > 0.0)
-		outflow = Network[y][x].h[i]*dy*dx/Time->Dt;
+		outflow = Network[y][x].h[i]*dy*dx/(float)Time->Dt;
 	      else
 		outflow = 0.0;
 	      
@@ -123,11 +128,18 @@ void RouteRoad(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	      /*Update surface water storage.  Make sure calculated outflow 
 		doesn't exceed available water.  Otherwise, update surface 
 		water storage. */
-	      if(outflow > (Network[y][x].h[i]*dy*dx)/Time->Dt + Runon[i]) 
-		outflow = (Network[y][x].h[i]*dy*dx)/Time->Dt + Runon[i];
+	      if(outflow > (Network[y][x].h[i]*dy*dx)/(float)Time->Dt + Runon[i]){ 
+		outflow = (Network[y][x].h[i]*dy*dx)/(float)Time->Dt + Runon[i];
+	      }
 	      
-	      Network[y][x].h[i] += (Runon[i]-outflow)*VariableDT/(dy*dx);
-	      
+	      /* Accounting for rounding errors */
+	      check = Network[y][x].h[i] + ((Runon[i]-outflow)*VariableDT/(dy*dx));
+	  
+	      if ((check < .0000001) && (check > -.0000001))
+		Network[y][x].h[i] = 0.;
+	      else
+		Network[y][x].h[i] += (Runon[i]-outflow)*VariableDT/(dy*dx);
+	 
 	      /* Save sub-timestep runoff for q(i)(t-1) and q(i-1)(t-1) of next time step. */
 	      Network[y][x].startRunoff[i] = outflow;
 	      Network[y][x].startRunon[i] = Runon[i];

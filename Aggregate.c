@@ -56,7 +56,6 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
   int jj;			/* FineMap counter */
   int xx;			/* x-coordinate on FineMap grid */
   int yy;			/* y-coordinate on FineMap grid */
-  float roadwidth, roadlength;
 
   NPixels = 0;
   for (y = 0; y < Map->NY; y++) {
@@ -150,10 +149,8 @@ void Aggregate(MAPSIZE *Map, OPTIONSTRUCT *Options, TOPOPIX **TopoMap,
 	Total->Soil.Qst += SoilMap[y][x].Qst;
 	Total->Soil.IExcess += SoilMap[y][x].IExcess;
 	if (channel_grid_has_channel(ChannelData->road_map, x, y)) {
-	  roadlength = channel_grid_cell_length(ChannelData->road_map, x, y);
-	  roadwidth = channel_grid_cell_width(ChannelData->road_map, x, y);
 	  for (i = 0; i < CELLFACTOR; i++)
-	    Total->Road.IExcess += (Network[y][x].h[i] * roadlength * roadwidth)/
+	    Total->Road.IExcess += (Network[y][x].h[i] * Network[y][x].RoadArea)/
 				    ((float)CELLFACTOR * (Map->DX*Map->DY));
 	}
 	if (Options->Infiltration == DYNAMIC)

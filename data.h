@@ -336,6 +336,7 @@ typedef struct {
   float MaxInfiltrationRate;	/* Area weighted infiltration rate through the
 				   road bed */
   uchar fraction;		/* flow fraction intercepted by road channel */
+  float RoadArea;                /* Road surface area (and area of percolation)*/
   float IExcess;                 /* Infiltration excess generated on road surface (m)*/
   float FlowLength;              /* Representative surface water flow length across 
 				     the road surface (m) */

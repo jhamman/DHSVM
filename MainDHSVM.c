@@ -81,7 +81,7 @@ int main(int argc, char **argv)
     {0.0, 0.0, 0.0, 0.0, NULL, NULL, 0.0, 0, 0.0},	/* PRECIPPIX */
     {{0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, 0.0, 0.0, 0.0},	/* PIXRAD */
     {0.0, 0.0},		/* RADCLASSPIX */
-    {0.0, 0.0, 0.0, NULL, NULL, 0.0, 0, 0.0, 0.0, 0.0, 
+    {0.0, 0.0, 0.0, NULL, NULL, 0.0, 0, 0.0, 0.0, 0.0, 0.0, 
      NULL, NULL, NULL},		/* ROADSTRUCT*/
     {0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0,
      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},	/* SNOWPIX */
@@ -328,7 +328,7 @@ int main(int argc, char **argv)
       printf("\n");
     }
 
-   /*  PrintDate(&(Time.Current),stdout); */
+/*     PrintDate(&(Time.Current),stdout); */
 /*     printf("\n"); */
     /* uncomment the above line to print the time at every step*/
 
@@ -390,7 +390,8 @@ int main(int argc, char **argv)
 			    &(Network[y][x]), &(PrecipMap[y][x]), 
 			    &(VType[VegMap[y][x].Veg-1]), &(VegMap[y][x]),
 			    &(SType[SoilMap[y][x].Soil-1]), &(SoilMap[y][x]), 
-			    &(SnowMap[y][x]), &(EvapMap[y][x]), &(Total.Rad));
+			    &(SnowMap[y][x]), &(EvapMap[y][x]), &(Total.Rad),
+			    &ChannelData);
 	}
       }
     }

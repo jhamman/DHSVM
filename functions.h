@@ -315,7 +315,8 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
 		       ROADSTRUCT *LocalNetwork, PRECIPPIX *LocalPrecip,
 		       VEGTABLE *VType, VEGPIX *LocalVeg, SOILTABLE *SType,
 		       SOILPIX *LocalSoil, SNOWPIX *LocalSnow,
-		       EVAPPIX *LocalEvap, PIXRAD *TotalRad);
+		       EVAPPIX *LocalEvap, PIXRAD *TotalRad,
+		       CHANNEL *ChannelData);
 
 float MaxRoadInfiltration(ChannelMapPtr **map, int col, int row);
 

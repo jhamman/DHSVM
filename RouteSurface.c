@@ -110,8 +110,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
     if(!Options->Routing) {
       
       if(Options->SurfaceErosion) {
-	fprintf(stderr, 
-		"The surface erosion model must be run with kinematic wave routing.\n");
+	printf("The surface erosion model must be run with kinematic wave routing.\n");
 	exit(0);
       }
       
@@ -623,22 +622,22 @@ void SedimentFlag(OPTIONSTRUCT *Options,  TIMESTRUCT * Time)
   if ((Options->OldSedFlag != Options->SurfaceErosion) && 
       (Time->Current.Julian != Time->Start.Julian)) {
     if (Options->SurfaceErosion)
-      fprintf(stderr,"Beginning surface erosion model calculations.\n");
+      printf("Beginning surface erosion model calculations.\n");
     else
-      fprintf(stderr,"Ending surface erosion model calculations.\n");
+      printf("Ending surface erosion model calculations.\n");
   }
   Options->OldSedFlag=Options->SurfaceErosion;
   
   if(Options->SurfaceErosion){
     Options->Routing=TRUE;
     if (oldrouting!=Options->Routing)
-      fprintf(stderr,"Turning on kinematic routing calculations.\n");
+      printf("Turning on kinematic routing calculations.\n");
   }
   
   else if (!Options->OldRouteFlag){
     Options->Routing=FALSE;
     if (oldrouting!=Options->Routing)
-      fprintf(stderr,"Turning off kinematic routing calculations.\n");
+      printf("Turning off kinematic routing calculations.\n");
   }
 }
 

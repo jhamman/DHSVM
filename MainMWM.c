@@ -326,7 +326,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
   numfailures = 0;
   for(iter=0; iter < massitertemp; iter++) {
     
-    fprintf(stderr,"iter=%d\n",iter);
+    printf("iter=%d\n",iter);
     
     /************************************************************************/
     /* Begin factor of safety code. */
@@ -397,8 +397,8 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 			
 			if (!INBASIN(TopoMap[coursei][coursej].Mask)) {
 			  
-			  fprintf(stderr,"WARNING: attempt to propagate failure to grid cell outside basin: y %d x %d\n",y,x);
-			  fprintf(stderr,"Depositing wasted sediment in grid cell y %d x %d\n",prevy,prevx);
+			  printf("WARNING: attempt to propagate failure to grid cell outside basin: y %d x %d\n",y,x);
+			  printf("Depositing wasted sediment in grid cell y %d x %d\n",prevy,prevx);
 			  (*FineMap[prevy][prevx]).sediment += SedFromUpslope;
 			  SedFromUpslope = SedToDownslope = 0.0;
 			  
@@ -512,8 +512,8 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 			  cells++;
 			}
 			else {
-			  fprintf(stderr,"WARNING: attempt to propagate runout to grid cell outside the basin: y %d x %d\n",y,x);
-			  fprintf(stderr,"Final grid cell of runout will be: y %d x %d\n",prevy,prevx);
+			  printf("WARNING: attempt to propagate runout to grid cell outside the basin: y %d x %d\n",y,x);
+			  printf("Final grid cell of runout will be: y %d x %d\n",prevy,prevx);
 			}
 		      }
 		      prevy = y;
@@ -544,7 +544,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 		      
 		      if(SedimentToChannel > 0.0) {
 			if(SlopeAspect < 0.) {
-			  fprintf(stderr, "Invalid aspect (%3.1f) in cell y= %d x= %d\n",
+			  printf("Invalid aspect (%3.1f) in cell y= %d x= %d\n",
 				  SlopeAspect,y,x);
 			  exit(0);
 			}
@@ -721,13 +721,13 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 
   if((fs=fopen(sumoutfile,"a")) == NULL)
     {
-      fprintf(stderr,"Cannot open factor of safety summary output file.\n");
+      printf("Cannot open factor of safety summary output file.\n");
       exit(0);
     }
 
   SPrintDate(&(Time->Current), buffer);
   fprintf(fs, "%-20s %.4f %.4f %7d\n", buffer, avgnumfailures, avgpixperfailure, numlikelyfailedpixels); 
-  fprintf(stderr, "%.4f failures; %.4f pixels per failure; %d pixels have failure likelihood > %.2f\n",
+  printf("%.4f failures; %.4f pixels per failure; %d pixels have failure likelihood > %.2f\n",
     avgnumfailures, avgpixperfailure, numlikelyfailedpixels, failure_threshold);
   fclose(fs);
 
@@ -738,7 +738,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
     sprintf(outfile, "%s%s_failure.txt", DumpPath, buffer);
 
     if((fo=fopen(outfile,"w")) == NULL) {
-      fprintf(stderr,"Cannot open factor of safety output file.\n");
+      printf("Cannot open factor of safety output file.\n");
       exit(0);
     }
 	
@@ -768,7 +768,7 @@ void MainMWM(SEDPIX **SedMap, FINEPIX ***FineMap, VEGTABLE *VType,
 	
     sprintf(sumoutfile, "%s%s_Deltasoildepth.txt", DumpPath, buffer);
     if((fs=fopen(sumoutfile,"w")) == NULL) {
-      fprintf(stderr,"Cannot open soil depth output file.\n");
+      printf("Cannot open soil depth output file.\n");
       exit(0);
     }
 

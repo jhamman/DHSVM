@@ -276,7 +276,7 @@ void CalcTopoIndex(MAPSIZE *Map, FINEPIX ***FineMap, TOPOPIX **TopoMap)
     
     if((fo=fopen(topoindexmap,"a")) == NULL)
       {
-	fprintf(stderr,"Cannot open TopoIndex output file.\n");
+	printf("Cannot open TopoIndex output file.\n");
 	exit(0);
       }
     

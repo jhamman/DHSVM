@@ -74,12 +74,12 @@ void InitFineMaps(LISTPTR Input, OPTIONSTRUCT *Options, MAPSIZE *Map,
   GetInitString(StrEnv[1].SectionName, StrEnv[1].KeyName, StrEnv[1].Default,
 		StrEnv[1].VarStr, (unsigned long) BUFSIZE, Input);
   if (IsEmptyStr(StrEnv[1].VarStr)) {
-    fprintf(stderr, "\nWARNING: Fine resolution mask not provided, will be set equal to \n");
-    fprintf(stderr, "coarse resolution mask.\n\n");
+    printf("\nWARNING: Fine resolution mask not provided, will be set equal to \n");
+    printf("coarse resolution mask.\n\n");
     MASKFLAG = FALSE;
   }
   else {
-    fprintf(stderr, "fine mask = %s\n",StrEnv[1].VarStr);
+    printf("fine mask = %s\n",StrEnv[1].VarStr);
     /* Read the mask */
     GetVarName(002, 0, VarName);
     GetVarNumberType(002, &NumberType);
@@ -122,7 +122,7 @@ void InitFineMaps(LISTPTR Input, OPTIONSTRUCT *Options, MAPSIZE *Map,
 	    yy = (int) y*Map->DY/Map->DMASS + ii; 
  	    xx = (int) x*Map->DX/Map->DMASS + jj; 
             if (!((*FineMap)[yy][xx] = (FINEPIX *) malloc(sizeof(FINEPIX)))) {
-	      fprintf(stderr,"error allocating FineMap[%d][%d]\n",yy,xx);
+	      printf("error allocating FineMap[%d][%d]\n",yy,xx);
               ReportError((char *) Routine, 1);
             }
 	  }

@@ -151,7 +151,8 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
     for (x = 0; x < Map->NX; x++) {
       if (INBASIN(TopoMap[y][x].Mask)) {
 	SoilMap[y][x].SatFlow = 0;
-	SoilMap[y][x].ChannelInt = 0;
+	/* ChannelInt and RoadInt are initialized in Aggregate.c Why are there here? */
+	/* 	SoilMap[y][x].ChannelInt = 0; */
 	SoilMap[y][x].RoadInt = 0;
       }
     }
@@ -328,7 +329,7 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
 	    channel_grid_inc_inflow(ChannelData->stream_map, x, y,
 				    OutFlow * Map->DX * Map->DY);
 
-	    SoilMap[y][x].ChannelInt = OutFlow;
+	    SoilMap[y][x].ChannelInt += OutFlow;
 	  }
 	}
       }

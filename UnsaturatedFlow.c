@@ -218,12 +218,10 @@ void UnsaturatedFlow(int Dt, float DX, float DY, float Infiltration,
      soil moisture in the lowest layer in the mass balance calculation */
   if (Moist[NSoilLayers] < FCap[NSoilLayers - 1]) {
     /*    Moist[NSoilLayers] = FCap[NSoilLayers - 1]; */
-   /*  fprintf(stderr,  */
-/* 	    "Warning: Deep layer soil moisture is less than field capacity.\n"); */
+   /*  printf("Warning: Deep layer soil moisture is less than field capacity.\n"); */
 
     if (Moist[NSoilLayers] < 0. )
-      fprintf(stderr, 
-	    "Warning: Deep layer soil moisture is negative.\n");
+      printf("Warning: Deep layer soil moisture is negative.\n");
   }
   
   /* Calculate the depth of the water table based on the soil moisture 

@@ -186,14 +186,15 @@ RouteChannel(CHANNEL * ChannelData, TIMESTRUCT * Time, MAPSIZE * Map,
   for (y = 0; y < Map->NY; y++) {
     for (x = 0; x < Map->NX; x++) {
       if (INBASIN(TopoMap[y][x].Mask)) {
-	SoilMap[y][x].IExcessSed = SoilMap[y][x].IExcess;	
+	SoilMap[y][x].IExcessSed = SoilMap[y][x].IExcess;
 	if (channel_grid_has_channel(ChannelData->road_map, x, y) && !channel_grid_has_sink(ChannelData->road_map, x, y)) {	/* road w/o sink */
+
 	  SoilMap[y][x].RoadInt += SoilMap[y][x].IExcess;
 	  channel_grid_inc_inflow(ChannelData->road_map, x, y,
-				    SoilMap[y][x].IExcess * Map->DX * Map->DY);
+				  SoilMap[y][x].IExcess * Map->DX * Map->DY);
 	  SoilMap[y][x].IExcess = 0.0f;
+	  
 	}
-	
       }
     }
   }
@@ -201,8 +202,8 @@ RouteChannel(CHANNEL * ChannelData, TIMESTRUCT * Time, MAPSIZE * Map,
   if(Options->RoadRouting){
     RouteRoad(Map, Time, TopoMap, SoilMap, Network, SType, ChannelData); 
   }
+
   /* route the road network and save results */
-  
   SPrintDate(&(Time->Current), buffer);
   flag = IsEqualTime(&(Time->Current), &(Time->Start));
   if (ChannelData->roads != NULL) {
@@ -217,6 +218,7 @@ RouteChannel(CHANNEL * ChannelData, TIMESTRUCT * Time, MAPSIZE * Map,
   for (y = 0; y < Map->NY; y++) {
     for (x = 0; x < Map->NX; x++) {
       if (INBASIN(TopoMap[y][x].Mask)) {
+
 	CulvertFlow = ChannelCulvertFlow(y, x, ChannelData);
 	CulvertFlow /= Map->DX * Map->DY;
 	/* CulvertFlow = (CulvertFlow > 0.0) ? CulvertFlow : 0.0; */
@@ -224,24 +226,20 @@ RouteChannel(CHANNEL * ChannelData, TIMESTRUCT * Time, MAPSIZE * Map,
 	if (channel_grid_has_channel(ChannelData->stream_map, x, y)) {
 	  channel_grid_inc_inflow(ChannelData->stream_map, x, y,
 				  (SoilMap[y][x].IExcess + 
-				   Network[y][x].IExcess +
 				   CulvertFlow) * Map->DX * Map->DY);
 	  SoilMap[y][x].ChannelInt += SoilMap[y][x].IExcess;
-	  SoilMap[y][x].ChannelInt += Network[y][x].IExcess;
 	  
 	  Total->CulvertToChannel += CulvertFlow;
 	  Total->RunoffToChannel += SoilMap[y][x].IExcess;
-	  Total->RunoffToChannel += Network[y][x].IExcess;
 	  
 	  SoilMap[y][x].IExcess = 0.0f;
-	  Network[y][x].IExcess = 0.;
+
 	}
 	else {
 	  SoilMap[y][x].IExcess += CulvertFlow;
 	  Total->CulvertReturnFlow += CulvertFlow;
+	  
 	}
-	
-	
       }
     }
   }

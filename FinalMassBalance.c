@@ -82,6 +82,8 @@ OPTIONSTRUCT * Options)
   fprintf(stderr, " \tFinal Soil Moisture (mm): %f\n", (Total->SoilWater + Total->Soil.SatFlow) * 1000.);
   fprintf(stderr, " \tFinal Surface (mm): %f\n", (Total->Soil.IExcess + Total->Road.IExcess + 
 						  Total->CanopyWater) * 1000.);
+  fprintf(stderr, " \tFinal Road Surface (mm): %f\n", Total->Road.IExcess *1000.);
+
 
   fprintf(stderr, " \nOther:\n");
   fprintf(stderr, " RoadInt (mm): %f\n", Mass->CumRoadInt * 1000.);
@@ -101,18 +103,18 @@ OPTIONSTRUCT * Options)
 	Mass->CumMassDeposition;
       
       fprintf(stderr, " \nTotal Mass Wasting\n");
-      fprintf(stderr, " MassWasted (m3): %.0f\n", Mass->CumMassWasting);
-      fprintf(stderr, " SedimentToChannel (m3): %.0f\n", 
+      fprintf(stderr, " MassWasted (m3): %.2e\n", Mass->CumMassWasting);
+      fprintf(stderr, " SedimentToChannel (m3): %.2e\n", 
 	      Mass->CumSedimentToChannel);
-      fprintf(stderr, " MassDepostion (m3): %.0f\n", Mass->CumMassDeposition);
-      fprintf(stderr, " Mass Error (m3): %f\n", MWMMassError);
+      fprintf(stderr, " MassDepostion (m3): %.2e\n", Mass->CumMassDeposition);
+      fprintf(stderr, " Mass Error (m3): %e\n", MWMMassError);
     }
     
     if (Options->SurfaceErosion){
       fprintf(stderr, " \nAverage Surface Erosion\n");
-      fprintf(stderr, " Surface Erosion (mm): %e\n", 
+      fprintf(stderr, " Surface Erosion (mm): %.2e\n", 
 	      Mass->CumSedimentErosion);
-      fprintf(stderr, " Surface Erosion (kg/hectare): %e\n", 
+      fprintf(stderr, " Surface Erosion (kg/hectare): %.2e\n", 
 	      Mass->CumSedimentErosion*PARTDENSITY*MMTOM/10000.);
     }
     
@@ -129,30 +131,30 @@ OPTIONSTRUCT * Options)
       SedOutput - SedInput;  
     
     fprintf(stderr, " \nChannel Erosion");
-    fprintf(stderr, " \nInflow %.0f:\n", SedInput); 
-    fprintf(stderr, " DebrisInflow (kg): %.0f\n", Mass->CumDebrisInflow); 
-    fprintf(stderr, " OverlandInflow (kg): %.0f\n", 
+    fprintf(stderr, " \nInflow %.2e:\n", SedInput); 
+    fprintf(stderr, " DebrisInflow (kg): %e\n", Mass->CumDebrisInflow); 
+    fprintf(stderr, " OverlandInflow (kg): %e\n", 
 	    Mass->CumSedOverlandInflow);
-    fprintf(stderr, " OverroadInflow (kg): %.0f\n", 
+    fprintf(stderr, " OverroadInflow (kg): %e\n", 
 	     Mass->CumSedOverroadInflow);
     
-    fprintf(stderr, " \nOutflow %.0f:\n",  SedOutput);
-    fprintf(stderr, " SedimentOutflow (kg): %.0f\n", Mass->CumSedimentOutflow);
-    fprintf(stderr, " CulvertReturnSedFlow (kg): %.0f\n", 
+    fprintf(stderr, " \nOutflow %.2e:\n",  SedOutput);
+    fprintf(stderr, " SedimentOutflow (kg): %e\n", Mass->CumSedimentOutflow);
+    fprintf(stderr, " CulvertReturnSedFlow (kg): %e\n", 
 	    Mass->CumCulvertReturnSedFlow); 
-    fprintf(stderr, " CulvertSedToChannel (kg): %.0f\n", 
+    fprintf(stderr, " CulvertSedToChannel (kg): %e\n", 
 	    Mass->CumCulvertSedToChannel);    
 
     fprintf(stderr, " \nStorage:\n");
-    fprintf(stderr, " Initial Storage (kg): %.0f\n", 
+    fprintf(stderr, " Initial Storage (kg): %e\n", 
 	    Mass->StartChannelSedimentStorage); 
-    fprintf(stderr, " End of Run Storage (kg): %.0f\n", 
+    fprintf(stderr, " End of Run Storage (kg): %e\n", 
 	    Total->ChannelSedimentStorage + Total->ChannelSuspendedSediment); 
-    fprintf(stderr, " \tFinal Bed Storage (kg): %.0f\n", 
+    fprintf(stderr, " \tFinal Bed Storage (kg): %e\n", 
 	    Total->ChannelSedimentStorage); 
-    fprintf(stderr, " \tFinal Suspended Sediment (kg): %.0f\n", 
+    fprintf(stderr, " \tFinal Suspended Sediment (kg): %e\n", 
 	    Total->ChannelSuspendedSediment); 
-    fprintf(stderr, " \nMass Error (kg): %f\n", SedMassError); 
+    fprintf(stderr, " \nMass Error (kg): %e\n", SedMassError); 
   }
 }
 

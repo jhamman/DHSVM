@@ -229,7 +229,7 @@ Channel *Find_Next_Segment(ChannelMapPtr ** map, int curr_col, int curr_row, int
       test = fabs(NextAspect - (CurrentAspect - 2.*PI));
   }
   if(test < 0. || test > PI) {
-    fprintf(stderr, "Problem in Find_Next_Segment\n");
+    printf("Problem in Find_Next_Segment\n");
     exit(0);
   }
 
@@ -279,7 +279,7 @@ Channel *Find_First_Segment(ChannelMapPtr ** map, int col, int row, float SlopeA
 	test = fabs(cell->aspect - (SlopeAspect - 2.*PI));
     }
     if(test < 0. || test > PI) {
-      fprintf(stderr, "Problem in Find_First_Segment\n");
+      printf("Problem in Find_First_Segment\n");
       exit(0);
     }
     

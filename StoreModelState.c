@@ -73,8 +73,7 @@ void StoreModelState(char *Path, DATE * Current, MAPSIZE * Map,
   MAPDUMP DMap;			/* Dump Info */
   void *Array;
   float RoadIExcess = 0.0;
-  float roadlength, roadwidth;
-
+ 
   /* print a message to stdout that state is being stored */
 
   printf("Storing model state\n");
@@ -481,10 +480,8 @@ void StoreModelState(char *Path, DATE * Current, MAPSIZE * Map,
       if (INBASIN(TopoMap[y][x].Mask)){
 	RoadIExcess = 0.0; 
 	if (channel_grid_has_channel(ChannelData->road_map, x, y)) {
-	  roadlength = channel_grid_cell_length(ChannelData->road_map, x, y);
-	  roadwidth = channel_grid_cell_width(ChannelData->road_map, x, y);
 	  for (i = 0; i < CELLFACTOR; i++)
- 	    RoadIExcess += (Network[y][x].h[i] * roadlength * roadwidth)/
+ 	    RoadIExcess += (Network[y][x].h[i] * Network[y][x].RoadArea)/
 	      ((float)CELLFACTOR * (Map->DX*Map->DY));
 	} 
 	((float *) Array)[y * Map->NX + x] = SoilMap[y][x].IExcess + RoadIExcess;

@@ -67,7 +67,8 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
 		       ROADSTRUCT *LocalNetwork, PRECIPPIX *LocalPrecip,
 		       VEGTABLE *VType, VEGPIX *LocalVeg, SOILTABLE *SType,
 		       SOILPIX *LocalSoil, SNOWPIX *LocalSnow,
-		       EVAPPIX *LocalEvap, PIXRAD *TotalRad)
+		       EVAPPIX *LocalEvap, PIXRAD *TotalRad,
+		       CHANNEL *ChannelData)
 {
  PIXRAD LocalRad;		/* Radiation balance components (W/m^2) */
   float SurfaceWater;		/* Pixel average depth of water before
@@ -75,6 +76,7 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
   float RoadWater;               /* Average depth of water on the road surface 
 				    (normalized by grid cell area) before
 				    infiltration is calculated (m) */
+  float ChannelWater;            /* Precip that hits the channel */
   float Infiltration;		/* Infiltration into the top soil layer (m) */
   float Infiltrability;          /* Dynamic infiltration capacity (m/s)*/
   float B;                       /* Capillary drive and soil saturation deficit
@@ -91,6 +93,9 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
   float MoistureFlux;		/* Amount of water transported from the pixel 
 				   to the atmosphere (m/timestep) */
   float NetRadiation;		/* Net radiation for a layer (W/m2) */
+  float PercArea;                /* Surface area of percolation corrected
+				    for channel and road area, divided by
+				    the grid cell area (0-1)  */
   float Reference;		/* Reference height for sensible heat 
 				   calculation (m) */
   float RoadbedInfiltration;	/* Infiltration through the road bed (m) */
@@ -415,24 +420,50 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
 
 #ifndef NO_SOIL
 
-  if (RoadRouteOption == FALSE)
-  SurfaceWater = LocalPrecip->RainFall + LocalSoil->IExcess + 
-    LocalSnow->Outflow;
-
- /* Since (1-PercArea) can represent a channel or road
-     RoadWater and Network.IExcess can have a value when 
-     there are no roads. There is a check for roads in 
-     RouteRoad so this does not cause a problem there. */
-  else {
-    SurfaceWater = LocalNetwork->PercArea[0] * 
-      (LocalPrecip->RainFall + LocalSnow->Outflow) + LocalSoil->IExcess;
-    RoadWater = (1. - LocalNetwork->PercArea[0])  * 
-      (LocalPrecip->RainFall + LocalSnow->Outflow)
-      + LocalNetwork->IExcess; 
-  }
-
+  /* This has been modified so that PercArea for infiltration is calculated
+     locally. I am not sure if the old PercArea needs to remain the same */
+  
+  MaxRoadbedInfiltration = 0.;
   MaxInfiltration = 0.;
-
+  ChannelWater = 0.;
+  RoadWater = 0.;
+  SurfaceWater = 0.;
+  PercArea = 1.;
+  RoadbedInfiltration = 0.;
+  
+  if (RoadRouteOption == FALSE)
+    SurfaceWater = LocalPrecip->RainFall + LocalSoil->IExcess + 
+      LocalSnow->Outflow;
+  /* ChannelWater is precipitation falling on the channel */
+  /* (if there is no road, LocalNetwork->RoadArea = 0) */
+  else {
+    if (channel_grid_has_channel(ChannelData->stream_map, x, y)){
+      PercArea = 1. - (LocalNetwork->Area + LocalNetwork->RoadArea)/(DX*DY);
+      ChannelWater = LocalNetwork->Area/(DX*DY) * LocalPrecip->RainFall;
+    }
+    /* If there is a road and no channel, the PercArea is 
+       based on the road only */
+    else if (channel_grid_has_channel(ChannelData->road_map, x, y)){
+      PercArea = 1. - (LocalNetwork->RoadArea)/(DX*DY);
+      MaxRoadbedInfiltration = (1. - PercArea) * 
+	LocalNetwork->MaxInfiltrationRate * Dt; 
+    }
+  
+    /* SurfaceWater is rain falling on the hillslope + 
+       snowmelt on the hillslope (there is no snowmelt on the channel) +
+       existing IExcess */
+    SurfaceWater = (PercArea * LocalPrecip->RainFall) +
+      ((1. - (LocalNetwork->RoadArea)/(DX*DY)) * LocalSnow->Outflow) + 
+      LocalSoil->IExcess;
+    
+    /* RoadWater is rain falling on the road surface +
+       snowmelt on the road surface + existing IExcess 
+       Existing IExcess = 0. WORK IN PROGRESS*/
+    RoadWater = (LocalNetwork->RoadArea/(DX*DY) * 
+		 (LocalPrecip->RainFall + LocalSnow->Outflow)) + 
+      LocalNetwork->IExcess;
+  }
+  
   if(InfiltOption == STATIC)
     MaxInfiltration = (1. - VType->ImpervFrac) * LocalNetwork->PercArea[0] * 
     SType->MaxInfiltrationRate * Dt; 
@@ -473,20 +504,16 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
   } /* end Dynamic MaxInfiltration calculation */ 
   
   if (RoadRouteOption == FALSE)
-    Infiltration = (1. - VType->ImpervFrac) * LocalNetwork->PercArea[0] * 
+    Infiltration = (1. - VType->ImpervFrac) * PercArea * 
     SurfaceWater; 
   else
     Infiltration = (1. - VType->ImpervFrac) * SurfaceWater;
-
   
   if (Infiltration > MaxInfiltration) 
     Infiltration = MaxInfiltration;
   
-  MaxRoadbedInfiltration = (1. - LocalNetwork->PercArea[0]) * 
-    LocalNetwork->MaxInfiltrationRate * Dt; 
-
   if (RoadRouteOption == FALSE)
-    RoadbedInfiltration = (1. - LocalNetwork->PercArea[0]) * 
+    RoadbedInfiltration = (1. - PercArea) * 
     SurfaceWater; 
   else
     RoadbedInfiltration = RoadWater;
@@ -498,12 +525,26 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
     LocalSoil->IExcess = SurfaceWater - Infiltration - RoadbedInfiltration;
   else {
     LocalSoil->IExcess = SurfaceWater - Infiltration;
-    LocalNetwork->IExcess = RoadWater - RoadbedInfiltration; 
+    LocalNetwork->IExcess = RoadWater - RoadbedInfiltration;
+    if (LocalNetwork->IExcess < 0.){
+      LocalNetwork->IExcess = 0.;
+      printf("MEB: NetIExcess(%f), reset to 0\n", LocalNetwork->IExcess);
+    }
   }
 
+  if (LocalSoil->IExcess < 0.){
+    printf("MEB: SoilIExcess(%f), reset to 0\n", LocalSoil->IExcess);
+    LocalSoil->IExcess = 0.;
+  }
+
+  /*Add water that hits the channel network to the channel network */
+  if (ChannelWater > 0.){
+    channel_grid_inc_inflow(ChannelData->stream_map, x, y, ChannelWater * DX * DY);
+    LocalSoil->ChannelInt += ChannelWater;
+   }
+  
   /* Calculate unsaturated soil water movement, and adjust soil water 
      table depth */
-
 
   UnsaturatedFlow(Dt, DX, DY, Infiltration, RoadbedInfiltration,
 		  LocalSoil->SatFlow, SType->NLayers,
