@@ -231,7 +231,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	    if(Runon[y][x] > 0.0001 || outflow > 0.0001) {
 	      sedoutflow = ((VariableDT/Map->DX)*Runon[y][x] + 
 			    alpha*beta*outflow * pow((outflow+Runon[y][x])/2.0,beta-1.) +
-			    (SoilMap[y][x].IExcess+SoilMap[y][x].IExcessSed)*Map->DX*VariableDT/Time->Dt)/
+			    (SoilMap[y][x].IExcessSed)*Map->DX*VariableDT/Time->Dt)/
 		((VariableDT/Map->DX) + alpha*beta*pow((outflow+
 							Runon[y][x])/2.0, beta-1.));
 	    }
@@ -243,7 +243,9 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	    
 	    if(sedoutflow < 0.0) 
 	      sedoutflow = 0.0; 
+
 	    outflow = 0.0;
+
 	    h = (SoilMap[y][x].IExcessSed+SoilMap[y][x].IExcess);
 	    SoilMap[y][x].IExcessSed = 0.;
 	  }
@@ -342,7 +344,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	  } /* end of if Options->SurfaceErosion */
 	  
 	  /* Save sub-timestep runoff for q(i)(t-1) and q(i-1)(t-1) of next time step. */
-	  SoilMap[y][x].startRunoff = outflow;
+	  SoilMap[y][x].startRunoff = sedoutflow;
 	  SoilMap[y][x].startRunon = Runon[y][x];
 	  
 	  /* Calculate total runoff in m/dhsvm timestep. */
