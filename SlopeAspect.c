@@ -289,8 +289,7 @@ void ElevationSlopeAspect(MAPSIZE * Map, TOPOPIX ** TopoMap)
 	      (TopoMap[yn][xn].Dem > TopoMap[y][x].Dem)) {
 	    (TopoMap[y][x].TotalDir) -= TopoMap[y][x].Dir[n]; 
 	    if (TopoMap[y][x].TotalDir == 0) {
-	      fprintf(stderr, 
-		      "WARNING: There may be a sink in the DEM in y(%d) x(%d).\n",
+	      printf("WARNING: There may be a sink in the DEM in y(%d) x(%d).\n",
 		      y,x);
 	      (TopoMap[y][x].TotalDir)+= TopoMap[y][x].Dir[n];
 	    }

@@ -162,6 +162,7 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	 (in seconds). Must be an even increment of Dt. */
       
       VariableDT = FindDT(SoilMap, Map, Time, TopoMap, SType); 
+      printf("VariableDT = %f\n", VariableDT);
       
       for (k = 0; k < Map->NumCells; k++) {
 	y = Map->OrderedCells[k].y;

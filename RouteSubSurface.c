@@ -367,8 +367,10 @@ void RouteSubSurface(int Dt, MAPSIZE *Map, TOPOPIX **TopoMap,
   for(i=0; i<Map->NY; i++) { 
     free(SubTotalDir[i]);
     free(SubFlowGrad[i]);
-    for(j=0; j<Map->NX; j++)
+    for(j=0; j<Map->NX; j++){
       free(SubDir[i][j]);
+    }
+    free(SubDir[i]);
   }
   free(SubDir);
   free(SubTotalDir);

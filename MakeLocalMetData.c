@@ -247,6 +247,10 @@ PIXMET MakeLocalMetData(int y, int x, MAPSIZE * Map, int DayStep,
 	  PrecipMap->Precip +=
 	    CurrentWeight * Stat[i].Data.Precip /
 	    Stat[i].PrismPrecip[Month - 1] * PrismMap[y][x];
+	if(PrismMap[y][x] < 0){
+	  printf("negative PrismMap value in MakeLocalMetData.c\n");
+	  exit(0);
+	}
       }
     }
   }
