@@ -110,7 +110,7 @@ void FinalMassBalance(FILES * Out, AGGREGATED * Total, WATERBALANCE * Mass,
       fprintf(stderr, " Mass Error (m3): %e\n", MWMMassError);
     }
     
-    if (Options->SurfaceErosion){
+    if (Options->InitSedFlag){
       fprintf(stderr, " \nAverage Surface Erosion\n");
       fprintf(stderr, " Surface Erosion (mm): %.2e\n", 
 	      Mass->CumSedimentErosion);

@@ -174,6 +174,8 @@ void InitParameters(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
   if (Options->SurfaceErosion == TRUE){
     InitSurfaceSed(Input, Time);
   }
+  /* Store initial sediment routing option for dumping */
+  Options->InitSedFlag=Options->SurfaceErosion;
 }
 
 /*******************************************************************************

@@ -248,6 +248,7 @@ typedef struct {
   
   int OldSedFlag;                 /* Sediment flag from previous timestep; */
   int OldRouteFlag;               /* Initial routing flag */
+  int InitSedFlag;                /* Initial Sediment Flag for dumping purposes */
   int SurfaceErosion;            /* Specifies whether surface erosion model should be run
 				       variables should be output, TRUE or FALSE. */
   int Routing;                  /* Overland flow routing indicator, either CONVENTIONAL
