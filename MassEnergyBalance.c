@@ -421,7 +421,8 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
 #ifndef NO_SOIL
 
   /* This has been modified so that PercArea for infiltration is calculated
-     locally. I am not sure if the old PercArea needs to remain the same */
+     locally. I am not sure if the old PercArea needs to remain the same. 
+     Currently, the old PercArea is passed to UnsaturatedFlow */
   
   MaxRoadbedInfiltration = 0.;
   MaxInfiltration = 0.;
@@ -431,48 +432,44 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
   PercArea = 1.;
   RoadbedInfiltration = 0.;
   
-  if (RoadRouteOption == FALSE)
-    SurfaceWater = LocalPrecip->RainFall + LocalSoil->IExcess + 
-      LocalSnow->Outflow;
   /* ChannelWater is precipitation falling on the channel */
   /* (if there is no road, LocalNetwork->RoadArea = 0) */
-  else {
-    if (channel_grid_has_channel(ChannelData->stream_map, x, y)){
-      PercArea = 1. - (LocalNetwork->Area + LocalNetwork->RoadArea)/(DX*DY);
-      ChannelWater = LocalNetwork->Area/(DX*DY) * LocalPrecip->RainFall;
-    }
-    /* If there is a road and no channel, the PercArea is 
-       based on the road only */
-    else if (channel_grid_has_channel(ChannelData->road_map, x, y)){
-      PercArea = 1. - (LocalNetwork->RoadArea)/(DX*DY);
-      MaxRoadbedInfiltration = (1. - PercArea) * 
-	LocalNetwork->MaxInfiltrationRate * Dt; 
-    }
-  
-    /* SurfaceWater is rain falling on the hillslope + 
-       snowmelt on the hillslope (there is no snowmelt on the channel) +
-       existing IExcess */
-    SurfaceWater = (PercArea * LocalPrecip->RainFall) +
-      ((1. - (LocalNetwork->RoadArea)/(DX*DY)) * LocalSnow->Outflow) + 
-      LocalSoil->IExcess;
-    
-    /* RoadWater is rain falling on the road surface +
-       snowmelt on the road surface + existing IExcess 
-       Existing IExcess = 0. WORK IN PROGRESS*/
-    RoadWater = (LocalNetwork->RoadArea/(DX*DY) * 
-		 (LocalPrecip->RainFall + LocalSnow->Outflow)) + 
-      LocalNetwork->IExcess;
+  if (channel_grid_has_channel(ChannelData->stream_map, x, y)){
+    PercArea = 1. - (LocalNetwork->Area + LocalNetwork->RoadArea)/(DX*DY);
+    ChannelWater = LocalNetwork->Area/(DX*DY) * LocalPrecip->RainFall;
+  }
+  /* If there is a road and no channel, the PercArea is 
+     based on the road only */
+  else if (channel_grid_has_channel(ChannelData->road_map, x, y)){
+    PercArea = 1. - (LocalNetwork->RoadArea)/(DX*DY);
+    MaxRoadbedInfiltration = (1. - PercArea) * 
+      LocalNetwork->MaxInfiltrationRate * Dt; 
   }
   
+  /* SurfaceWater is rain falling on the hillslope + 
+     snowmelt on the hillslope (there is no snowmelt on the channel) +
+     existing IExcess */
+  SurfaceWater = (PercArea * LocalPrecip->RainFall) +
+    ((1. - (LocalNetwork->RoadArea)/(DX*DY)) * LocalSnow->Outflow) + 
+    LocalSoil->IExcess;
+  
+  /* RoadWater is rain falling on the road surface +
+     snowmelt on the road surface + existing IExcess 
+     Existing IExcess = 0. WORK IN PROGRESS*/
+  RoadWater = (LocalNetwork->RoadArea/(DX*DY) * 
+	       (LocalPrecip->RainFall + LocalSnow->Outflow)) + 
+    LocalNetwork->IExcess;
+  
+  
   if(InfiltOption == STATIC)
-    MaxInfiltration = (1. - VType->ImpervFrac) * LocalNetwork->PercArea[0] * 
-    SType->MaxInfiltrationRate * Dt; 
-   
+    MaxInfiltration = (1. - VType->ImpervFrac) * PercArea * 
+      SType->MaxInfiltrationRate * Dt; 
+  
   else { /* InfiltOption == DYNAMIC 
 	    Dynamic Infiltration Capacity after Parlange and Smith 1978, 
 	    as used in KINEROS and THALES */
     Infiltration = 0.0;
-
+    
     if (SurfaceWater > 0.) {
       /* Infiltration is a function of the amount of water infiltrated since 
 	 the storm started */
@@ -480,7 +477,7 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
 	LocalSoil->MoistInit = LocalSoil->Moist[0];
 	LocalSoil->InfiltAcc = 0.0;
       }
-
+      
       /* Check that the B parameter > 0 */
       if ((LocalSoil->InfiltAcc > 0.) && (SType->Porosity[0] > LocalSoil->MoistInit)) {
 	
@@ -489,40 +486,33 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
 	Infiltrability = SType->Ks[0] * exp((LocalSoil->InfiltAcc)/B) / 
 	  (exp((LocalSoil->InfiltAcc)/B) - 1.);
       }
-
+      
       else 
 	Infiltrability = SurfaceWater/Dt ; 
-        
-      MaxInfiltration = Infiltrability * LocalNetwork->PercArea[0] *
-                                        (1. - VType->ImpervFrac) *  Dt;
+      
+      MaxInfiltration = Infiltrability * PercArea *
+	(1. - VType->ImpervFrac) *  Dt;
       
       LocalPrecip->PrecipStart = FALSE; 
     }/* end  if (SurfaceWater > 0.) */
     else 
       LocalPrecip->PrecipStart = TRUE;
-  	
+    
   } /* end Dynamic MaxInfiltration calculation */ 
   
-  if (RoadRouteOption == FALSE)
-    Infiltration = (1. - VType->ImpervFrac) * PercArea * 
-    SurfaceWater; 
-  else
-    Infiltration = (1. - VType->ImpervFrac) * SurfaceWater;
+  Infiltration = (1. - VType->ImpervFrac) * SurfaceWater;
   
   if (Infiltration > MaxInfiltration) 
     Infiltration = MaxInfiltration;
   
-  if (RoadRouteOption == FALSE)
-    RoadbedInfiltration = (1. - PercArea) * 
-    SurfaceWater; 
-  else
-    RoadbedInfiltration = RoadWater;
-
+  RoadbedInfiltration = RoadWater;
+  
   if (RoadbedInfiltration > MaxRoadbedInfiltration) 
     RoadbedInfiltration = MaxRoadbedInfiltration;
   
   if (RoadRouteOption == FALSE)
-    LocalSoil->IExcess = SurfaceWater - Infiltration - RoadbedInfiltration;
+    LocalSoil->IExcess = SurfaceWater - Infiltration + 
+      RoadWater + RoadbedInfiltration;
   else {
     LocalSoil->IExcess = SurfaceWater - Infiltration;
     LocalNetwork->IExcess = RoadWater - RoadbedInfiltration;
