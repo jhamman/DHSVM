@@ -6,7 +6,7 @@
  * ORG:          Battelle - Pacific Northwest National Laboratory
  * E-MAIL:       ms_wigmosta@pnl.gov
  * ORIG-DATE:    Oct-96
- * DESCRIPTION:  Calculate water mass balance errors
+ * DESCRIPTION:  Calculate water and sediment mass balance errors
  *               
  * DESCRIP-END.
  * FUNCTIONS:    FinalMassBalance()
@@ -34,12 +34,14 @@
   The aggregated values are set to zero in the function RestAggregate,
   which is executed at the beginning of each time step.
 *****************************************************************************/
-void FinalMassBalance(FILES * Out, AGGREGATED * Total, WATERBALANCE * Mass)
+void FinalMassBalance(FILES * Out, AGGREGATED * Total, WATERBALANCE * Mass,
+OPTIONSTRUCT * Options)
 {
   float NewWaterStorage;	/* water storage at the end of the time step */
   float Output;			/* total water flux leaving the basin;  */
   float MassError;		/* mass balance error m  */
   float Input;
+  float MWMMassError;
 
   NewWaterStorage = Total->Soil.IExcess + Total->Road.IExcess + 
     Total->CanopyWater + Total->SoilWater +
@@ -87,4 +89,21 @@ void FinalMassBalance(FILES * Out, AGGREGATED * Total, WATERBALANCE * Mass)
   fprintf(stderr, " Mass Error (mm): %f\n", MassError * 1000.);
   fprintf(stderr, " Mass added to glacier (mm) %f\n",
 	  Total->Snow.Glacier * 1000.);
+
+  if(Options->Sediment){
+    
+    fprintf(stderr, "\nFinal Sediment Mass Balance\n");
+    
+    if (Options->MassWaste){
+      
+      MWMMassError = Mass->CumMassWasting - Mass->CumSedimentToChannel - 
+	Mass->CumMassDeposition;
+      
+      fprintf(stderr, " \nMass Wasting\n");
+      fprintf(stderr, " MassWasted (m3): %.0f\n", Mass->CumMassWasting);
+      fprintf(stderr, " SedimentToChannel (m3): %.0f\n", Mass->CumSedimentToChannel);
+      fprintf(stderr, " MassDepostion (m3): %.0f\n", Mass->CumMassDeposition );
+      fprintf(stderr, " Mass Error (m3): %f\n", MWMMassError);
+    }
+  }
 }

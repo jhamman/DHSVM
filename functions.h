@@ -92,7 +92,8 @@ void ExecDump(MAPSIZE * Map, DATE * Current, DATE * Start, OPTIONSTRUCT * Option
 
 unsigned char fequal(float a, float b);
 
-void FinalMassBalance(FILES *Out, AGGREGATED *Total, WATERBALANCE *Mass);
+void FinalMassBalance(FILES *Out, AGGREGATED *Total, WATERBALANCE *Mass,
+OPTIONSTRUCT * Options);
 
 float FindDT(SOILPIX **SoilMap, MAPSIZE *Map, TIMESTRUCT *Time, 
 	     TOPOPIX **TopoMap, SOILTABLE *SType); 

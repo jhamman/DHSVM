@@ -78,14 +78,16 @@ int main(int argc, char **argv)
   AGGREGATED Total = {		/* Total or average value of a 
 				   variable over the entire basin */
     {0.0, NULL, NULL, NULL, NULL, 0.0},	/* EVAPPIX */
-    {0.0, 0.0, 0.0, 0.0, NULL, NULL, 0.0},	/* PRECIPPIX */
+    {0.0, 0.0, 0.0, 0.0, NULL, NULL, 0.0, 0, 0.0},	/* PRECIPPIX */
     {{0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, 0.0, 0.0, 0.0},	/* PIXRAD */
     {0.0, 0.0},		/* RADCLASSPIX */
-    {0.0},		/* ROADSTRUCT*/
+    {0.0, 0.0, 0.0, NULL, NULL, 0.0, 0, 0.0, 0.0, 0.0, 
+     NULL, NULL, NULL},		/* ROADSTRUCT*/
     {0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0,
      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},	/* SNOWPIX */
     {0, 0.0, NULL, NULL, NULL, 0.0, 0.0, 0.0, 0.0,
-     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},	/*SOILPIX */
+     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+    0.0, 0.0, 0.0},	/*SOILPIX */
     { 0.0, 0.0, 0.0, 0.0}, /*SEDPIX */
     { 0.0, NULL, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, /*FINEPIX */
     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0l, 0.0, 0.0, 0.0
@@ -129,7 +131,7 @@ int main(int argc, char **argv)
   VEGPIX **VegMap = NULL;
   VEGTABLE *VType = NULL;
   WATERBALANCE Mass =		/* parameter for mass balance calculations */
-  { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
+  { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 
 /*****************************************************************************
   Initialization Procedures 
@@ -446,7 +448,7 @@ int main(int argc, char **argv)
 	   SedMap, Network, &ChannelData, FineMap, &Soil, &Total, &HydrographInfo,
 	   Hydrograph);
 
-  FinalMassBalance(&(Dump.Balance), &Total, &Mass);
+  FinalMassBalance(&(Dump.Balance), &Total, &Mass, &Options);
 
 /*****************************************************************************
   Cleanup

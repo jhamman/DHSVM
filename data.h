@@ -566,6 +566,11 @@ typedef struct {
   float CumCulvertReturnFlow;
   float CumCulvertToChannel;
   float CumRunoffToChannel;
+  float CumMassWasting;
+  float CumSedimentToChannel;
+  float CumMassDeposition;
+
+
 } WATERBALANCE;
 
 typedef struct {

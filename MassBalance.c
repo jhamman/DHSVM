@@ -6,7 +6,7 @@
  * ORG:          Battelle - Pacific Northwest National Laboratory
  * E-MAIL:       ms_wigmosta@pnl.gov
  * ORIG-DATE:    Oct-96
- * DESCRIPTION:  Calculate water mass balance errors
+ * DESCRIPTION:  Calculate water and sediment mass balance errors
  *               
  * DESCRIP-END.
  * FUNCTIONS:    MassBalance()
@@ -74,5 +74,10 @@ void MassBalance(DATE *Current, FILES *Out, AGGREGATED *Total,
 	   Total->Snow.VaporMassFlux, Total->Snow.CanopyVaporMassFlux,
 	   Mass->OldWaterStorage, Total->CulvertToChannel,
 	   Total->RunoffToChannel, MassError);
-      } 
+
+  Mass->CumMassWasting += Total->Fine.MassWasting;
+  Mass->CumSedimentToChannel += Total->Fine.SedimentToChannel;
+  Mass->CumMassDeposition += Total->Fine.MassDeposition;
+  
+} 
 
