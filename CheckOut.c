@@ -142,7 +142,7 @@ void CheckOut(int CanopyRadAttOption, LAYER Veg, LAYER Soil,
 	  printf("Error for class %d of Type %s  \n", VegMap[y][x].Veg,
 		 VType[VegMap[y][x].Veg - 1].Desc);
 	  printf("%d %d Soil depth is %f, Root depth is %f \n", y,x,SoilMap[y][x].Depth,
-		 VType[VegMap[y][x].Veg].TotalDepth);
+		 VType[VegMap[y][x].Veg - 1].TotalDepth);
 	  exit(-1);
 	}
       }
