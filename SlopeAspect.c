@@ -513,7 +513,7 @@ float ElevationSlope(MAPSIZE *Map, FINEPIX ***FineMap, int y, int x, int *nexty,
   if(direction==0 || direction==2 || direction==4 || direction==6)
     Slope = (atan((celev - soil_elev[direction]) / length_diagonal))
       * DEGPRAD;
-  else if(n==1 || n==5)
+  else if(direction==1 || direction==5)
     Slope = (atan((celev - soil_elev[direction]) / dy)) * DEGPRAD;
   else
     Slope = (atan((celev - soil_elev[direction]) / dx)) * DEGPRAD;

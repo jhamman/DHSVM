@@ -247,6 +247,7 @@ static Channel *alloc_channel_segment(void)
   seg->last_outflow = 0.0;
   seg->inflow = 0.0;
   seg->outflow = 0.0;
+  seg->storage= 0.0;
   seg->last_lateral_inflow = 0.0;
   seg->outlet = NULL;
   seg->next = NULL;
