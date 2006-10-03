@@ -14,6 +14,7 @@
  */
 
 #include <math.h>
+#include <stdlib.h>
 #include "settings.h"
 #include "data.h"
 #include "functions.h"

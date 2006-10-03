@@ -28,6 +28,8 @@
 #include "functions.h"
 #include "rad.h"
 #include "sizeofnt.h"
+#include "varid.h"
+
 
 /*****************************************************************************
   InitMetMaps()

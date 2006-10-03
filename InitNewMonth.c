@@ -29,6 +29,7 @@
 #include "rad.h"
 #include "slopeaspect.h"
 #include "sizeofnt.h"
+#include "varid.h"
 
 /*****************************************************************************
   InitNewMonth()

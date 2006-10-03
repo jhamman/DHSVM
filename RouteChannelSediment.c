@@ -301,8 +301,7 @@ void RouteChannelSediment(Channel * Head, TIMESTRUCT Time,
 	      }
 	      
 	      if (error_count>2){
-		printf("Warning: Unable to reduce mass error below specified level\n
-                         in RouteChannelSediment");
+		printf("Warning: Unable to reduce mass error below specified level\n in RouteChannelSediment");
 	      }
 	      
 	      /****************************************/
