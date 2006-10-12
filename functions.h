@@ -225,6 +225,8 @@ void InitSurfaceSed(LISTPTR Input, TIMESTRUCT *Time);
 void InitSedimentTables(int StepsPerDay, LISTPTR Input, SEDTABLE **SedType, SOILTABLE **SType,
 			VEGTABLE **VType, LAYER *Soil, LAYER *Veg);
 
+void InitSedMap(MAPSIZE *Map, SEDPIX ***SedMap);
+
 void InitShadeMap(OPTIONSTRUCT *Options, int NDaySteps, int NY, int NX,
 		  unsigned char ****ShadowMap, float ***SkyViewMap);
 

@@ -143,12 +143,21 @@ void ExecDump(MAPSIZE * Map, DATE * Current, DATE * Start, OPTIONSTRUCT * Option
       }
       else overroadinflow = -999.;
       
-      DumpPix(Current, IsEqualTime(Current, Start), &(Dump->Pix[i].OutFile),
+      if ( Options->Sediment)
+        DumpPix(Current, IsEqualTime(Current, Start), &(Dump->Pix[i].OutFile),
               &(Dump->Pix[i].OutFileSediment), &(EvapMap[y][x]), &(PrecipMap[y][x]),
               &(RadMap[y][x]), &(SnowMap[y][x]), &(SoilMap[y][x]),&(SedMap[y][x]), 
 	      &(Network[y][x]), overlandinflow, overroadinflow,
               &PixAggFineMap, Soil->NLayers[(SoilMap[y][x].Soil - 1)],
               Veg->NLayers[(VegMap[y][x].Veg - 1)], Options);
+      else
+        DumpPix(Current, IsEqualTime(Current, Start), &(Dump->Pix[i].OutFile),
+              &(Dump->Pix[i].OutFileSediment), &(EvapMap[y][x]), &(PrecipMap[y][x]),
+              &(RadMap[y][x]), &(SnowMap[y][x]), &(SoilMap[y][x]),&(Total->Sediment),
+              &(Network[y][x]), overlandinflow, overroadinflow,
+              &PixAggFineMap, Soil->NLayers[(SoilMap[y][x].Soil - 1)],
+              Veg->NLayers[(VegMap[y][x].Veg - 1)], Options);
+
       fprintf(Dump->Pix[i].OutFile.FilePtr, "\n");
     }
 

@@ -15,8 +15,8 @@ EvapoTranspiration.o ExecDump.o FileIOBin.o FileIONetCDF.o Files.o   \
 FinalMassBalance.o FindValue.o GetInit.o GetMetData.o InArea.o InitAggregated.o  \
 InitArray.o InitConstants.o InitDump.o InitFileIO.o InitFineMaps.o   \
 InitInterpolationWeights.o InitMetMaps.o InitMetSources.o	     \
-InitModelState.o InitNetwork.o InitNewMonth.o InitParameters.o InitSedTables.o     \
-InitSnowMap.o InitTables.o InitTerrainMaps.o InitUnitHydrograph.o  \
+InitModelState.o InitNetwork.o InitNewMonth.o InitParameters.o InitSedMap.o \
+InitSedTables.o InitSnowMap.o InitTables.o InitTerrainMaps.o InitUnitHydrograph.o  \
 InitXGraphics.o InterceptionStorage.o IsStationLocation.o LapseT.o LookupTable.o  \
 MainDHSVM.o MainMWM.o MakeLocalMetData.o MassBalance.o MassEnergyBalance.o     \
 MassRelease.o MaxRoadInfiltration.o NoEvap.o RadiationBalance.o	     \
@@ -193,6 +193,7 @@ InitNewMonth.o: InitNewMonth.c settings.h data.h Calendar.h \
 InitParameters.o: InitParameters.c settings.h data.h Calendar.h \
  fileio.h DHSVMerror.h functions.h DHSVMChannel.h getinit.h channel.h \
  channel_grid.h constants.h rad.h
+InitSedMap.o: InitSedMap.c data.h DHSVMerror.h 
 InitSedTables.o: InitSedTables.c settings.h DHSVMerror.h Calendar.h \
  data.h constants.h fileio.h getinit.h
 InitSnowMap.o: InitSnowMap.c settings.h data.h Calendar.h DHSVMerror.h \

@@ -93,7 +93,7 @@ int main(int argc, char **argv)
      0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
     0.0, 0.0, 0.0},	/*SOILPIX */
     { 0.0, 0.0, 0.0, 0.0}, /*SEDPIX */
-    { 0.0, NULL, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, /*FINEPIX */
+    { 0.0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, /*FINEPIX */
     0.0, 0.0, 0.0, 0.0, 0.0, 0l, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
     0.0, 0.0, 0.0, 0.0
   };
@@ -287,18 +287,12 @@ int main(int argc, char **argv)
       InitChannelSediment(ChannelData.roads, &Total);
     }
 
-
-    /* Allocate memory for the sediment grid */
-    if (!(SedMap = (SEDPIX **) calloc(Map.NY, sizeof(SEDPIX *))))
-      ReportError("MainDHSVM", 1);
-    for (y = 0; y < Map.NY; y++) {
-      if (!((SedMap)[y] = (SEDPIX *) calloc(Map.NX, sizeof(SEDPIX))))
-	ReportError("MainDHSVM", 1);
-    }
+    InitSedMap( &Map, &SedMap);
 
     /* Done with initialization, delete the list with input strings */
     DeleteList(Input);
   }
+
   
 
   /* setup for mass balance calculations */
