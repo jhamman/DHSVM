@@ -11,6 +11,7 @@
  * FUNCTIONS:    ExecDump()
  *               DumpMap()
  *               DumpPix()
+ *               DumpPixSed()
  * COMMENTS:
  * $Id$     
  */
@@ -51,13 +52,15 @@ void ExecDump(MAPSIZE * Map, DATE * Current, DATE * Start, OPTIONSTRUCT * Option
 
   /* dump the aggregated basin values for this timestep */
   DumpPix(Current, IsEqualTime(Current, Start), &(Dump->Aggregate),
-	  &(Dump->AggregateSediment), &(Total->Evap),
-	  &(Total->Precip), &(Total->RadClass), &(Total->Snow), &(Total->Soil),
-	  &(Total->Sediment), &(Total->Road), Total->SedimentOverlandInflow, 
-	  Total->SedimentOverroadInflow, &(Total->Fine),
-	  Soil->MaxLayers, Veg->MaxLayers, Options);
+	  &(Total->Evap),&(Total->Precip), &(Total->RadClass), &(Total->Snow),
+	  &(Total->Soil), Soil->MaxLayers, Veg->MaxLayers, Options);
   fprintf(Dump->Aggregate.FilePtr, " %lu", Total->Saturated);
   fprintf(Dump->Aggregate.FilePtr, "\n");
+
+  if (Options->Sediment)
+  DumpPixSed(Current, IsEqualTime(Current, Start), &(Dump->AggregateSediment),
+          &(Total->Sediment), &(Total->Road), Total->SedimentOverlandInflow, 
+          Total->SedimentOverroadInflow, &(Total->Fine) );
 
   if (Options->Extent != POINT) {
 
@@ -127,7 +130,7 @@ void ExecDump(MAPSIZE * Map, DATE * Current, DATE * Start, OPTIONSTRUCT * Option
         PixAggFineMap.SedimentToChannel = -999.;
       }
 
-      if (Options->InitSedFlag){
+      if (Options->InitSedFlag && channel_grid_has_channel(ChannelData->stream_map, x, y)){
 	overlandinflow = 0.;
 	for(i=0;i<NSEDSIZES;i++) {
 	  overlandinflow += ChannelData->stream_map[x][y]->channel->sediment.overlandinflow[i];
@@ -135,29 +138,24 @@ void ExecDump(MAPSIZE * Map, DATE * Current, DATE * Start, OPTIONSTRUCT * Option
       }
       else overlandinflow = -999.;
 
-      if (Options->RoadRouting){
+      if (Options->RoadRouting && channel_grid_has_channel(ChannelData->road_map, x, y) ){
 	overroadinflow = 0.;
 	for(i=0;i<NSEDSIZES;i++) {
-	  overroadinflow += ChannelData->stream_map[x][y]->channel->sediment.overroadinflow[i];
+	    overroadinflow += ChannelData->road_map[x][y]->channel->sediment.overroadinflow[i];
 	}
       }
       else overroadinflow = -999.;
       
-      if ( Options->Sediment)
-        DumpPix(Current, IsEqualTime(Current, Start), &(Dump->Pix[i].OutFile),
-              &(Dump->Pix[i].OutFileSediment), &(EvapMap[y][x]), &(PrecipMap[y][x]),
-              &(RadMap[y][x]), &(SnowMap[y][x]), &(SoilMap[y][x]),&(SedMap[y][x]), 
-	      &(Network[y][x]), overlandinflow, overroadinflow,
-              &PixAggFineMap, Soil->NLayers[(SoilMap[y][x].Soil - 1)],
-              Veg->NLayers[(VegMap[y][x].Veg - 1)], Options);
-      else
-        DumpPix(Current, IsEqualTime(Current, Start), &(Dump->Pix[i].OutFile),
-              &(Dump->Pix[i].OutFileSediment), &(EvapMap[y][x]), &(PrecipMap[y][x]),
-              &(RadMap[y][x]), &(SnowMap[y][x]), &(SoilMap[y][x]),&(Total->Sediment),
-              &(Network[y][x]), overlandinflow, overroadinflow,
-              &PixAggFineMap, Soil->NLayers[(SoilMap[y][x].Soil - 1)],
-              Veg->NLayers[(VegMap[y][x].Veg - 1)], Options);
+      /* output sediment-related variable at the pixel */
+      if ( Options->Sediment) 
+        DumpPixSed(Current, IsEqualTime(Current, Start), &(Dump->Pix[i].OutFileSediment),
+              &(SedMap[y][x]), &(Network[y][x]), overlandinflow, overroadinflow, &PixAggFineMap);
 
+      /* output variable at the pixel */
+      DumpPix(Current, IsEqualTime(Current, Start), &(Dump->Pix[i].OutFile),
+              &(EvapMap[y][x]), &(PrecipMap[y][x]),&(RadMap[y][x]), &(SnowMap[y][x]),
+              &(SoilMap[y][x]), Soil->NLayers[(SoilMap[y][x].Soil - 1)],
+              Veg->NLayers[(VegMap[y][x].Veg - 1)], Options);
       fprintf(Dump->Pix[i].OutFile.FilePtr, "\n");
     }
 
@@ -1504,11 +1502,9 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 /*****************************************************************************
   DumpPix()
 *****************************************************************************/
-void DumpPix(DATE * Current, int first, FILES * OutFile, FILES * OutFileSediment,
-             EVAPPIX * Evap, PRECIPPIX * Precip, RADCLASSPIX * Rad, SNOWPIX * Snow,
-	     SOILPIX * Soil, SEDPIX * SedMap, ROADSTRUCT * Network, 
-	     float SedimentOverlandInflow, float SedimentOverroadInflow,
-	     FINEPIX * FineMap, int NSoil, int NVeg, OPTIONSTRUCT *Options)
+void DumpPix(DATE * Current, int first, FILES * OutFile, EVAPPIX * Evap,
+             PRECIPPIX * Precip, RADCLASSPIX * Rad, SNOWPIX * Snow,
+	     SOILPIX * Soil, int NSoil, int NVeg, OPTIONSTRUCT *Options)
 {
   int i;			/* counter */
   int j;			/* counter */
@@ -1550,14 +1546,6 @@ void DumpPix(DATE * Current, int first, FILES * OutFile, FILES * OutFileSediment
     if (Options->Infiltration == DYNAMIC)
       fprintf(OutFile->FilePtr, " InfiltAcc"); 
     fprintf(OutFile->FilePtr, "\n"); 
-
-    // Sediment Values File
-    if (Options->Sediment) {
-      fprintf(OutFileSediment->FilePtr, "Date ");
-      fprintf(OutFileSediment->FilePtr, "SatThick DeltaDepth Probability TotMassWasting TotMassDeposition TotSedToChannel ");
-      fprintf(OutFileSediment->FilePtr, "Erosion SedFluxOut OverlandInflow ");
-      fprintf(OutFileSediment->FilePtr, "RdErosion RdSedToHill OverroadInflow \n");
-    }
 
   }
 
@@ -1607,20 +1595,31 @@ void DumpPix(DATE * Current, int first, FILES * OutFile, FILES * OutFileSediment
 
   if (Options->Infiltration == DYNAMIC)
     fprintf(OutFile->FilePtr, " %g", Soil->InfiltAcc);
-
-  // Sediment Values File
-  if (Options->Sediment) {
-  
-    // Date
-    PrintDate(Current, OutFileSediment->FilePtr);
-
-    // Sediment
-    fprintf(OutFileSediment->FilePtr, " %g %g %g %g %g %g %g %g %g %g %g %g\n",
-	    FineMap->SatThickness, FineMap->DeltaDepth, FineMap->Probability, 
-	    FineMap->MassWasting, FineMap->MassDeposition, FineMap->SedimentToChannel, 
-	    SedMap->Erosion, SedMap->SedFluxOut, SedimentOverlandInflow,
-	    Network->Erosion, SedMap->RoadSed, SedimentOverroadInflow);
-    
+}
+/*****************************************************************************
+  DumpPixSed()
+*****************************************************************************/
+void DumpPixSed(DATE * Current, int first, FILES * OutFileSediment,
+             SEDPIX * SedMap, ROADSTRUCT * Network, 
+             float SedimentOverlandInflow, float SedimentOverroadInflow,
+             FINEPIX * FineMap)
+{
+  if (first == 1) {
+    // Sediment Values File
+    fprintf(OutFileSediment->FilePtr, "Date ");
+    fprintf(OutFileSediment->FilePtr, "SatThick DeltaDepth Probability TotMassWasting TotMassDeposition TotSedToChannel ");
+    fprintf(OutFileSediment->FilePtr, "Erosion SedFluxOut OverlandInflow ");
+    fprintf(OutFileSediment->FilePtr, "RdErosion RdSedToHill OverroadInflow \n");
   }
+
+  // Date
+  PrintDate(Current, OutFileSediment->FilePtr);
+
+  // Sediment
+  fprintf(OutFileSediment->FilePtr, " %g %g %g %g %g %g %g %g %g %g %g %g\n",
+            FineMap->SatThickness, FineMap->DeltaDepth, FineMap->Probability,
+            FineMap->MassWasting, FineMap->MassDeposition, FineMap->SedimentToChannel,
+            SedMap->Erosion, SedMap->SedFluxOut, SedimentOverlandInflow,
+            Network->Erosion, SedMap->RoadSed, SedimentOverroadInflow);
 
 }

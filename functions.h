@@ -82,11 +82,13 @@ void DumpMap(MAPSIZE *Map, DATE *Current, MAPDUMP *DMap, TOPOPIX **TopoMap,
 	     LAYER *Soil, VEGPIX **VegMap, LAYER *Veg, ROADSTRUCT **Network,
 	     OPTIONSTRUCT *Options);
 
-void DumpPix(DATE *Current, int first, FILES *OutFile, FILES *OutFileSediment,
-	     EVAPPIX *Evap, PRECIPPIX *Precip, RADCLASSPIX *Rad, SNOWPIX *Snow,
-	     SOILPIX *Soil, SEDPIX *SedMap, ROADSTRUCT *Network,
-	     float SedimentOverlandInflow, float SedimentOverroadInflow,
-	     FINEPIX *FineMap, int NSoil, int NVeg, OPTIONSTRUCT *Options); 
+void DumpPix(DATE *Current, int first, FILES *OutFile, EVAPPIX *Evap,
+	     PRECIPPIX *Precip, RADCLASSPIX *Rad, SNOWPIX *Snow,
+	     SOILPIX *Soil, int NSoil, int NVeg, OPTIONSTRUCT *Options);
+
+void DumpPixSed(DATE *Current, int first, FILES *OutFileSediment, SEDPIX *SedMap,
+             ROADSTRUCT *Network, float SedimentOverlandInflow, 
+             float SedimentOverroadInflow, FINEPIX *FineMap);
 
 void ExecDump(MAPSIZE * Map, DATE * Current, DATE * Start, OPTIONSTRUCT * Options,
 	      DUMPSTRUCT * Dump, TOPOPIX ** TopoMap, EVAPPIX ** EvapMap,
