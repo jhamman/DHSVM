@@ -55,6 +55,7 @@ void EvapoTranspiration(int Layer, int Dt, PIXMET * Met, float NetRad,
   *Int /= F;
   NetRad /= F;
   MoistureFlux /= F;
+  VType->MaxInt[Layer] /= F;
 
   /* allocate memory for the canopy resistance array */
 
@@ -136,6 +137,7 @@ void EvapoTranspiration(int Layer, int Dt, PIXMET * Met, float NetRad,
   LocalEvap->EInt[Layer] *= F;
   LocalEvap->ETot += LocalEvap->EInt[Layer];
   *Int *= F;
+  VType->MaxInt[Layer] *= F;   
 
   /* calculate the canopy conductances associated with the conditions in 
      each of the soil layers */
