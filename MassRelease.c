@@ -11,6 +11,8 @@
  * FUNCTIONS:    MassRelease()
  * COMMENTS:
  * $Id$     
+ *  Comments     : Modified 02/12/08 to match VIC snow model- Elizabeth Clark
+ *              ****No longer calls MDRatio-EC
  */
 
 #include <stdarg.h>
@@ -34,19 +36,30 @@
 
   Modifies     : see under required (i.e. all variables are modified)
 
-  Comments     :
+  Comments     : Modified 02/12/08 to match VIC snow model- Elizabeth Clark
+  *              ****No longer calls MDRatio-EC
 *****************************************************************************/
 void MassRelease(float *InterceptedSnow, float *TempInterceptionStorage,
-		 float *ReleasedMass, float *Drip, float MDRatio)
+		 float *ReleasedMass, float *Drip)
 {
   float TempDrip;
   float TempReleasedMass;
+  float Threshold;
+  float MaxRelease;
 
   /* If the amount of snow in the canopy is greater than some minimum
      value, MIN_INTERCEPTION_STORAGE, then calculte mass release and Drip */
 
   if (*InterceptedSnow > MIN_INTERCEPTION_STORAGE) {
-
+    Threshold  = 0.10 * *InterceptedSnow;
+    MaxRelease = 0.17 * *InterceptedSnow;
+    
+    /* If the amount of snow_melt after interception, snow_melt, is >= the
+       theshhold then there is mass release.  If snow_melt is < the treshhold
+       then there is no mass release but that water remains in
+       *TempInterceptionStorage which will be augmented during the next
+       compute period */
+    /*
     if ((*TempInterceptionStorage) >= 0.0) {
       *Drip += *TempInterceptionStorage;
       *InterceptedSnow -= *TempInterceptionStorage;
@@ -60,6 +73,29 @@ void MassRelease(float *InterceptedSnow, float *TempInterceptionStorage,
       *InterceptedSnow -= TempReleasedMass;
       *TempInterceptionStorage = 0;
 
+      }
+
+    else {
+      TempDrip = MIN(*TempInterceptionStorage, *InterceptedSnow);
+      *Drip += TempDrip;
+      *InterceptedSnow -= TempDrip;
+    }
+    }*/
+    if ((*TempInterceptionStorage) >= Threshold) {
+      
+      
+      *Drip += Threshold;
+      *InterceptedSnow -= Threshold;
+      *TempInterceptionStorage -= Threshold;
+      if (*InterceptedSnow < MIN_INTERCEPTION_STORAGE)
+        TempReleasedMass = 0.0;
+      else
+        TempReleasedMass = MIN((*InterceptedSnow - MIN_INTERCEPTION_STORAGE),
+                               MaxRelease); 
+      *ReleasedMass += TempReleasedMass;
+      *InterceptedSnow -= TempReleasedMass;
+      MassRelease(InterceptedSnow, TempInterceptionStorage, ReleasedMass,
+                  Drip); 
     }
 
     else {
@@ -68,6 +104,7 @@ void MassRelease(float *InterceptedSnow, float *TempInterceptionStorage,
       *InterceptedSnow -= TempDrip;
     }
   }
+
 
   /* (*InterceptedSnow < MIN_INTERCEPTION_STORAGE) If the amount of snow in
      the canopy is less than some minimum value, MIN_INTERCEPTION_STORAGE,

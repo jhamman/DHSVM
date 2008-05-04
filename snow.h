@@ -10,7 +10,10 @@
  * DESCRIP-END.
  * FUNCTIONS:    
  * COMMENTS:
- * $Id$     
+ * $Id$
+ * Modified 02/12/08--Elizabeth Clark
+ * ***** MassRelease() no longer takes MDRatio as an input as part of 
+ * ***** modification making SnowInterception.c match VIC's snow_intercept.c.
  */
 
 #ifndef SNOW_H
@@ -22,7 +25,7 @@
 					   in water equivalent (m) */
 
 void MassRelease(float *InterceptedSnow, float *TempInterceptionStorage,
-		 float *ReleasedMass, float *Drip, float MDRatio);
+		 float *ReleasedMass, float *Drip); //, float MDRatio);
 
 void SnowInterception(int y, int x, int Dt, float F, float LAI,
 		      float MaxInt, float MaxSnowIntCap, float MDRatio,

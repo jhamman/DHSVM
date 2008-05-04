@@ -15,8 +15,8 @@ EvapoTranspiration.o ExecDump.o FileIOBin.o FileIONetCDF.o Files.o   \
 FinalMassBalance.o FindValue.o GetInit.o GetMetData.o InArea.o InitAggregated.o  \
 InitArray.o InitConstants.o InitDump.o InitFileIO.o InitFineMaps.o   \
 InitInterpolationWeights.o InitMetMaps.o InitMetSources.o	     \
-InitModelState.o InitNetwork.o InitNewMonth.o InitParameters.o InitSedMap.o \
-InitSedTables.o InitSnowMap.o InitTables.o InitTerrainMaps.o InitUnitHydrograph.o  \
+InitModelState.o InitNetwork.o InitNewMonth.o InitParameters.o InitSedTables.o     \
+InitSedMap.o InitSnowMap.o InitTables.o InitTerrainMaps.o InitUnitHydrograph.o  \
 InitXGraphics.o InterceptionStorage.o IsStationLocation.o LapseT.o LookupTable.o  \
 MainDHSVM.o MainMWM.o MakeLocalMetData.o MassBalance.o MassEnergyBalance.o     \
 MassRelease.o MaxRoadInfiltration.o NoEvap.o RadiationBalance.o	     \
@@ -42,14 +42,24 @@ RCSDIR= RCS/
 GET= co
 REL=
 
- 
+#DEFS =  -DHAVE_X11 -DHAVE_NETCDF
 DEFS =  -DHAVE_X11
 #possible DEFS -DHAVE_NETCDF -DHAVE_X11 -DSHOW_MET_ONLY -DSNOW_ONLY
-CFLAGS =  -g -I/usr/X11R6/include -Wall  -I/usr/local/include/  $(DEFS) 
-
+#CFLAGS =  -g -O3 -I. -Wall -Wno-unused -I/usr/local/include -I/usr/local/i386/include
+CFLAGS =  -O3 -I. -Wall -Wno-unused -I/usr/local/include -I/usr/local/i386/include
 CC = cc
 FLEX = /usr/bin/flex
-LIBS = -lm -L/usr/X11R6/lib -lX11 -L/sw/lib -L/usr/local/lib
+#LIBS = -lm -L/usr/X11R6/lib -lX11 -L/sw/lib -lnetcdf
+LIBS = -lm -L/usr/X11R6/lib -lX11
+
+ 
+#DEFS =  -DHAVE_X11
+#possible DEFS -DHAVE_NETCDF -DHAVE_X11 -DSHOW_MET_ONLY -DSNOW_ONLY
+#CFLAGS =  -g -I/usr/X11R6/include -Wall  -I/usr/local/include/  $(DEFS) 
+
+#CC = cc
+#FLEX = /usr/bin/flex
+#LIBS = -lm -L/usr/X11R6/lib -lX11 -L/sw/lib -L/usr/local/lib
 # possible libs:   
 #LIBS = -lm -L/usr/X11R6/lib -lX11 -L/sw/lib -L/usr/local/lib -lnetcdf
 
@@ -193,9 +203,9 @@ InitNewMonth.o: InitNewMonth.c settings.h data.h Calendar.h \
 InitParameters.o: InitParameters.c settings.h data.h Calendar.h \
  fileio.h DHSVMerror.h functions.h DHSVMChannel.h getinit.h channel.h \
  channel_grid.h constants.h rad.h
-InitSedMap.o: InitSedMap.c data.h DHSVMerror.h 
 InitSedTables.o: InitSedTables.c settings.h DHSVMerror.h Calendar.h \
  data.h constants.h fileio.h getinit.h
+InitSedMap.o: InitSedMap.c data.h DHSVMerror.h
 InitSnowMap.o: InitSnowMap.c settings.h data.h Calendar.h DHSVMerror.h \
  functions.h DHSVMChannel.h getinit.h channel.h channel_grid.h \
  constants.h
