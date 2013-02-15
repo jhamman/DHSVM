@@ -13,7 +13,7 @@
  *               Write2DMatrixNetCDF()
  *               SizeOfNumberType()
  * COMMENTS:
- * $Id$     
+ * $Id: FileIONetCDF.c,v 1.4 2003/07/01 21:26:14 olivier Exp $     
  */
 
 #ifdef HAVE_NETCDF

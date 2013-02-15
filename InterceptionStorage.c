@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    InterceptionStorage()
  * COMMENTS:
- * $Id$     
+ * $Id: InterceptionStorage.c,v 1.5 2003/11/12 20:01:51 colleen Exp $     
  */
 
 #include <math.h>

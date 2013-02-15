@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    CalcSnowAlbedo()
  * COMMENTS:
- * $Id$     
+ * $Id: CalcSnowAlbedo.c,v 1.4 2003/07/01 21:26:10 olivier Exp $     
  */
 
 #include <math.h>

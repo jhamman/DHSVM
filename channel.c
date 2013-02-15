@@ -7,7 +7,7 @@
    ------------------------------------------------------------- */
 /* -------------------------------------------------------------
    Created October 24, 1995 by  William A Perkins
-   $Id$
+   $Id: channel.c,v 1.14 2004/10/07 20:51:08 jlanini Exp $
    ------------------------------------------------------------- */
 
 #include <stdlib.h>
@@ -276,7 +276,7 @@ static Channel *alloc_channel_segment(void)
   seg->record = FALSE;
   seg->length = 0.0;
   seg->slope = 0.0;
-  seg->class = NULL;
+  seg->class2 = NULL;
   seg->lateral_inflow = 0.0;
   seg->last_inflow = 0.0;
   seg->last_outflow = 0.0;
@@ -420,7 +420,7 @@ void channel_routing_parameters(Channel * network, int deltat)
 
   for (segment = network; segment != NULL; segment = segment->next) {
 
-    y = segment->class->bank_height * 0.75;
+    y = segment->class2->bank_height * 0.75;
 
     /* must keep 0 <= X <= 0.5 */
 
@@ -457,8 +457,8 @@ void channel_routing_parameters(Channel * network, int deltat)
     /*     } */
 
     /*  for new routing scheme */
-    segment->K = sqrt(segment->slope) * pow(y, 2.0 / 3.0) /
-      (segment->class->friction * segment->length);
+    segment->K = sqrt(segment->slope) * pow((double)y, 2.0 / 3.0) /
+      (segment->class2->friction * segment->length);
     segment->X = exp(-segment->K * deltat);
   }
 
@@ -570,7 +570,7 @@ Channel *channel_read_network(const char *file, ChannelClass * class_list, int *
 	  }
 	  break;
 	case 4:
-	  if ((current->class =
+	  if ((current->class2 =
 	       find_channel_class(class_list, chan_fields[i].value.integer)
 	      ) == NULL) {
 	    error_handler(ERRHDL_ERROR,
@@ -792,6 +792,7 @@ channel_save_outflow_text(char *tstring, Channel * net, FILE * out,
     fprintf(out2, "\n");
   }
 
+  //tsstring = date in the form of 01.01.1915-00:00:00 
   if (fprintf(out2, "%15s ", tstring) == EOF) {
     error_handler(ERRHDL_ERROR,
 		  "channel_save_outflow: write error:%s", strerror(errno));

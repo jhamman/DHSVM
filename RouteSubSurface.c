@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    RouteSubSurface()
  * COMMENTS:
- * $Id$     
+ * $Id: RouteSubSurface.c,v 1.20 2004/08/18 01:01:32 colleen Exp $     
  */
 
 #include <math.h>

@@ -9,7 +9,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    ReadMetRecord()
  * COMMENTS:
- * $Id$     
+ * $Id: ReadMetRecord.c,v 1.4 2003/07/01 21:26:22 olivier Exp $     
  */
 
 #include <stdio.h>

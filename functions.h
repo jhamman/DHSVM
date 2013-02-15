@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    
  * COMMENTS:
- * $Id$     
+ * $Id: functions.h,v 1.30 2006/10/12 23:51:03 nathalie Exp $     
  */
 
 #ifndef FUNCTIONS_H
@@ -56,6 +56,8 @@ float CalcTransmissivity(float SoilDepth, float WaterTable, float LateralKs,
 void CalcWeights(METLOCATION *Station, int NStats, int NX, int NY,
 		 uchar **BasinMask, uchar ****WeightArray,
 		 OPTIONSTRUCT *Options);
+
+/* double cbrt (double x);*/ //compute the cubic root of a value
 
 double ChannelCulvertSedFlow(int y, int x, CHANNEL * ChannelData, int i);
 
@@ -332,6 +334,8 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
 float MaxRoadInfiltration(ChannelMapPtr **map, int col, int row);
 
 void OutputChannelSediment(Channel * Head, TIMESTRUCT Time, DUMPSTRUCT *Dump);
+
+double pow (double a, double b);
 
 void quick(ITEM *OrderedCells, int count);
 

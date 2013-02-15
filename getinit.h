@@ -6,7 +6,7 @@
  * ORG:          University of Washington, Department of Civil Engineering
  * E-MAIL:       nijssen@u.washington.edu
  * ORIG-DATE:     6-May-97 at 10:43:13
- $Id$
+ $Id: getinit.h,v 1.4 2003/07/01 21:26:30 olivier Exp $
  */
 
 #ifndef GETINIT_H

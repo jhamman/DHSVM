@@ -15,7 +15,7 @@
  *               InitWindModel()
  *
  * COMMENTS:
- * $Id$     
+ * $Id: InitMetSources.c,v 1.5 2003/10/28 20:02:43 colleen Exp $     
  */
 
 #include <math.h>

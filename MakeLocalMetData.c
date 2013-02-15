@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    MakeLocalMetData()
  * COMMENTS:
- * $Id$     
+ * $Id: MakeLocalMetData.c,v 1.5 2004/02/19 15:36:17 colleen Exp $     
  */
 
 #include <assert.h>
@@ -205,7 +205,7 @@ PIXMET MakeLocalMetData(int y, int x, MAPSIZE * Map, int DayStep,
   /* a finer resolution than this would require a higher min angle or more memory */
 
   if (Options->Shading == TRUE) {
-    LocalMet.SinBeam = LocalMet.SinBeam * (float) shadow / 22.23191;
+    LocalMet.SinBeam = LocalMet.Sin * (float) shadow / 22.23191;
     LocalMet.SinDiffuse *= skyview;
     if (LocalMet.SinBeam + LocalMet.SinDiffuse > SOLARCON)
       LocalMet.SinBeam = SOLARCON - LocalMet.SinDiffuse;

@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    
  * COMMENTS:
- * $Id$     
+ * $Id: varid.h,v 1.4 2003/07/01 21:26:33 olivier Exp $     
  */
 
 #ifndef VARID_H

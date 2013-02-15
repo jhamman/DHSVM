@@ -11,7 +11,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    StoreModelState()
  * COMMENTS:
- * $Id$     
+ * $Id: StoreModelState.c,v 1.8 2004/08/16 18:26:38 colleen Exp $     
  */
 
 #include <stdio.h>

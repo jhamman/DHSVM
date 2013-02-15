@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    ResetAggregate.()
  * COMMENTS:
- * $Id$     
+ * $Id: ResetAggregate.c,v 1.12 2004/05/03 03:28:46 colleen Exp $     
  */
 
 #include <stdio.h>
@@ -104,6 +104,8 @@ void ResetAggregate(LAYER * Soil, LAYER * Veg, AGGREGATED * Total,
   Total->Soil.Qst = 0.0;
   Total->Soil.IExcess = 0.0;
   Total->Road.IExcess = 0.0;
+  Total->Soil.DetentionStorage = 0.0;
+
   if (Options->Infiltration == DYNAMIC)
     Total->Soil.InfiltAcc = 0.0;
   Total->SoilWater = 0.0;

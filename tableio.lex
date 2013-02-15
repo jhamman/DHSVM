@@ -8,11 +8,11 @@
    ------------------------------------------------------------- */
 /* -------------------------------------------------------------
    Created January 22, 1996 by William A. Perkins
-   $Id$
+   $Id: tableio.lex,v 1.4 2003/07/01 21:26:33 olivier Exp $
    ------------------------------------------------------------- */
 
 
-const char* TABLE_LEX_ID = "$Id$";
+const char* TABLE_LEX_ID = "$Id: tableio.lex,v 1.4 2003/07/01 21:26:33 olivier Exp $";
 
 #include <stdlib.h>
 #include <string.h>

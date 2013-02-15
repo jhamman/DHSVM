@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    
  * COMMENTS:
- * $Id$     
+ * $Id: DHSVMerror.h,v 1.4 2003/07/01 21:26:13 olivier Exp $     
  */
 
 #ifndef DHSVM_ERROR_H

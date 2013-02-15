@@ -11,7 +11,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    MaxRoadInfiltration()
  * COMMENTS:
- * $Id$     
+ * $Id: MaxRoadInfiltration.c,v 1.4 2003/07/01 21:26:21 olivier Exp $     
  */
 
 #include <assert.h>
@@ -36,7 +36,7 @@ float MaxRoadInfiltration(ChannelMapPtr **map, int col, int row)
 
   while (cell != NULL) {
     area = cell->length * cell->cut_width;
-    infiltration += area * cell->channel->class->infiltration;
+    infiltration += area * cell->channel->class2->infiltration;
     tot_area += area;
     cell = cell->next;
   }

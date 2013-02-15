@@ -13,7 +13,7 @@
  *               InitNewDay()
  *               InitNewStep()
  * COMMENTS:
- * $Id$     
+ * $Id: InitNewMonth.c,v 1.8 2006/10/03 22:50:22 nathalie Exp $     
  */
 
 #include <stdio.h>
@@ -213,6 +213,8 @@ void InitNewStep(INPUTFILES *InFiles, MAPSIZE *Map, TIMESTRUCT *Time,
   float *Array = NULL;
   int MM5Y, MM5X;
 
+  /*printf("current time is %4d-%2d-%2d-%2d\n", Time->Current.Year,Time->Current.Month, Time->Current.Day, Time->Current.Hour);*/
+
   /* Calculate variables related to the position of the sun above the
      horizon, this is only necessary if shading is TRUE */
 
@@ -240,9 +242,9 @@ void InitNewStep(INPUTFILES *InFiles, MAPSIZE *Map, TIMESTRUCT *Time,
 		 MM5Map->NX, Step);
     for (y = 0; y < Map->NY; y++)
       for (x = 0; x < Map->NX; x++) {
-	MM5Y = (int) ((y + MM5Map->OffsetY) * Map->DY / MM5Map->DY);
-	MM5X = (int) ((x - MM5Map->OffsetX) * Map->DX / MM5Map->DY);
-	MM5Input[MM5_temperature - 1][y][x] = Array[MM5Y * MM5Map->NX + MM5X];
+		  MM5Y = (int) ((y + MM5Map->OffsetY) * Map->DY / MM5Map->DY);
+		  MM5X = (int) ((x - MM5Map->OffsetX) * Map->DX / MM5Map->DY);
+		  MM5Input[MM5_temperature - 1][y][x] = Array[MM5Y * MM5Map->NX + MM5X];
       }
 
     Read2DMatrix(InFiles->MM5Humidity, Array, NumberType, MM5Map->NY,
@@ -250,18 +252,18 @@ void InitNewStep(INPUTFILES *InFiles, MAPSIZE *Map, TIMESTRUCT *Time,
 
     for (y = 0; y < Map->NY; y++)
       for (x = 0; x < Map->NX; x++) {
-	MM5Y = (int) ((y + MM5Map->OffsetY) * Map->DY / MM5Map->DY);
-	MM5X = (int) ((x - MM5Map->OffsetX) * Map->DX / MM5Map->DY);
-	MM5Input[MM5_humidity - 1][y][x] = Array[MM5Y * MM5Map->NX + MM5X];
+		  MM5Y = (int) ((y + MM5Map->OffsetY) * Map->DY / MM5Map->DY);
+		  MM5X = (int) ((x - MM5Map->OffsetX) * Map->DX / MM5Map->DY);
+		  MM5Input[MM5_humidity - 1][y][x] = Array[MM5Y * MM5Map->NX + MM5X];
       }
 
     Read2DMatrix(InFiles->MM5Wind, Array, NumberType, MM5Map->NY,
 		 MM5Map->NX, Step);
     for (y = 0; y < Map->NY; y++)
       for (x = 0; x < Map->NX; x++) {
-	MM5Y = (int) ((y + MM5Map->OffsetY) * Map->DY / MM5Map->DY);
-	MM5X = (int) ((x - MM5Map->OffsetX) * Map->DX / MM5Map->DY);
-	MM5Input[MM5_wind - 1][y][x] = Array[MM5Y * MM5Map->NX + MM5X];
+		  MM5Y = (int) ((y + MM5Map->OffsetY) * Map->DY / MM5Map->DY);
+		  MM5X = (int) ((x - MM5Map->OffsetX) * Map->DX / MM5Map->DY);
+		  MM5Input[MM5_wind - 1][y][x] = Array[MM5Y * MM5Map->NX + MM5X];
       }
 
     Read2DMatrix(InFiles->MM5ShortWave, Array, NumberType, MM5Map->NY,

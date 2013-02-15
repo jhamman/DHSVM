@@ -14,7 +14,7 @@
  *               InitRadarMap()
  *               InitRadMap()
  * COMMENTS:
- * $Id$     
+ * $Id: InitMetMaps.c,v 1.6 2006/10/03 22:50:22 nathalie Exp $     
  */
 
 #include <assert.h>

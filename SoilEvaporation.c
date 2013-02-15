@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    SoilEvaporation()
  * COMMENTS:
- * $Id$     
+ * $Id: SoilEvaporation.c,v 1.4 2003/07/01 21:26:25 olivier Exp $     
  */
 
 #include <stdio.h>

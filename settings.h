@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    
  * COMMENTS:
- * $Id$     
+ * $Id: settings.h,v 1.18 2004/08/18 01:01:34 colleen Exp $     
  */
 
 #ifndef SETTINGS_H
@@ -93,11 +93,8 @@ typedef unsigned int unint;
 #define MAXSTRING    255
 #define NAMESIZE     127
 
-#define NDIRS          4	/* Number of directions in which water can 
-			    flow, must equal 4 */
-#define NNEIGHBORS      8 /* Number of directions in which water and 
-			    sediment can flow based on fine grid,
-			    must equal 8 */
+#define NDIRS          4	/* Number of directions in which water can flow, must equal 4 */
+#define NNEIGHBORS      8 /* Number of directions in which water and  sediment can flow based on fine grid, must equal 8 */
 
 #define NA          -9999	/* Not applicable */
 
@@ -147,7 +144,7 @@ enum KEYS {
   /* Vegetation information */
   veg_description = 0, overstory, understory, fraction, hemifraction, trunk_space,
   aerodynamic_att, radiation_att, clumping_factor, leaf_angle_a, leaf_angle_b,
-  scat, snow_int_cap, mass_drip_ratio, snow_int_eff, imperv_frac, height, 
+  scat, snow_int_cap, mass_drip_ratio, snow_int_eff, imperv_frac, detention_frac, detention_decay, height, 
   max_resistance, min_resistance, moisture_threshold, vpd, rpc,  
   number_of_root_zones, root_zone_depth, overstory_fraction,
   understory_fraction, overstory_monlai, understory_monlai, overstory_monalb,

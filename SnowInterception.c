@@ -11,11 +11,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    SnowInterception()
  * COMMENTS:
- * $Id$
- * Modifications 02/12/08 -- Elizabeth Clark:  
- * ****Significantly modified to match VIC snow_intercept.c
- * ****Original DHSVM 3.0 code still included in commented form
- * ****Subroutine MassRelease.c also changed-- EC 
+ * $Id: SnowInterception.c,v 1.5 2003/11/12 20:01:52 colleen Exp $     
  */
 
 #include <math.h>
@@ -132,15 +128,12 @@ void SnowInterception(int y, int x, int Dt, float F, float LAI,
 				 */
   float Tmp;			/* Temporary variable */
   float MaxIntercept;		/* max snow interception - regardless of temp */
-  float Overload;		/* overload of intercepted snow due to rainfall
+  float overload;		/* overload of intercepted snow due to rainfall
 				   or condensation */
-  float IntRainFract;		/* fraction of intercepted water which is 
+  float intrainfrac;		/* fraction of intercepted water which is 
 				   liquid */
-  float IntSnowFract;		/*fraction of intercepted water which is solid */
+  float intsnowfrac;		/*fraction of intercepted water which is solid */
   float OriginalRainfall;
-  // variables added to match VIC, VIC double format treated as float here to match other DHSVM variables--EC
-  float Imax1;                  /* maxium water intecept regardless of temp */
-  float BlownSnow;              /* Depth of snow blown of the canopy (m) */  
 
   /* Initialize Drip, H2O balance, and mass release variables. */
 
@@ -160,61 +153,25 @@ void SnowInterception(int y, int x, int Dt, float F, float LAI,
      Cold Regions Science and Technology, (13), pp. 239-245.           
      Figure 4. */
 
-  /*  if (Tair > -5.0)
+  if (Tair > -5.0)
     MaxSnowInt = 1.0;
   else
-  MaxSnowInt = 0.25;*/
-  
-  Imax1 = 4.0* LAI_SNOW_MULTIPLIER * LAI;
-  
-  if (Tair < -1.0 && Tair > -3.0)
-    MaxSnowInt = (Tair*3.0/2.0) + (11.0/2.0);
-  else if (Tair > -1.0) 
-    MaxSnowInt = 4.0;  
-  else
-    MaxSnowInt = 1.0;
-  
+    MaxSnowInt = 0.25;
+
   /* therefore LAI_ratio decreases as temp decreases */
 
-  /* MaxSnowInt *= MaxSnowIntCap;
-     MaxIntercept = MaxSnowIntCap;*/
-
-  MaxSnowInt *= LAI_SNOW_MULTIPLIER * LAI;
+  MaxSnowInt *= MaxSnowIntCap;
+  MaxIntercept = MaxSnowIntCap;
 
   /* Calculate snow interception. */
 
-  /*  DeltaSnowInt = SnowIntEff * *SnowFall;
+  DeltaSnowInt = SnowIntEff * *SnowFall;
   if (DeltaSnowInt + *IntSnow > MaxSnowInt)
     DeltaSnowInt = MaxSnowInt - *IntSnow;
   if (DeltaSnowInt < 0.0)
-  DeltaSnowInt = 0.0;*/
-  DeltaSnowInt = (1-*IntSnow/MaxSnowInt) * *SnowFall; 
-  if (DeltaSnowInt + *IntSnow > MaxSnowInt) 
-    DeltaSnowInt = MaxSnowInt - *IntSnow;
-  if (DeltaSnowInt < 0.0)  
     DeltaSnowInt = 0.0;
-  
-  /* Reduce the amount of intercepted snow if windy and cold.         
-     Ringyo Shikenjo Tokyo, #54, 1952.                                
-     Bulletin of the Govt. Forest Exp. Station,                       
-     Govt. Forest Exp. Station, Meguro, Tokyo, Japan.                 
-     FORSTX 634.9072 R475r #54.                                       
-     Page 146, Figure 10.                                               
-     
-     Reduce the amount of intercepted snow if snowing, windy, and     
-     cold (< -3 to -5 C).                                             
-     Schmidt and Troendle 1992 western snow conference paper. */  
-  
-  if (Tair < -3.0 && DeltaSnowInt > 0.0 && Wind > 1.0) {
-    BlownSnow = (0.2 * Wind - 0.2) * DeltaSnowInt;
-    if (BlownSnow >= DeltaSnowInt) 
-      BlownSnow = DeltaSnowInt;
-    DeltaSnowInt -= BlownSnow;
-  }
-  
+
   /* now update snowfall and total accumulated intercepted snow amounts */
-  
-  if (*IntSnow +  DeltaSnowInt > Imax1) DeltaSnowInt =0.0; 
 
   /* pixel depth    */
   SnowThroughFall = (*SnowFall - DeltaSnowInt) * F + (*SnowFall) * (1 - F);
@@ -247,18 +204,8 @@ void SnowInterception(int y, int x, int Dt, float F, float LAI,
      allow sliding due to branch bending.  Of course, if chunks of snow are
      falling, they can contain both ice and liquid water - Let both of these
      come off in the correct proportions */
- /* at this point we have calculated the amount of snowfall intercepted and
-     the amount of rainfall intercepted.  These values have been 
-     appropriately subtracted from SnowFall and RainFall to determine 
-     SnowThroughfall and RainThroughfall.  However, we can end up with the 
-     condition that the total intercepted rain plus intercepted snow is 
-     greater than the maximum bearing capacity of the tree regardless of air 
-     temp (Imax1).  The following routine will adjust *IntRain and *IntSnow 
-     by triggering mass release due to overloading.  Of course since *IntRain
-     and *IntSnow are mixed, we need to slough them of as fixed fractions  */
 
-
-  /*  if (*IntRain + *IntSnow > MaxIntercept) {
+  if (*IntRain + *IntSnow > MaxIntercept) {
     overload = (*IntRain + *IntSnow) - MaxIntercept;
     intsnowfrac = *IntSnow / (*IntSnow + *IntRain);
     intrainfrac = *IntRain / (*IntSnow + *IntRain);
@@ -266,17 +213,8 @@ void SnowInterception(int y, int x, int Dt, float F, float LAI,
     *IntSnow = *IntSnow - overload * intsnowfrac;
     SnowThroughFall = SnowThroughFall + overload * intsnowfrac * F;
     RainThroughFall = RainThroughFall + overload * intrainfrac * F;
-    }*/
-  if (*IntRain + *IntSnow > Imax1) { /*then trigger structural unloading*/
-    Overload = (*IntSnow + *IntRain) - Imax1;
-    IntRainFract = *IntRain/(*IntRain + *IntSnow);
-    IntSnowFract = *IntSnow/(*IntRain + *IntSnow);
-    *IntRain = *IntRain - Overload*IntRainFract;
-    *IntSnow = *IntSnow - Overload*IntSnowFract;
-    RainThroughFall = RainThroughFall + (Overload*IntRainFract)*F;
-    SnowThroughFall = SnowThroughFall + (Overload*IntSnowFract)*F;
   }
-  
+
   /* The canopy temperature is assumed to be equal to the air temperature if 
      the air temperature is below 0C, otherwise the canopy temperature is 
      equal to 0C */
@@ -293,12 +231,11 @@ void SnowInterception(int y, int x, int Dt, float F, float LAI,
   Tmp = *Tcanopy + 273.15;
   LongOut = STEFAN * (Tmp * Tmp * Tmp * Tmp);
   NetRadiation = LocalRad->NetShort[0] + LocalRad->LongIn[0] - 2 * F * LongOut;
-  // this already accounts for albedo unlike in VIC--EC*/
   NetRadiation /= F;
 
   /* Calculate the vapor mass flux between the canopy and the surrounding 
      air mass - snow covered aerodynamic resistance is assumed to increase by an order
-     of magnitude based on Lunderg et al 1998, Journal of Hydrology */
+     of magnitude based on Lunderg et al 1998, Journal of Hydrological Processes */
 
   EsSnow = SatVaporPressure(*Tcanopy);
   *VaporMassFlux = AirDens * (EPS / Press) * (EactAir - EsSnow) / (Ra * 10.0);
@@ -387,7 +324,7 @@ void SnowInterception(int y, int x, int Dt, float F, float LAI,
 
 	*TempIntStorage += ExcessSnowMelt;
 
-      MassRelease(IntSnow, TempIntStorage, &ReleasedMass, &Drip); //, MDRatio);
+      MassRelease(IntSnow, TempIntStorage, &ReleasedMass, &Drip, MDRatio);
     }
 
     /* If intercepted snow has melted, add the water it held to drip */

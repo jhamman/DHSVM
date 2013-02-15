@@ -6,7 +6,7 @@
  * ORG:          University of Washington, Department of Civil Engineering
  * E-MAIL:       nijssen@u.washington.edu
  * ORIG-DATE:    29-May-97 at 20:27:40
- * $Id$
+ * $Id: globals.c,v 1.4 2003/07/01 21:26:30 olivier Exp $
  */
 
 float LAI_SNOW_MULTIPLIER;	/* multiplier to calculate the amount of 

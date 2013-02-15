@@ -13,7 +13,7 @@
  *               InitSoilMap()
  *               InitVegMap()
  * COMMENTS:
- * $Id$     
+ * $Id: InitTerrainMaps.c,v 1.7 2003/11/18 00:24:24 tbohn Exp $     
  */
 
 #include <stdio.h>

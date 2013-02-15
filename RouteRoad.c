@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    RouteRoad()
  * COMMENTS:
- * $Id$     
+ * $Id: RouteRoad.c,v 1.9 2004/08/18 01:01:32 colleen Exp $     
  */
 
 #include <stdio.h>
@@ -133,7 +133,7 @@ void RouteRoad(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	  }
 	  
 	  beta = 3./5.;
-	  alpha = pow(Network[y][x].RoadClass->friction_road*pow(dx,2./3.)/sqrt(slope),beta);
+	  alpha = pow(Network[y][x].RoadClass->friction_road*pow((double)dx,2./3.)/sqrt(slope),beta);
 
 	  /* Evenly distribute water over road surface. */
 	  roadwater = (Network[y][x].IExcess * Map->DX * Map->DY)/
@@ -162,7 +162,7 @@ void RouteRoad(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	  while (fabs(vs_last - vs) > 0.0001 * vs_last) {
 	    vs_last = vs;
 	    Rn = (vs * DS * 1000. * 1000.) / knviscosity; 
-	    Cd = (24./Rn) + (3./(pow(Rn, 0.5))) + 0.34;
+	    Cd = (24./Rn) + (3./(pow((double)Rn, 0.5))) + 0.34;
 	    vs = sqrt((4./3.) * G * ((PARTDENSITY/WATER_DENSITY) - 1.)*(DS/Cd));
 	  }
 		  
@@ -253,10 +253,10 @@ void RouteRoad(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 		  term2 = alpha/(2.*VariableDT);
 		  term3 = (1.-TIMEWEIGHT)/dx;
 				  
-		  SedOut = (SedIn[i]*(term1*Runon[i]-term2*pow(Runon[i], beta)) +
-			    Network[y][x].OldSedOut[i]*(term2*pow(Network[y][x].startRunoff[i], beta) -
+		  SedOut = (SedIn[i]*(term1*Runon[i]-term2*pow((double)Runon[i], beta)) +
+			    Network[y][x].OldSedOut[i]*(term2*pow((double)Network[y][x].startRunoff[i], beta) -
 							term3*Network[y][x].startRunoff[i]) +
-			    Network[y][x].OldSedIn[i]*(term2*pow(Network[y][x].startRunon[i], beta) + 
+			    Network[y][x].OldSedIn[i]*(term2*pow((double)Network[y][x].startRunon[i], beta) + 
 						       term3*Network[y][x].startRunon[i]) + ES + 
 			    (cg*Cmx*alpha*pow(outflow, beta)))/
 		    (term2*pow(outflow, beta) + term1*outflow + cg*alpha*pow(outflow,beta));
@@ -397,7 +397,7 @@ float FindDTRoad(ROADSTRUCT **Network, TIMESTRUCT *Time, int y, int x,
     runoff = Network[y][x].startRunoff[i];
     if (runoff == 0) runoff = 0.000000001;
     
-    Ck = 1./(alpha*beta*pow(runoff, beta -1.)); 
+    Ck = 1./(alpha*beta*pow((double)runoff, beta -1.)); 
     
     if(runoff > maxRunoff)
       maxRunoff = runoff;

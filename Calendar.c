@@ -26,7 +26,7 @@
  *               JulianDayToGregorian()
  *               DayOfWeek()
  * COMMENTS:
- * $Id$     
+ * $Id: Calendar.c,v 1.5 2004/02/17 20:40:58 jlanini Exp $     
  */
 
 #include <ctype.h>
@@ -682,3 +682,9 @@ int SScanMonthDay(char *DateStr, DATE * Day)
 
   return TRUE;
 }
+
+/*---------------Funtion rint (round to nearest integer)----------------------*/
+/* float rint(float x) */
+/* { */
+/* return floor(x + 0.5); */
+/* } */

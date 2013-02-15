@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:   CheckOut()
  * COMMENTS:
- * $Id$     
+ * $Id: CheckOut.c,v 1.6 2003/11/13 23:24:33 colleen Exp $     
  */
 
 #include <stdio.h>
@@ -106,8 +106,7 @@ void CheckOut(int CanopyRadAttOption, LAYER Veg, LAYER Soil,
 	    exit(-1);
 	  }
 	}
-	printf("Overstory LAI July %2.3f Effective LAI July %2.3f\n",
-	       VType[i].LAIMonthly[0][6], l);
+	/* printf("Overstory LAI July %2.3f Effective LAI July %2.3f\n", VType[i].LAIMonthly[0][6]);*/
 	if (CanopyRadAttOption == VARIABLE) {
 	  a = VType[i].LeafAngleA;
 	  b = VType[i].LeafAngleB;

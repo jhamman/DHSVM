@@ -11,7 +11,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    CalcKhDry() 
  * COMMENTS:
- * $Id$     
+ * $Id: CalcKhDry.c,v 1.4 2003/07/01 21:26:10 olivier Exp $     
  */
 
 #include "settings.h"

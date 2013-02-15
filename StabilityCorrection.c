@@ -11,7 +11,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    StabilityCorrection()
  * COMMENTS:
- * $Id$     
+ * $Id: StabilityCorrection.c,v 1.4 2003/07/01 21:26:25 olivier Exp $     
  */
 
 #include <math.h>

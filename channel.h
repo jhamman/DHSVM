@@ -7,7 +7,7 @@
    ------------------------------------------------------------- */
 /* -------------------------------------------------------------
    Created October 24, 1995 by  William A Perkins
-   $Id$
+   $Id: channel.h,v 1.12 2004/10/07 20:51:08 jlanini Exp $
    ------------------------------------------------------------- */
 
 #ifndef _channel_h_
@@ -91,7 +91,7 @@ struct _channel_rec_ {
   float K;
   float X;
 
-  ChannelClass *class;		/* ChannelClass identifier */
+  ChannelClass *class2;		/* ChannelClass identifier */
 
   /* necessary routing terms */
 

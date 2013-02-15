@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    
  * COMMENTS:
- * $Id$     
+ * $Id: rad.h,v 1.4 2003/07/01 21:26:31 olivier Exp $     
  */
 
 #ifndef RAD_H

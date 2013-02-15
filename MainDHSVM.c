@@ -11,7 +11,7 @@
  * DESCRIP-END.cd
  * FUNCTIONS:    main()
  * COMMENTS:
- * $Id$
+ * $Id: MainDHSVM.c,v 1.42 2006/10/12 20:38:11 nathalie Exp $
  */
 
 /******************************************************************************/
@@ -37,16 +37,14 @@
 
 /* global function pointers */
 void (*CreateMapFile) (char *FileName, ...);
-int (*Read2DMatrix) (char *FileName, void *Matrix, int NumberType, int NY,
-		     int NX, int NDataSet, ...);
-int (*Write2DMatrix) (char *FileName, void *Matrix, int NumberType, int NY,
-		      int NX, ...);
+int (*Read2DMatrix) (char *FileName, void *Matrix, int NumberType, int NY, int NX, int NDataSet, ...);
+int (*Write2DMatrix) (char *FileName, void *Matrix, int NumberType, int NY, int NX, ...);
 
 /* global strings */
 char *version = "Version 3.0 Mon August 9, 2004"; /* store version string */
-char commandline[BUFSIZE + 1] = "";	/* store command line */
-char fileext[BUFSIZ + 1] = "";	/* file extension */
-char errorstr[BUFSIZ + 1] = "";	/* error message */
+char commandline[BUFSIZE + 1] = "";		/* store command line */
+char fileext[BUFSIZ + 1] = "";			/* file extension */
+char errorstr[BUFSIZ + 1] = "";			/* error message */
 /******************************************************************************/
 /*				      MAIN                                    */
 /******************************************************************************/
@@ -66,36 +64,30 @@ int main(int argc, char **argv)
   int flag;
   int i;
   int j;
-  int x;			/* row counter */
-  int y;			/* column counter */
-  int shade_offset;		/* a fast way of handling arraay position
-				   given the number of mm5 input options */
-  int NStats;			/* Number of meteorological stations */
-  uchar ***MetWeights = NULL;	/* 3D array with weights for interpolating 
-				   meteorological variables between the 
-				   stations */
+  int x;						/* row counter */
+  int y;						/* column counter */
+  int shade_offset;				/* a fast way of handling arraay position given the number of mm5 input options */
+  int NStats;					/* Number of meteorological stations */
+  uchar ***MetWeights = NULL;	/* 3D array with weights for interpolating meteorological variables between the stations */
 
-  int NGraphics;		/* number of graphics for X11 */
-  int *which_graphics;		/* which graphics for X11 */
+  int NGraphics;				/* number of graphics for X11 */
+  int *which_graphics;			/* which graphics for X11 */
   char buffer[32];
 
-  AGGREGATED Total = {		/* Total or average value of a 
-				   variable over the entire basin */
-    {0.0, NULL, NULL, NULL, NULL, 0.0},	/* EVAPPIX */
-    {0.0, 0.0, 0.0, 0.0, NULL, NULL, 0.0, 0, 0.0},	/* PRECIPPIX */
-    {{0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, 0.0, 0.0, 0.0},	/* PIXRAD */
-    {0.0, 0.0},		/* RADCLASSPIX */
-    {0.0, 0.0, 0.0, NULL, NULL, 0.0, 0, 0.0, 0.0, 0.0, 0.0, 
-     NULL, NULL, NULL},		/* ROADSTRUCT*/
-    {0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0,
-     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},	/* SNOWPIX */
-    {0, 0.0, NULL, NULL, NULL, 0.0, 0.0, 0.0, 0.0,
-     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-    0.0, 0.0, 0.0},	/*SOILPIX */
-    { 0.0, 0.0, 0.0, 0.0}, /*SEDPIX */
-    { 0.0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, /*FINEPIX */
-    0.0, 0.0, 0.0, 0.0, 0.0, 0l, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
-    0.0, 0.0, 0.0, 0.0
+  AGGREGATED Total = {			/* Total or average value of a  variable over the entire basin */
+
+    {0.0, NULL, NULL, NULL, NULL, 0.0},												/* EVAPPIX */
+    {0.0, 0.0, 0.0, 0.0, NULL, NULL, 0.0, 0, 0.0},									/* PRECIPPIX */
+    {{0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, 0.0, 0.0, 0.0},							/* PIXRAD */
+    {0.0, 0.0},																		/* RADCLASSPIX */
+    {0.0, 0.0, 0, NULL, NULL, 0.0, 0, 0.0, 0.0, 0.0, 0.0, NULL, 
+	NULL, NULL, NULL, NULL, NULL, 0.0},												/* ROADSTRUCT*/
+    {0, 0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},		/* SNOWPIX */
+    {0, 0.0, NULL, NULL, NULL, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+     0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},			/*SOILPIX */
+    { 0.0, 0.0, 0.0, 0.0, 0.0},														/*SEDPIX */
+    { 0.0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0},							/*FINEPIX */
+    0.0, 0.0, 0.0, 0.0, 0.0, 0l, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
   };
   CHANNEL ChannelData = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL };
   DUMPSTRUCT Dump;
@@ -103,39 +95,33 @@ int main(int argc, char **argv)
   INPUTFILES InFiles;
   LAYER Soil;
   LAYER Veg;
-  LISTPTR Input = NULL;		/* Linked list with input strings */
-  MAPSIZE Map;			/* Size and location of model area */
-  MAPSIZE Radar;		/* Size and location of area covered by 
-				   precipitation radar */
-  MAPSIZE MM5Map;		/* Size and location of area covered by MM5 
-				   input files */
+  LISTPTR Input = NULL;			/* Linked list with input strings */
+  MAPSIZE Map;					/* Size and location of model area */
+  MAPSIZE Radar;				/* Size and location of area covered by precipitation radar */
+  MAPSIZE MM5Map;				/* Size and location of area covered by MM5 input files */
   METLOCATION *Stat = NULL;
-  OPTIONSTRUCT Options;		/* Structure with information which program
-				   options to follow */
-  PIXMET LocalMet;		/* Meteorological conditions for current pixel
-			 */
-  FINEPIX ***FineMap = NULL;
+  OPTIONSTRUCT Options;			/* Structure with information which program options to follow */
+  PIXMET LocalMet;				/* Meteorological conditions for current pixel */
+  FINEPIX ***FineMap	= NULL;
   PRECIPPIX **PrecipMap = NULL;
-  RADARPIX **RadarMap = NULL;
-  RADCLASSPIX **RadMap = NULL;
-  ROADSTRUCT **Network = NULL;	/* 2D Array with channel information for each
-				   pixel */
-  SNOWPIX **SnowMap = NULL;
-  MET_MAP_PIX **MetMap = NULL;
+  RADARPIX **RadarMap	= NULL;
+  RADCLASSPIX **RadMap	= NULL;
+  ROADSTRUCT **Network	= NULL;	/* 2D Array with channel information for each pixel */
+  SNOWPIX **SnowMap		= NULL;
+  MET_MAP_PIX **MetMap	= NULL;
   SNOWTABLE *SnowAlbedo = NULL;
-  SOILPIX **SoilMap = NULL;
-  SEDPIX **SedMap = NULL;
-  SOILTABLE *SType = NULL;
-  SEDTABLE *SedType = NULL;
-  SOLARGEOMETRY SolarGeo;	/* Geometry of Sun-Earth system (needed for
-				   INLINE radiation calculations */
+  SOILPIX **SoilMap		= NULL;
+  SEDPIX **SedMap		= NULL;
+  SOILTABLE *SType	    = NULL;
+  SEDTABLE *SedType		= NULL;
+  SOLARGEOMETRY SolarGeo;		/* Geometry of Sun-Earth system (needed for INLINE radiation calculations */
   TIMESTRUCT Time;
   TOPOPIX **TopoMap = NULL;
   UNITHYDR **UnitHydrograph = NULL;
   UNITHYDRINFO HydrographInfo;	/* Information about unit hydrograph */
   VEGPIX **VegMap = NULL;
   VEGTABLE *VType = NULL;
-  WATERBALANCE Mass =		/* parameter for mass balance calculations */
+  WATERBALANCE Mass =			/* parameter for mass balance calculations */
     { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,  
       0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 };
 
@@ -218,8 +204,6 @@ int main(int argc, char **argv)
 	      &RadarMap, &RadMap, SoilMap, &Soil, VegMap, &Veg, TopoMap,
 	      &MM5Input, &WindModel);
 
-
-
   InitInterpolationWeights(&Map, &Options, TopoMap, &MetWeights, Stat, NStats);
 
   InitDump(Input, &Options, &Map, Soil.MaxLayers, Veg.MaxLayers, Time.Dt,
@@ -260,7 +244,7 @@ int main(int argc, char **argv)
   *****************************************************************************/
   if(Options.Sediment) {
      time (&tloc);
-     srand48 (tloc);
+     srand (tloc);
   /* Randomize Random Generator */
  
   /* Commenting the line above and uncommenting the line below 
@@ -293,12 +277,10 @@ int main(int argc, char **argv)
     DeleteList(Input);
   }
 
-  
-
   /* setup for mass balance calculations */
   Aggregate(&Map, &Options, TopoMap, &Soil, &Veg, VegMap, EvapMap, PrecipMap,
-	    RadMap, SnowMap, SoilMap,  &Total, VType, Network, SedMap, FineMap,
-	    &ChannelData, &roadarea); 
+	      RadMap, SnowMap, SoilMap, &Total, VType, Network, SedMap, FineMap,
+	      &ChannelData, &roadarea);
 
   Mass.StartWaterStorage =
     Total.Soil.IExcess + Total.CanopyWater + Total.SoilWater + Total.Snow.Swq +
@@ -322,8 +304,6 @@ int main(int argc, char **argv)
       InitNewMonth(&Time, &Options, &Map, TopoMap, PrismMap, ShadowMap,
 		   RadMap, &InFiles, Veg.NTypes, VType, NStats, Stat, 
 		   Dump.InitStatePath);
-
-
 
     if (IsNewDay(Time.DayStep)) {
       InitNewDay(Time.Current.JDay, &SolarGeo);

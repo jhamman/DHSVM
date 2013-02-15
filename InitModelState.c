@@ -11,7 +11,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    InitModelState()
  * COMMENTS:
- * $Id$     
+ * $Id: InitModelState.c,v 1.6 2004/01/29 00:02:46 colleen Exp $     
  */
 
 #include <stdio.h>
@@ -102,23 +102,22 @@ void InitModelState(DATE * Start, MAPSIZE * Map, OPTIONSTRUCT * Options,
 		 DMap.Name);
 
     for (y = 0; y < Map->NY; y++) {
-      for (x = 0; x < Map->NX; x++) {
-	if (INBASIN(TopoMap[y][x].Mask)) {
-	  PrecipMap[y][x].IntRain[i] = 0.0;
-	  NVeg = Veg.NLayers[(VegMap[y][x].Veg - 1)];
-	  if (i < NVeg) {
-	    PrecipMap[y][x].IntRain[i] = ((float *) Array)[y * Map->NX + x];
-	    if (PrecipMap[y][x].IntRain[i] < 0.0) {
-	      fprintf(stderr, "InitModelState at (x, y) is (%d, %d):\n", x, y);
-	      fprintf(stderr,
-		      "\tRain interception negative on layer %d of max %d ... reset to 0\n",
-		      i, Veg.MaxLayers);
-	      PrecipMap[y][x].IntRain[i] = 0.0;
-	    }
-	  }
+		for (x = 0; x < Map->NX; x++) {
+			if (INBASIN(TopoMap[y][x].Mask)) {
+				PrecipMap[y][x].IntRain[i] = 0.0;
+				NVeg = Veg.NLayers[(VegMap[y][x].Veg - 1)];
+				if (i < NVeg) {
+					PrecipMap[y][x].IntRain[i] = ((float *) Array)[y * Map->NX + x];
+					if (PrecipMap[y][x].IntRain[i] < 0.0) {
+						fprintf(stderr, "InitModelState at (x, y) is (%d, %d):\n", x, y);
+						fprintf(stderr,
+							"\tRain interception negative on layer %d of max %d ... reset to 0\n", i, Veg.MaxLayers);
+						PrecipMap[y][x].IntRain[i] = 0.0;
+					}
+				}
+			}
+		}
 	}
-      }
-    }
   }
 
   for (i = 0; i < Veg.MaxLayers; i++) {
@@ -129,25 +128,23 @@ void InitModelState(DATE * Start, MAPSIZE * Map, OPTIONSTRUCT * Options,
     strcpy(DMap.FileName, "");
     GetVarAttr(&DMap);
 
-    Read2DMatrix(FileName, Array, DMap.NumberType, Map->NY, Map->NX, NSet++,
-		 DMap.Name);
+    Read2DMatrix(FileName, Array, DMap.NumberType, Map->NY, Map->NX, NSet++, DMap.Name);
 
     for (y = 0; y < Map->NY; y++) {
       for (x = 0; x < Map->NX; x++) {
-	if (INBASIN(TopoMap[y][x].Mask)) {
-	  PrecipMap[y][x].IntSnow[i] = 0.0;
-	  NVeg = Veg.NLayers[(VegMap[y][x].Veg - 1)];
-	  if (i < NVeg) {
-	    PrecipMap[y][x].IntSnow[i] = ((float *) Array)[y * Map->NX + x];
-	    if (PrecipMap[y][x].IntSnow[i] < 0.0) {
-	      fprintf(stderr, "InitModelState at (x, y) is (%d, %d):\n", x, y);
-	      fprintf(stderr,
-		      "Snow interception negative on layer %d of max %d ... reset to 0\n",
-		      i, Veg.MaxLayers);
-	      PrecipMap[y][x].IntSnow[i] = 0.0;
-	    }
-	  }
-	}
+		  if (INBASIN(TopoMap[y][x].Mask)) {
+			  PrecipMap[y][x].IntSnow[i] = 0.0;
+			  NVeg = Veg.NLayers[(VegMap[y][x].Veg - 1)];
+			  if (i < NVeg) {
+				  PrecipMap[y][x].IntSnow[i] = ((float *) Array)[y * Map->NX + x];
+				  if (PrecipMap[y][x].IntSnow[i] < 0.0) {
+					  fprintf(stderr, "InitModelState at (x, y) is (%d, %d):\n", x, y);
+					  fprintf(stderr,
+						  "Snow interception negative on layer %d of max %d ... reset to 0\n", i, Veg.MaxLayers);
+					  PrecipMap[y][x].IntSnow[i] = 0.0;
+				  }
+			  }
+		  }
       }
     }
   }
@@ -477,25 +474,24 @@ void InitModelState(DATE * Start, MAPSIZE * Map, OPTIONSTRUCT * Options,
   for (y = 0; y < Map->NY; y++) {
     for (x = 0; x < Map->NX; x++) {
 
-      /* SatFlow needs to be initialized properly in the future.  For now it 
-         will just be set to zero here */
+      /* SatFlow needs to be initialized properly in the future.  
+	  For now it will just be set to zero here */
       SoilMap[y][x].SatFlow = 0.0;
-      if (INBASIN(TopoMap[y][x].Mask)) {
-	if ((SoilMap[y][x].TableDepth =
-	     WaterTableDepth((Soil.NLayers[SoilMap[y][x].Soil - 1]),
+	  if (INBASIN(TopoMap[y][x].Mask)) {
+		  if ((SoilMap[y][x].TableDepth =
+			  WaterTableDepth((Soil.NLayers[SoilMap[y][x].Soil - 1]),
 			     SoilMap[y][x].Depth,
 			     VType[VegMap[y][x].Veg - 1].RootDepth,
 			     SType[SoilMap[y][x].Soil - 1].Porosity,
 			     SType[SoilMap[y][x].Soil - 1].FCap,
-			     Network[y][x].Adjust, SoilMap[y][x].Moist))
-	    < 0.0)
+			     Network[y][x].Adjust, SoilMap[y][x].Moist))< 0.0)
 	  /*  ReportError((char *) Routine, 35); */  {
-	  remove -= SoilMap[y][x].TableDepth * Map->DX * Map->DY;
-	  SoilMap[y][x].TableDepth = 0.0;
+		  remove -= SoilMap[y][x].TableDepth * Map->DX * Map->DY;
+		  SoilMap[y][x].TableDepth = 0.0;
+		  }
 	  }
-      }
       else {
-	SoilMap[y][x].TableDepth = 0;
+		  SoilMap[y][x].TableDepth = 0;
       }
     }
   }
@@ -514,4 +510,16 @@ void InitModelState(DATE * Start, MAPSIZE * Map, OPTIONSTRUCT * Options,
       fscanf(HydroStateFile, "%f\n", &(Hydrograph[i]));
     fclose(HydroStateFile);
   }
+
+  // Initialize the flood detention storage in each pixel for impervious fraction > 0 situation. 
+for (y = 0; y < Map->NY; y++) {
+    for (x = 0; x < Map->NX; x++) {
+		SoilMap[y][x].DetentionStorage = 0.0;
+		SoilMap[y][x].DetentionIn = 0.0;
+		SoilMap[y][x].DetentionOut = 0.0;
+   }
 }
+
+}
+
+

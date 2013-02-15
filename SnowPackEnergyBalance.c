@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    SnowPackEnergyBalance()
  * COMMENTS:
- * $Id$     
+ * $Id: SnowPackEnergyBalance.c,v 1.4 2003/07/01 21:26:25 olivier Exp $     
  */
 
 #include <math.h>

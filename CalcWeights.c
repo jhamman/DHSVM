@@ -12,7 +12,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    CalcWeights()
  * COMMENTS:
- * $Id$     
+ * $Id: CalcWeights.c,v 1.5 2003/10/28 20:02:41 colleen Exp $     
  */
 
 #include <stdio.h>

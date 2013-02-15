@@ -7,7 +7,7 @@
    ------------------------------------------------------------- */
 /* -------------------------------------------------------------
    Created September 12, 1996 by  William A Perkins
-   $Id$
+   $Id: Calendar.h,v 1.7 2004/07/08 19:53:03 colleen Exp $
    ------------------------------------------------------------- */
 
 #ifndef _Calendar_h_
@@ -42,21 +42,21 @@ typedef struct {
 
 typedef struct {
   int Dt;			/* Timestep (in sec) */
-  DATE Start;			/* Starting date of run */
+  DATE Start;		/* Starting date of run */
   DATE End;			/* Ending date of run */
-  DATE *StartSed;		/* Starting date of sediment run */
-  DATE *EndSed;			/* Ending date of sediment run */
-  DATE *MWM;                    /* Dates to run the mass wasting model */
-  DATE MWMnext;                 /* Date for next mass wasting model run*/
-  DATE Current;			/* Current date in run */
-  DATE StartRadar;		/* Start radar file */
-  DATE StartMM5;		/* Start of MM5 files */
+  DATE *StartSed;	/* Starting date of sediment run */
+  DATE *EndSed;		/* Ending date of sediment run */
+  DATE *MWM;        /* Dates to run the mass wasting model */
+  DATE MWMnext;     /* Date for next mass wasting model run*/
+  DATE Current;		/* Current date in run */
+  DATE StartRadar;	/* Start radar file */
+  DATE StartMM5;	/* Start of MM5 files */
   int Step;			/* Timestep since start */
-  int DayStep;			/* Time step since midnight */
-  int NDaySteps;		        /* Number of timesteps per day */
-  int NTotalSteps;		/* Total number of steps in run */
-  int NMWMTotalSteps;            /* Total number of times the mass wasting nmodel is run */
-  int NSETotalSteps;             /* Total number of times the surface erosio nmodel is run */
+  int DayStep;		/* Time step since midnight */
+  int NDaySteps;	/* Number of timesteps per day */
+  int NTotalSteps;	/* Total number of steps in run */
+  int NMWMTotalSteps;  /* Total number of times the mass wasting nmodel is run */
+  int NSETotalSteps;   /* Total number of times the surface erosio nmodel is run */
 } TIMESTRUCT;
 
 /* -------------------------------------------------------------
@@ -86,5 +86,6 @@ void JulianDayToGregorian(double jd, int *y, int *m, int *d, int *h, int *mi,
 double GregorianToJulianDay(int year, int mon, int day, int h, int mi,
 			    double se);
 int DayOfWeek(double j);
+/*float rint(float x);*/
 
 #endif

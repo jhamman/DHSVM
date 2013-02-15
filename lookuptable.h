@@ -8,7 +8,7 @@
  * ORIG-DATE:    Feb 25, 1997
  * DESCRIPTION:  header file for LookupTable.c
  * DESCRIP-END.
- * $Id$
+ * $Id: lookuptable.h,v 1.4 2003/07/01 21:26:31 olivier Exp $
  */
 
 #ifndef LOOKUP_TABLE_H

@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    LapseT()
  * COMMENTS:
- * $Id$     
+ * $Id: LapseT.c,v 1.4 2003/07/01 21:26:19 olivier Exp $     
  */
 
 #include <stdio.h>

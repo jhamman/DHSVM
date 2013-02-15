@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    NoEvap()
  * COMMENTS:
- * $Id$     
+ * $Id: NoEvap.c,v 1.4 2003/07/01 21:26:21 olivier Exp $     
  */
 
 #include <stdio.h>

@@ -11,7 +11,8 @@
  * DESCRIP-END.
  * FUNCTIONS:    MassBalance()
  * COMMENTS:
- * $Id$
+ * Modification made on 2012/12/31
+ * $Id: MassBalance.c, v 4.0 Ning Exp $
  */
 
 #include <stdio.h>
@@ -41,6 +42,7 @@ void MassBalance(DATE *Current, FILES *Out, FILES *SedOut, AGGREGATED *Total,
 {
   float NewWaterStorage;	/* water storage at the end of the time step */
   float Output;			/* total water flux leaving the basin;  */
+  float Input;
   float MassError;		/* mass balance error m  */
   float MWMMassError;            /* mass wasting mass balance error m3  */
   float SedInput, SedOutput, SedMassError;  /* sediment mass balance variables 
@@ -48,9 +50,11 @@ void MassBalance(DATE *Current, FILES *Out, FILES *SedOut, AGGREGATED *Total,
 
   NewWaterStorage = Total->Soil.IExcess + Total->Road.IExcess + 
     Total->CanopyWater + Total->SoilWater +
-    Total->Snow.Swq + Total->Soil.SatFlow;
+    Total->Snow.Swq + Total->Soil.SatFlow + Total->Soil.DetentionStorage;
 
   Output = Total->ChannelInt + Total->RoadInt + Total->Evap.ETot;
+  Input = Total->Precip.Precip + Total->Snow.VaporMassFlux +
+    Total->Snow.CanopyVaporMassFlux + Total->CulvertReturnFlow;
 
   MassError = (NewWaterStorage - Mass->OldWaterStorage) + Output -
     Total->Precip.Precip - Total->Snow.VaporMassFlux -
@@ -70,17 +74,16 @@ void MassBalance(DATE *Current, FILES *Out, FILES *SedOut, AGGREGATED *Total,
   Mass->CumRunoffToChannel += Total->RunoffToChannel;
   
   PrintDate(Current, Out->FilePtr);
-  
-  fprintf(Out->FilePtr, " %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g %g\n",
-	   Total->Soil.IExcess, Total->CanopyWater, Total->SoilWater, Total->Snow.Swq,
-	   Total->Soil.SatFlow, Total->ChannelInt, Total->RoadInt,
-	   Total->CulvertReturnFlow, Total->Evap.ETot, Total->Precip.Precip,
-	   Total->Snow.VaporMassFlux, Total->Snow.CanopyVaporMassFlux,
-	   Mass->OldWaterStorage, Total->CulvertToChannel,
-	   Total->RunoffToChannel, MassError);
+  fprintf(Out->FilePtr, " %7.4f  %7.4f  %6.3f  %8.4f  %.2e  \
+%.2e  %5.2f  %5.2f  %7.4f  %7.4f  %7.4f  %6.3f  %.2e  %5.2f  %.2e  %7.3f \n",
+	  Total->Soil.IExcess, Total->CanopyWater, Total->SoilWater, 
+	  Total->Snow.Swq, Total->Soil.SatFlow, 
+	  Total->ChannelInt,  Total->RoadInt, Total->CulvertReturnFlow, Total->Evap.ETot,  
+	  Total->Precip.Precip, Total->Snow.VaporMassFlux, 
+	  Total->Snow.CanopyVaporMassFlux, Mass->OldWaterStorage, Total->CulvertToChannel,
+	  Total->RunoffToChannel, MassError);
 
   if(Options->Sediment){
-
     /* Calculate sediment mass errors */
     MWMMassError = Total->Fine.MassWasting -Total->Fine.SedimentToChannel - 
       Total->Fine.MassDeposition ;

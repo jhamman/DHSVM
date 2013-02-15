@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    
  * COMMENTS:
- * $Id$     
+ * $Id: data.h,v 1.31 2004/05/04 19:39:00 colleen Exp $     
  */
 
 #ifndef DATA_H
@@ -55,39 +55,28 @@ typedef struct {
 } PIXDUMP;
 
 typedef struct {
-  char Path[BUFSIZE + 1];	/* Path to dump to */
+  char Path[BUFSIZE + 1];			/* Path to dump to */
   char InitStatePath[BUFSIZE + 1];	/* Path for initial state */
-  FILES Aggregate;		/* File with aggregated values for entire
-				   basin */
-  FILES AggregateSediment;	/* File with aggregated sediment values
-				   for entire basin */
-  FILES Balance;		/* File with summed mass balance values
-				   for entire basin */
-  FILES SedBalance;		/* File with summed mass balance values
-				   for entire basin */
+  FILES Aggregate;					/* File with aggregated values for entire basin */
+  FILES AggregateSediment;			/* File with aggregated sediment values for entire basin */
+  FILES Balance;					/* File with summed mass balance values for entire basin */
+  FILES SedBalance;					/* File with summed mass balance values for entire basin */
   FILES Stream;
-  int NStates;			/* Number of model state dumps */
-  DATE *DState;			/* Array with dates on which to dump state */
-  int NPix;			/* Number of pixels for which to output
-				   timeseries */
-  PIXDUMP *Pix;			/* Array with info on pixels for which to 
-				   output timeseries */
-  int NMaps;			/* Number of variables for which to output 
-				   maps */
-  MAPDUMP *DMap;		/* Array with info on each map to output */
+  int NStates;						/* Number of model state dumps */
+  DATE *DState;						/* Array with dates on which to dump state */
+  int NPix;							/* Number of pixels for which to output timeseries */
+  PIXDUMP *Pix;						/* Array with info on pixels for which to output timeseries */
+  int NMaps;						/* Number of variables for which to output maps */
+  MAPDUMP *DMap;					/* Array with info on each map to output */
 } DUMPSTRUCT;
 
 typedef struct {
   float ETot;			/* Total amount of evapotranspiration */
-  float *EPot;			/* Potential transpiration from each 
-				   vegetation/soil layer */
-  float *EAct;			/* Actual transpiration from each vegetation/ 
-				   soil layer */
-  float *EInt;			/* Evaporation from interception for each 
-				   vegetation layer */
-  float **ESoil;		        /* Transpiration for each vegetation layer 
-				   from each soil zone */
-  float EvapSoil;		        /* Evaporation from the upper soil layer */
+  float *EPot;			/* Potential transpiration from each vegetation/soil layer */
+  float *EAct;			/* Actual transpiration from each vegetation soil layer */
+  float *EInt;			/* Evaporation from interception for each vegetation layer */
+  float **ESoil;		/* Transpiration for each vegetation layer from each soil zone */
+  float EvapSoil;		/* Evaporation from the upper soil layer */
 } EVAPPIX;
 
 typedef struct {
@@ -152,29 +141,25 @@ typedef struct {
 } ITEM;
 
 typedef struct {
-  char System[BUFSIZE + 1];	/* Coordinate system */
-  double Xorig;			/* X coordinate of Northwest corner */
-  double Yorig;			/* Y coordinate of Northwest corner */
-  int X;			        /* Current x position */
-  int Y;			        /* Current y position */
-  int NX;			/* Number of pixels in x direction */
-  int NY;			/* Number of pixels in y direction */
-  float DX;			/* Pixel spacing in x-direction */
-  float DY;			/* Pixel spacing in y-direction */
-  float DXY;			/* Pixel spacing in diagonal */
-  int OffsetX;			/* Offset in x-direction compared to basemap */
-  int OffsetY;			/* Offset in y-direction compared to basemap */
+  char System[BUFSIZE + 1];		 /* Coordinate system */
+  double Xorig;					 /* X coordinate of Northwest corner */
+  double Yorig;					 /* Y coordinate of Northwest corner */
+  int X;						 /* Current x position */
+  int Y;						 /* Current y position */
+  int NX;						 /* Number of pixels in x direction */
+  int NY;						 /* Number of pixels in y direction */
+  float DX;						 /* Pixel spacing in x-direction */
+  float DY;						 /* Pixel spacing in y-direction */
+  float DXY;					 /* Pixel spacing in diagonal */
+  int OffsetX;					 /* Offset in x-direction compared to basemap */
+  int OffsetY;					 /* Offset in y-direction compared to basemap */
   int NumCells;                  /* Number of cells within the basin */
-  int NYfine;                    /* Number of pixels for mass wasting algorithm
-				    in x direction */
-  int NXfine;                    /* Number of pixels for mass wasting algorithm 
-				    in y direction */
-  float DMASS;			/* Pixel spacing for mass wasting algorithm */
-  int NumCellsfine;              /* Number of cells for mass wasting algorithm 
-				    within the basin */
+  int NYfine;                    /* Number of pixels for mass wasting algorithm in x direction */
+  int NXfine;                    /* Number of pixels for mass wasting algorithm in y direction */
+  float DMASS;					 /* Pixel spacing for mass wasting algorithm */
+  int NumCellsfine;              /* Number of cells for mass wasting algorithm within the basin */
   int NumFineIn;                 /* Number of fine cells in one coarse cell */  
-  ITEM *OrderedCells;           /* Structure array to hold the ranked elevations;
-				   NumCells in size */
+  ITEM *OrderedCells;            /* Structure array to hold the ranked elevations; NumCells in size */
 } MAPSIZE;
 
 typedef struct {
@@ -217,65 +202,54 @@ typedef struct {
 } METLOCATION;
 
 typedef struct {
-  int FileFormat;		/* File format indicator, BIN or HDF */
-  int HasNetwork;		/* Flag to indicate whether roads and/or
-				   channels are imposed on the model area,
-				   TRUE if NETWORK, FALSE if UNIT_HYDROGRAPH */
-  int CanopyRadAtt;		/* Radiation attenuation through the canopy,
-				   either FIXED (old method) or VARIABLE (based
-				   on Nijssen and Lettenmaier) */
-  int PrecipType;		/* Precipitation source indicator, either
-				   RADAR or STATION */
-  int Prism;			/* If TRUE, user supplied PRISM maps will be 
-				   used to interpolate precipitation */
-  int PrecipLapse;		/* Whether the precipitation lapse rate is
-				   CONSTANT or VARIABLE */
-  int TempLapse;		        /* Whether the temperature lapse rate is
-				   CONSTANT or VARIABLE */
+  int FileFormat;				/* File format indicator, BIN or HDF */
+  int HasNetwork;				/* Flag to indicate whether roads and/or channels are imposed on the model area,
+								TRUE if NETWORK, FALSE if UNIT_HYDROGRAPH */
+  int CanopyRadAtt;				/* Radiation attenuation through the canopy, either FIXED (old method) or VARIABLE (based
+								on Nijssen and Lettenmaier) */
+  int PrecipType;				/* Precipitation source indicator, either RADAR or STATION */
+  int Prism;					/* If TRUE, user supplied PRISM maps will be  used to interpolate precipitation */
+  int PrecipLapse;				/* Whether the precipitation lapse rate is CONSTANT or VARIABLE */
+  int TempLapse;				/* Whether the temperature lapse rate is CONSTANT or VARIABLE */
   int CressRadius;
   int CressStations;
-  int WindSource;		/* Wind source indicator, either MODEL or 
-				   STATION */
-  int HeatFlux;			/* Specifies whether a sensible heat flux 
-				   should be calculated, TRUE or FALSE */
-  int Routing;                   /* Overland flow routing indicator, either CONVENTIONAL
-				   or KINEMATIC */
+  int WindSource;				/* Wind source indicator, either MODEL or STATION */
+  int HeatFlux;					/* Specifies whether a sensible heat flux 
+								should be calculated, TRUE or FALSE */
+  int Routing;                   /* Overland flow routing indicator, either CONVENTIONAL or KINEMATIC */
   int OldRouteFlag;              /* Initial Overland flow routing indicator, either 
-				   CONVENTIONAL or KINEMATIC */
+								 CONVENTIONAL or KINEMATIC */
   int Sediment;                  /* Specifies whether sediment is run and variables 
-				    are output, TRUE or FALSE */
+									are output, TRUE or FALSE */
   int MassWaste;                 /* Specifies whether mass wasting model should be run
-				    and variables should be output, TRUE or FALSE */
+								 and variables should be output, TRUE or FALSE */
   int SurfaceErosion;            /* Specifies whether surface erosion model should be run
-				    variables should be output, TRUE or FALSE */
+								variables should be output, TRUE or FALSE */
   int ErosionPeriod;             /* Specifies dates when erosion model should be run
-				    and variables should be output, TRUE or FALSE */
+								 and variables should be output, TRUE or FALSE */
   int OldSedFlag;                /* Surface erosion flag from previous timestep */
   int InitSedFlag;               /* Initial Surface erosion flag for dumping purposes */
   int RoadRouting;               /* Road Erosion indicator, either TRUE or FALSE */
   int ChannelRouting;            /* Specifies whether sediment should be routed through
-				   the channel network, either TRUE or FALSE */
-  int Infiltration;              /* Specifies static or dynamic maximum infiltration 
-				   rate */
-  int FlowGradient;		/* Specifies whether the flow gradient is based
-				   on the terrain elevation (TOPOGRAPHY) or the 
-				   water table elevation (WATERTABLE).  The 
-				   TOPOGRAPHY method is much faster, since the 
-				   flow direction and gradient do not have to 
-				   be recalculated every timestep */
-  int Extent;			/* Specifies the extent of the model run,
-				   either POINT or BASIN */
+								 the channel network, either TRUE or FALSE */
+  int Infiltration;              /* Specifies static or dynamic maximum infiltration rate */
+  int FlowGradient;				 /* Specifies whether the flow gradient is based
+								 on the terrain elevation (TOPOGRAPHY) or the 
+								 water table elevation (WATERTABLE).  The 
+								 TOPOGRAPHY method is much faster, since the 
+								 flow direction and gradient do not have to 
+								 be recalculated every timestep */
+  int Extent;					/* Specifies the extent of the model run, either POINT or BASIN */
   int Interpolation;
-  int MM5;			/* TRUE if MM5 interface is to be used, FALSE
-				   otherwise */
-  int QPF;			/* TRUE if QPF override, else FALSE */
-  int PointX;			/* X-index of point to model in POINT mode */
-  int PointY;			/* Y-index of point to model in POINT mode */
-  int Snotel;			/* if TRUE then station veg = bare for output */
-  int Outside;			/* if TRUE then all listed met stats are used */
-  int Rhoverride;		/* if TRUE then RH=100% if Precip>0 */
-  int Shading;			/* if TRUE then terrain shading for solar is on */
-  char SedFile[BUFSIZE+1];	/* Filename for sediment input file  */
+  int MM5;						/* TRUE if MM5 interface is to be used, FALSE otherwise */
+  int QPF;						/* TRUE if QPF override, else FALSE */
+  int PointX;					/* X-index of point to model in POINT mode */
+  int PointY;					/* Y-index of point to model in POINT mode */
+  int Snotel;					/* if TRUE then station veg = bare for output */
+  int Outside;					/* if TRUE then all listed met stats are used */
+  int Rhoverride;				/* if TRUE then RH=100% if Precip>0 */
+  int Shading;					/* if TRUE then terrain shading for solar is on */
+  char SedFile[BUFSIZE+1];		/* Filename for sediment input file  */
   char PrismDataPath[BUFSIZE + 1];
   char PrismDataExt[BUFSIZE + 1];
   char ShadingDataPath[BUFSIZE + 1];
@@ -285,18 +259,15 @@ typedef struct {
 } OPTIONSTRUCT;
 
 typedef struct {
-  float Precip;			/* Total amount of precipitation at pixel (m) */
+  float Precip;					/* Total amount of precipitation at pixel (m) */
   float RainFall;		        /* Amount of rainfall (m) */
   float SnowFall;		        /* Amount of snowfall (m) */
-  float MomentSq;                /* Momentum squared for rain, used in the 
-				    sediment model (kg* m/s)^2 /m^2*s) */
+  float MomentSq;               /* Momentum squared for rain, used in the sediment model (kg* m/s)^2 /m^2*s) */
   float *IntRain;		        /* Rain interception by each vegetation layer (m) */
   float *IntSnow;		        /* Snow interception by each vegetation layer (m) */
-  float TempIntStorage;		/* Temporary snow and rain interception storage,
-				   used by MassRelease() */
-  int PrecipStart;               /* TRUE if there was surface water in the last
-				    time step */ 
-  float Dm;                      /* Median raindrop diameter (m) */
+  float TempIntStorage;			/* Temporary snow and rain interception storage, used by MassRelease() */
+  int PrecipStart;              /* TRUE if there was surface water in the last time step */ 
+  float Dm;                     /* Median raindrop diameter (m) */
  } PRECIPPIX;
 
 typedef struct {
@@ -305,7 +276,7 @@ typedef struct {
 
 typedef struct {
   float Beam;			/* Beam value */
-  float Diffuse;		        /* Diffuse value */
+  float Diffuse;		/* Diffuse value */
 } RADCLASSPIX;
 
 typedef struct {
@@ -323,38 +294,24 @@ typedef struct {
 typedef struct {
   float Area;			/* Area of road or channel cut (m) */
   float BankHeight;		/* Height of road or channel cut (m) */
-  int CutBankZone;		/* Number of the soil layer that contains the
-				   bottom of the road/channel cut */
-  float *PercArea;		/* Area of percolation zone for each soil
-				   layer, corrected for the road/channel cut,
-				   divided by the grid cell area (0-1)  */
-  float *Adjust;		        /* Array with coefficients to correct for
-				   loss of soil storage due to
-				   channel/road-cut for each soil layer.
-				   Multiplied with RootDepth to give the zone
-				   thickness for use in calculating soil
-				   moisture */
-  float MaxInfiltrationRate;	/* Area weighted infiltration rate through the
-				   road bed */
-  uchar fraction;		/* flow fraction intercepted by road channel */
+  int   CutBankZone;	/* Number of the soil layer that contains the bottom of the road/channel cut */
+  float *PercArea;		/* Area of percolation zone for each soil layer, corrected for the road/channel cut,
+						divided by the grid cell area (0-1)  */
+  float *Adjust;		/* Array with coefficients to correct for loss of soil storage due to channel/road-cut for each soil layer.
+						Multiplied with RootDepth to give the zone thickness for use in calculating soil moisture */
+  float MaxInfiltrationRate;	 /* Area weighted infiltration rate through the road bed */
+  uchar fraction;				 /* flow fraction intercepted by road channel */
   float RoadArea;                /* Road surface area (and area of percolation)*/
   float IExcess;                 /* Infiltration excess generated on road surface (m)*/
-  float FlowLength;              /* Representative surface water flow length across 
-				     the road surface (m) */
-  float FlowSlope;               /* Representative road surface slope along the flow
-				    path (m/m) */
-  ChannelClass *RoadClass;      /* Class of road with most area in the pixel */
+  float FlowLength;              /* Representative surface water flow length across the road surface (m) */
+  float FlowSlope;               /* Representative road surface slope along the flow path (m/m) */
+  ChannelClass *RoadClass;       /* Class of road with most area in the pixel */
   float *h;                      /* Infiltration excess on road grid cell (m)*/
-  float *startRunoff;            /* Surface water flux from the previus (sub) time 
-				    step. Used for road kinematic wave routing.*/
-  float *startRunon;             /* Surface water flux from the previus (sub) time 
-				    step. Used for road kinematic wave routing.*/
-  float *OldSedIn;               /* Sediment inflow to road cell from previous time 
-				   step (m3/m3). */
-  float *OldSedOut;              /* Sediment outflow from road cell from previous time 
-				   step (m3/m3). */
-  float Erosion;                 /* Change in road elevation/call area due to erosion 
-				    (m/timestep). */
+  float *startRunoff;            /* Surface water flux from the previus (sub) time step. Used for road kinematic wave routing.*/
+  float *startRunon;             /* Surface water flux from the previus (sub) time step. Used for road kinematic wave routing.*/
+  float *OldSedIn;               /* Sediment inflow to road cell from previous time step (m3/m3). */
+  float *OldSedOut;              /* Sediment outflow from road cell from previous time step (m3/m3). */
+  float Erosion;                 /* Change in road elevation/call area due to erosion (m/timestep). */
 } ROADSTRUCT;
 
 typedef struct {
@@ -382,20 +339,20 @@ typedef struct {
 } SOLARGEOMETRY;
 
 typedef struct {
-  uchar HasSnow;		/* Snow cover flag */
+  uchar HasSnow;			/* Snow cover flag */
   uchar SnowCoverOver;		/* Flag overstory can be covered */
-  unshort LastSnow;		/* Days since last snowfall */
-  float Swq;			/* Snow water equivalent */
-  float Melt;			/* Snow Melt */
-  float Outflow;		        /* Snow pack outflow (m) */
-  float PackWater;		/* Liquid water content of snow pack */
-  float TPack;			/* Temperature of snow pack */
-  float SurfWater;		/* Liquid water content of surface layer */
-  float TSurf;			/* Temperature of snow pack surface layer */
+  unshort LastSnow;			/* Days since last snowfall */
+  float Swq;				/* Snow water equivalent */
+  float Melt;				/* Snow Melt */
+  float Outflow;		    /* Snow pack outflow (m) */
+  float PackWater;			/* Liquid water content of snow pack */
+  float TPack;				/* Temperature of snow pack */
+  float SurfWater;			/* Liquid water content of surface layer */
+  float TSurf;				/* Temperature of snow pack surface layer */
   float ColdContent;		/* Cold content of snow pack */
-  float Albedo;			/* Albedo of snow pack */
-  float Depth;			/* Snow depth; Does not appear to be calculated
-				 or used anywhere */
+  float Albedo;				/* Albedo of snow pack */
+  float Depth;				/* Snow depth; Does not appear to be calculated
+							or used anywhere */
   float VaporMassFlux;		/* Vapor mass flux to/from snow pack
 				   (m/timestep) */
   float CanopyVaporMassFlux;	/* Vapor mass flux to/from intercepted snow in
@@ -404,70 +361,58 @@ typedef struct {
 } SNOWPIX;
 
 typedef struct {
-  int Soil;			/* Soil type */
+  int   Soil;			/* Soil type */
   float Depth;			/* Depth of total soil zone, including all root
-				   zone layers, and the saturated zone */
+						zone layers, and the saturated zone */
   float *Moist;			/* Soil moisture content in layers (0-1) */
   float *Perc;			/* Percolation from layers */
   float *Temp;			/* Temperature in each layer (C) */
-  float TableDepth;		/* Depth of water table below ground surface 
-				   (m) */
-  float WaterLevel;		/* Absolute height of the watertable above 
-				   datum (m), i.e. corrected for terrain
-				   elevation */
-  float SatFlow;		        /* amount of saturated flow generated */
-  float IExcess;		        /* amount of surface runoff (m) generated from
-				   HOF and Return flow */
-  float Runoff;                  /* Surface water flux (m) from the grid cell. */
-  float ChannelInt;		/* amount of subsurface flow intercepted by
-				   the channel */
-  float RoadInt;		        /* amount of water intercepted by the road */
+  float TableDepth;		/* Depth of water table below ground surface (m) */
+  float WaterLevel;		/* Absolute height of the watertable above datum (m), 
+						i.e. corrected for terrain elevation */
+  float SatFlow;		/* amount of saturated flow generated */
+  float IExcess;		/* amount of surface runoff (m) generated from HOF and Return flow */
+  float Runoff;         /* Surface water flux (m) from the grid cell. */
+  float ChannelInt;		/* amount of subsurface flow intercepted by the channel */
+  float RoadInt;		/* amount of water intercepted by the road */
   float TSurf;			/* Soil surface temperature */
   float Qnet;			/* Net radiation exchange at surface */
   float Qrest;			/* Rest term for energy balance (should be 0) */
-  float Qs;			/* Sensible heat exchange */
-  float Qe;			/* Latent heat exchange */
-  float Qg;			/* Ground heat exchange */
+  float Qs;				/* Sensible heat exchange */
+  float Qe;				/* Latent heat exchange */
+  float Qg;				/* Ground heat exchange */
   float Qst;			/* Ground heat storage */
-  float Ra;			/* Soil surface aerodynamic resistance (s/m) */
+  float Ra;				/* Soil surface aerodynamic resistance (s/m) */
   float InfiltAcc;               /* Accumulated water in the top layer (m) */
-  float MoistInit;               /* Initial moisture content when ponding 
-				    begins (0-1) */
-  float startRunoff;             /* Surface water flux from the previus (sub) time 
-				    step. Used for kinematic wave routing.*/
-  float startRunon;              /* Surface water flux from the previus (sub) time 
-				    step. Used for kinematic wave routing.*/
-  float IExcessSed;              /* amount of surface runoff (m) generated from
-				    HOF and Return flow  - saved for sediment
-				    routing */
+  float MoistInit;               /* Initial moisture content when ponding begins (0-1) */
+  float startRunoff;             /* Surface water flux from the previus (sub) time step. Used for kinematic wave routing.*/
+  float startRunon;              /* Surface water flux from the previus (sub) time step. Used for kinematic wave routing.*/
+  float IExcessSed;              /* amount of surface runoff (m) generated from HOF and Return flow  - saved for sediment routing */
+  float DetentionStorage;        /* amount of water kept in detention storage when impervious fraction > 0 */
+  float DetentionIn;			 /* detention storage change in current time step */
+  float DetentionOut;            /* water flow out of detention storage */
 } SOILPIX;
 
 typedef struct {
   char Desc[BUFSIZE + 1];	/* Soil type */
   int Index;
-  int NLayers;			/* Number of soil layers */
-  float Albedo;			/* Albedo of the soil surface */
-  float Manning;		        /* Manning's roughness of the soil surface */ 
-  float *Porosity;		/* Soil porosity for each layer */
-  float *PoreDist;		/* Pore size distribution for each layer */
-  float *Press;			/* Soil bubbling pressure for each layer */
-  float *FCap;			/* Field capacity for each layer  */
-  float *WP;			/* Wilting point for each layer */
-  float *Dens;			/* Soil density (kg/m^3) */
-  float *Ks;			/* Saturated hydraulic conductivity 
-				   (vertical) for each layer */
-  float KsLat;			/* Saturated hydraulic conductivity 
-				   (lateral) */
-  float KsLatExp;		        /* Exponent for vertical change of KsLat */
-  float *KhDry;			/* Thermal conductivity for dry soil 
-				   (W/(m*K)) */
-  float *KhSol;			/* Effective solids thermal conductivity
-				   (W/(M*K)) */
-  float *Ch;			/* Heat capacity for soil medium */
-  float MaxInfiltrationRate;	/* Maximum infiltration rate for upper layer
-				   (m/s) */
-  float G_Infilt;                /* Mean capillary drive for dynamic maximum 
-				    infiltration rate (m)   */
+  int NLayers;				/* Number of soil layers */
+  float Albedo;				/* Albedo of the soil surface */
+  float Manning;		    /* Manning's roughness of the soil surface */ 
+  float *Porosity;			/* Soil porosity for each layer */
+  float *PoreDist;			/* Pore size distribution for each layer */
+  float *Press;				/* Soil bubbling pressure for each layer */
+  float *FCap;				/* Field capacity for each layer  */
+  float *WP;				/* Wilting point for each layer */
+  float *Dens;				/* Soil density (kg/m^3) */
+  float *Ks;				/* Saturated hydraulic conductivity (vertical) for each layer */
+  float KsLat;				/* Saturated hydraulic conductivity (lateral) */
+  float KsLatExp;		    /* Exponent for vertical change of KsLat */
+  float *KhDry;				/* Thermal conductivity for dry soil (W/(m*K)) */
+  float *KhSol;				/* Effective solids thermal conductivity (W/(M*K)) */
+  float *Ch;				/* Heat capacity for soil medium */
+  float MaxInfiltrationRate;/* Maximum infiltration rate for upper layer (m/s) */
+  float G_Infilt;                /* Mean capillary drive for dynamic maximum infiltration rate (m)   */
 } SOILTABLE;
 
 typedef struct {
@@ -486,20 +431,18 @@ typedef struct {
 
 
 typedef struct {
-  float Dem;			/* Elevations */
-  uchar Mask;			/* Mask for modeled area */
-  unshort Travel;		/* Travel time */
-  float Grad;			/* Sum of downslope slope-width products */
-  float Slope;			/* Land surface slope */
-  float Aspect;			/* Land surface slope direction */
-  float FlowGrad;		        /* Magnitude of subsurface flow gradient
-				   slope * width */
-  unsigned char Dir[NDIRS];	/* Fraction of surface flux moving in each direction*/
-  unsigned int TotalDir;	        /* Sum of Dir array */
-  int drains_x;			/* x-loc of cell to which this impervious cell drains */
-  int drains_y;			/* y-loc of cell to which this impervious cell drains */
-  ITEM *OrderedTopoIndex;       /* Structure array to hold the ranked topoindex
-				   for fine pixels in a coarse pixel */
+  float Dem;					/* Elevations */
+  uchar Mask;					/* Mask for modeled area */
+  unshort Travel;				/* Travel time */
+  float Grad;					/* Sum of downslope slope-width products */
+  float Slope;					/* Land surface slope */
+  float Aspect;					/* Land surface slope direction */
+  float FlowGrad;				/* Magnitude of subsurface flow gradient slope * width */
+  unsigned char Dir[NDIRS];		/* Fraction of surface flux moving in each direction*/
+  unsigned int TotalDir;	    /* Sum of Dir array */
+  int drains_x;					/* x-loc of cell to which this impervious cell drains */
+  int drains_y;					/* y-loc of cell to which this impervious cell drains */
+  ITEM *OrderedTopoIndex;       /* Structure array to hold the ranked topoindex for fine pixels in a coarse pixel */
 } TOPOPIX;
 
 typedef struct {
@@ -514,51 +457,49 @@ typedef struct {
   int NSoilLayers;		/* Number of soil layers */
   unsigned char OverStory;	        /* TRUE if there is an overstory */
   unsigned char UnderStory;	/* TRUE if there is an understory */
-  float *Height;		        /* Height of vegetation (m) */
+  float *Height;		/* Height of vegetation (m) */
   float *Fract;			/* Fractional coverage */
   float *HemiFract;		/* used to calculated longwave radiation balance */
   float *LAI;			/* One Sided Leaf Area Index */
-  float **LAIMonthly;		/* Monthly LAI (one-sided) */
-  float *MaxInt;		        /* Maximum interception storage (m) */
+  float **LAIMonthly;	/* Monthly LAI (one-sided) */
+  float *MaxInt;		/* Maximum interception storage (m) */
   float *RsMax;			/* Maximum stomatal resistance */
   float *RsMin;			/* Minimum stomatal resistance */
-  float *MoistThres;		/* Soil moisture threshold above which soil 
-				   moisture does not restrict transpiration */
+  float *MoistThres;	/* Soil moisture threshold above which soil 
+						moisture does not restrict transpiration */
   float *VpdThres;		/* Vapor pressure deficit threshold above which
-				   stomatal closure occurs (Pa) */
-  float **RootFract;		/* Fraction of roots in each soil layer */
+						stomatal closure occurs (Pa) */
+  float **RootFract;	/* Fraction of roots in each soil layer */
   float *RootDepth;		/* Depth of root zones */
   float Atten;			/* Canopy attenuation for radiation, only used
-				   when the "canopy radiation attenuation" 
-				   option is set to fixed */
+						when the "canopy radiation attenuation" 
+						option is set to fixed */
   float TotalDepth;		/* total depth of all root zones */
-  float ClumpingFactor;		/* To convert LAI of overstory to Effective LAI
-				   for canopy attenuation of shortwave radiation 
-				   taken after Chen and Black, 1991 */
+  float ClumpingFactor;	/* To convert LAI of overstory to Effective LAI
+					    for canopy attenuation of shortwave radiation 
+						taken after Chen and Black, 1991 */
   float Taud;			/* Transmission of Diffuse radiation through canopy */
-  /* a function of the following two parameters and
-     effective LAI (which can change monthly) */
+						/* a function of the following two parameters and
+						effective LAI (which can change monthly) */
   float LeafAngleA;		/* parameter describing the Leaf Angle Distribution */
   float LeafAngleB;		/* parameter describing the leaf Angle Distribution */
   float Scat;			/* scattering parameter (between 0.7 and 0.85) */
   float *Rpc;			/* fraction of radiaton that is photosynthetically active (PAR) */
   float *Albedo;		/* Albedo for each vegetation layer */
   float **AlbedoMonthly;
-  float Cn;			/* Canopy attenuation coefficient for wind 
-				   profile */
+  float Cn;				/* Canopy attenuation coefficient for wind profile */
   float MaxSnowInt;		/* Maximum snow interception capacity for the overstory */
   float MDRatio;		/* Ratio of Mass Release to Meltwater drip from int snow */
   float SnowIntEff;		/* Efficiency of snow interception process */
   float ImpervFrac;		/* fraction of pixel that is impervious */
-  float Ra[2];			/* Aerodynamic resistance in the absence of 
-				   snow  */
-  float RaSnow;			/* Aerodynamic resistance for the lower boundary
-				   in the presence of snow */
-  float Trunk;			/* Fraction of overstory height that identifies
-				   the top of the trunk space */
+  float DetentionFrac;  /* fraction of flow on impervious area goes to flood detention storage */ 
+  float DetentionDecay; /* Decay coefficient of linear reservoir storage for impervious surface detention facility.  */
+  float Ra[2];			/* Aerodynamic resistance in the absence of snow  */
+  float RaSnow;			/* Aerodynamic resistance for the lower boundary in the presence of snow */
+  float Trunk;			/* Fraction of overstory height that identifies the top of the trunk space */
   float U[2];			/* Wind speed profile (m/s) */
   float USnow;			/* wind speed 2, above snow surface (m/s) */
-  STATSTABLE RootCoh;           /* Used for the mass wasting model. */
+  STATSTABLE RootCoh;   /* Used for the mass wasting model. */
   STATSTABLE VegSurcharge;      /* Used for the mass wasting model. */
 } VEGTABLE;
 
@@ -598,16 +539,11 @@ typedef struct {
 } MET_MAP_PIX;
 
 typedef struct {
-  float SedFluxOut;              /* Time step total sediment flux from the 
-				   grid cell (m3). */
-  float OldSedIn;                /* Sediment inflow to grid cell from previous time 
-				   step (m3/m3). */
-  float OldSedOut;               /* Sediment outflow from grid cell from previous time 
-				   step (m3/m3). */
-  float Erosion;                 /* Change in grid cell elevation due to erosion 
-				   (mm/timestep). */
-  float RoadSed;                 /* Time step total sediment flux from the 
-				  road surface to hillslope (m3). */
+  float SedFluxOut;              /* Time step total sediment flux from the grid cell (m3). */
+  float OldSedIn;                /* Sediment inflow to grid cell from previous time step (m3/m3). */
+  float OldSedOut;               /* Sediment outflow from grid cell from previous time step (m3/m3). */
+  float Erosion;                 /* Change in grid cell elevation due to erosion (mm/timestep). */
+  float RoadSed;                 /* Time step total sediment flux from the road surface to hillslope (m3). */
 } SEDPIX;
 
 typedef struct {
@@ -636,13 +572,10 @@ typedef struct {
   float DeltaDepth;              /* Change in sediment thickness (m) */
   float Probability;             /* Pixel failure probability. */
   float MassWasting;             /* Sediment (m3) lost due to mass wasting */
-  float MassDeposition;          /* Sediment (m3) deposited in grid cell from mass 
-				    wasting elsewhere */
-  float SedimentToChannel;       /* Sediment (m3) deposited in channel from mass 
-				    wasting */
-  float TopoIndex;               /* Topographic Index used for soil
-				    moisture redistribution from coarse 
-				    grid to fine grid */
+  float MassDeposition;          /* Sediment (m3) deposited in grid cell from mass wasting elsewhere */
+  float SedimentToChannel;       /* Sediment (m3) deposited in channel from mass wasting */
+  float TopoIndex;               /* Topographic Index used for soil moisture redistribution from coarse 
+								grid to fine grid */
 } FINEPIX; 
  
 typedef struct {

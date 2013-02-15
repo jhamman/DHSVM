@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    
  * COMMENTS:
- * $Id$     
+ * $Id: slopeaspect.h,v 1.10 2004/04/16 04:18:29 colleen Exp $     
  */
 
 #ifndef SLOPEASPECT_H

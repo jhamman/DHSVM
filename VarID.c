@@ -16,7 +16,7 @@
  *               better, faster search.  This is not done here, because in the 
  *               overall scheme of DHSVM it is not worth the programming effort
  *               right now.
- * $Id$     
+ * $Id: VarID.c,v 1.7 2004/05/04 19:39:00 colleen Exp $     
  */
 
 #include <stdio.h>

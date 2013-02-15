@@ -11,7 +11,7 @@
  * FUNCTIONS:    SensibleHeatFlux()
  *               NoSensibleHeatFlux()
  * COMMENTS:
- * $Id$     
+ * $Id: SensibleHeatFlux.c,v 1.4 2003/07/01 21:26:24 olivier Exp $     
  */
 
 #include <math.h>

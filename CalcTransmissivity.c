@@ -11,7 +11,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    CalcTransmissivity()
  * COMMENTS:
- * $Id$     
+ * $Id: CalcTransmissivity.c,v 1.4 2003/07/01 21:26:11 olivier Exp $     
  */
 
 #include <math.h>

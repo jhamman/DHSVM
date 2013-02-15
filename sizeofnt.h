@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    
  * COMMENTS:
- * $Id$     
+ * $Id: sizeofnt.h,v 1.4 2003/07/01 21:26:32 olivier Exp $     
  */
 
 #ifndef SIZEOFNT_H

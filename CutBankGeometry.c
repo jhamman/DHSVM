@@ -14,7 +14,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    CutBankGeometry()
  * COMMENTS:
- * $Id$     
+ * $Id: CutBankGeometry.c,v 1.4 2003/07/01 21:26:12 olivier Exp $     
  */
 
 #include <assert.h>

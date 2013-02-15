@@ -17,7 +17,7 @@
  *               byte_swap_long()
  *               byte_swap_short()
  * COMMENTS:
- * $Id$     
+ * $Id: FileIOBin.c,v 1.4 2003/07/01 21:26:14 olivier Exp $     
  */
 
 #include <stdio.h>

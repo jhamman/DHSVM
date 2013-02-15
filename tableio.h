@@ -10,7 +10,7 @@
    Last Change: Thu Feb 15 16:02:18 1996 by  William A Perkins <perk@yama.pnl.gov>
    ------------------------------------------------------------- */
 
-/* $Id$ */
+/* $Id: tableio.h,v 1.4 2003/07/01 21:26:33 olivier Exp $ */
 
 #ifndef _tableio_h_
 #define _tableio_h_

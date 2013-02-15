@@ -11,7 +11,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    SeparateRadiation()
  * COMMENTS:
- * $Id$     
+ * $Id: SeparateRadiation.c,v 1.4 2003/07/01 21:26:24 olivier Exp $     
  */
 
 #include <math.h>

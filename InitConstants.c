@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    InitConstants()
  * COMMENTS:
- * $Id$     
+ * $Id: InitConstants.c,v 1.16 2004/08/18 01:01:28 colleen Exp $     
  */
 
 #include <ctype.h>

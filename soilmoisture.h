@@ -11,7 +11,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    
  * COMMENTS:
- * $Id$     
+ * $Id: soilmoisture.h,v 1.7 2004/02/04 03:08:56 colleen Exp $     
  */
 
 #ifndef SOILMOISTURE_H

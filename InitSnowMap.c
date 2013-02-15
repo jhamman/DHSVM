@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    InitSnowMap()
  * COMMENTS:
- * $Id$     
+ * $Id: InitSnowMap.c,v 1.4 2003/07/01 21:26:17 olivier Exp $     
  */
 
 #include <stdio.h>

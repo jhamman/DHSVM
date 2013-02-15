@@ -14,7 +14,7 @@
  *               InitMapDump()
  *               InitPixDump()
  * COMMENTS:
- * $Id$     
+ * $Id: InitDump.c,v 1.11 2004/08/18 01:01:29 colleen Exp $     
  */
 
 #include <stdio.h>
@@ -163,10 +163,10 @@ void InitDump(LISTPTR Input, OPTIONSTRUCT * Options, MAPSIZE * Map,
        done directly in ExecDump */
 
     if (!(BasinMask = (uchar **) calloc(Map->NY, sizeof(uchar *))))
-      ReportError(Routine, 1);
+		ReportError(Routine, 1);
     for (y = 0; y < Map->NY; y++)
       if (!(BasinMask[y] = (uchar *) calloc(Map->NX, sizeof(uchar))))
-	ReportError(Routine, 1);
+		  ReportError(Routine, 1);
 
     for (y = 0; y < Map->NY; y++)
       for (x = 0; x < Map->NX; x++)

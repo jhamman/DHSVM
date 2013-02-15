@@ -12,7 +12,7 @@
  * FUNCTIONS:    InitFileIO()
  * COMMENTS:     In order to use the NetCDF, you have to define HAVE_NETCDF 
  *               during the build
- * $Id$
+ * $Id: InitFileIO.c,v 1.5 2006/10/03 22:50:22 nathalie Exp $
  */
 
 #include <stdio.h>

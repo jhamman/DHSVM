@@ -11,7 +11,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    
  * COMMENTS:     Adapted from netcdf library
- * $Id$     
+ * $Id: equal.c,v 1.4 2003/07/01 21:26:29 olivier Exp $     
  */
 
 /******************************************************************************/

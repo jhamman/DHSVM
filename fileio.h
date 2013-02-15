@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    
  * COMMENTS:
- * $Id$     
+ * $Id: fileio.h,v 1.4 2003/07/01 21:26:30 olivier Exp $     
  */
 
 #ifndef FILEIO_H

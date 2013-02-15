@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    InitInterpolationWeights()
  * COMMENTS:
- * $Id$     
+ * $Id: InitInterpolationWeights.c,v 1.5 2003/10/28 20:02:43 colleen Exp $     
  */
 
 #include <stdio.h>

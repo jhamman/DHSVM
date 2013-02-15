@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    InitAggregated()
  * COMMENTS:
- * $Id$     
+ * $Id: InitAggregated.c,v 1.4 2003/07/01 21:26:15 olivier Exp $     
  */
 
 #include <stdio.h>

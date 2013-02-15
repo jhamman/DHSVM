@@ -11,7 +11,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    InitNetwork()
  * COMMENTS:
- * $Id$     
+ * $Id: InitNetwork.c,v 1.8 2004/05/03 03:28:45 colleen Exp $     
  */
 
 #include <stdio.h>
@@ -63,16 +63,13 @@ void InitNetwork(int NY, int NX, float DX, float DY, TOPOPIX **TopoMap,
   for (y = 0; y < NY; y++) {
     for (x = 0; x < NX; x++) {
       if (INBASIN(TopoMap[y][x].Mask)) {
-	if (!((*Network)[y][x].Adjust =
-	      (float *) calloc((VType[VegMap[y][x].Veg - 1].NSoilLayers + 1),
-			       sizeof(float))))
-	  ReportError((char *) Routine, 1);
-	
-	if (!((*Network)[y][x].PercArea =
-	      (float *) calloc((VType[VegMap[y][x].Veg - 1].NSoilLayers + 1),
-			       sizeof(float))))
-	  ReportError((char *) Routine, 1);
-	
+		  if (!((*Network)[y][x].Adjust = 
+			  (float *) calloc((VType[VegMap[y][x].Veg - 1].NSoilLayers + 1), sizeof(float))))
+			  ReportError((char *) Routine, 1);
+		  
+		  if (!((*Network)[y][x].PercArea =
+			  (float *) calloc((VType[VegMap[y][x].Veg - 1].NSoilLayers + 1), sizeof(float))))
+			  ReportError((char *) Routine, 1);
       }
     }
   }

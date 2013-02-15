@@ -17,7 +17,7 @@
  * FUNCTIONS:    ReadChannelState()
                  StoreChannelState()
  * COMMENTS:
- * $Id$     
+ * $Id: ChannelState.c,v 1.5 2006/10/03 22:50:22 nathalie Exp $     
  */
 
 #include <stdlib.h>

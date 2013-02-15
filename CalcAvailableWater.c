@@ -12,7 +12,7 @@
  * FUNCTIONS:    CalcAvailableWater()
  * COMMENTS:     Mark Wigmosta, Batelle Pacific Northwest Laboratories,
  *               ms_wigmosta@pnl.gov
- * $Id$      
+ * $Id: CalcAvailableWater.c,v 1.4 2003/07/01 21:26:09 olivier Exp $      
  */
 
 #include <assert.h>

@@ -39,13 +39,13 @@ int InitChannelSediment(Channel * Head, AGGREGATED * Total)
     float InitialDepth = 0.010; /* initial depth of sediment in the channel, m */
     float bulkporosity, initvol;
     
-    bulkporosity = 0.245+0.14*pow(DEBRISd50,-0.21); /* Komura, 1961 relation */
+    bulkporosity = 0.245+0.14*pow((double)DEBRISd50,-0.21); /* Komura, 1961 relation */
    
     /* Assign the storages to the correct IDs */
     Current = Head;
     while (Current) {
       
-      initvol = Current->length * InitialDepth * Current->class->width;
+      initvol = Current->length * InitialDepth * Current->class2->width;
       for(i=0;i<NSEDSIZES;i++) {
 	Current->sediment.mass[i] = 
 	  initvol*(1.-bulkporosity)*((float) PARTDENSITY)*(1./((float) NSEDSIZES));
@@ -165,8 +165,8 @@ void RouteChannelSediment(Channel * Head, TIMESTRUCT Time,
 	/* If there is no flow (true for roads), move on to the next segment */
 	if(Qavg > 0){
 	  if(Current->slope>0.0) {
-	    flowdepth = pow(Qavg*Current->class->friction/(Current->class->width*sqrt(Current->slope)),0.6);
-	    V = Qavg/(flowdepth*Current->class->width);
+	    flowdepth = pow(Qavg*Current->class2->friction/(Current->class2->width*sqrt(Current->slope)),0.6);
+	    V = Qavg/(flowdepth*Current->class2->width);
 	  }
 	  else V=0.01;
 	  if(Current->length/V < minDT_sed) minDT_sed = 1.0*Current->length/V;
@@ -234,10 +234,10 @@ void RouteChannelSediment(Channel * Head, TIMESTRUCT Time,
 		    Current->sediment.inflowrate[i]+Current->sediment.mass[i]/DT_sed;
 		}
 		else {
-		  TotalCapacityUp = CalcBagnold(DS,&Time,Qup,Current->class->width,
-						Current->class->friction,Current->slope);
-		  TotalCapacityDown = CalcBagnold(DS,&Time,Qdown,Current->class->width,
-						  Current->class->friction,Current->slope);
+		  TotalCapacityUp = CalcBagnold(DS,&Time,Qup,Current->class2->width,
+						Current->class2->friction,Current->slope);
+		  TotalCapacityDown = CalcBagnold(DS,&Time,Qdown,Current->class2->width,
+						  Current->class2->friction,Current->slope);
 		  TotalCapacity=phi*TotalCapacityDown + (1.0-phi)*TotalCapacityUp;
 		  TotalCapacity -= CapacityUsed; /* Avoid mult use of streampower */
 		}

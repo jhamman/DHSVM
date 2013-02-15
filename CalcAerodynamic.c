@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    CalcAerodynamic()
  * COMMENTS:
- * $Id$     
+ * $Id: CalcAerodynamic.c,v 1.4 2003/07/01 21:26:09 olivier Exp $     
  */
 
 #include <math.h>

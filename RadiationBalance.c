@@ -12,7 +12,7 @@
  *               LongwaveBalance()
  *               ShortwaveBalance()
  * COMMENTS:
- * $Id$     
+ * $Id: RadiationBalance.c,v 1.4 2003/07/01 21:26:21 olivier Exp $     
  */
 
 #include <math.h>
@@ -138,7 +138,7 @@ void RadiationBalance(int HeatFluxOption, int CanopyRadAttOption,
       Taud = VType->Taud;
       if (Rs > 0.0) {
 	Tau = Taub * Rsb / Rs + Taud * Rsd / Rs;
-	Tau = (float) pow((double) Tau, VType->Scat);
+	Tau = (float) pow((double) Tau, (double)(VType->Scat));
 	/* VType->Scat can be specified as a scattering paramter 
 	   or DHSVM will set it to 0.8 if not specified */
 	Tau = Tau / (1 - Albedo[0] * Albedo[1]);

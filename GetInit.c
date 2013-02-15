@@ -41,11 +41,13 @@
  *               CreateNode()
  *               DeleteList()
  *               CountLines()
- * COMMENTS: for compilation it is necessary to link to ReportError.c, 
- *           FileIO.c, and SizeOfNt.c 
- * $Id$     
- */
 
+ * Modification:
+ * $Id: GetInit.c, v 4.0  2012/10/31   Ning Exp $
+ * Comments: 
+ *
+ */
+#define _CRT_SECURE_NO_DEPRECATE
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -72,7 +74,7 @@ unsigned long GetInitString(const char *Section, const char *Key,
 
   return (unsigned long) strlen(ReturnBuffer);
 }
-
+/*#####################################################################################*/
 long GetInitLong(const char *Section, const char *Key, long Default,
 		 LISTPTR Input)
 {
@@ -96,7 +98,7 @@ long GetInitLong(const char *Section, const char *Key, long Default,
 
   return Entry;
 }
-
+/*#####################################################################################*/
 double GetInitDouble(const char *Section, const char *Key, double Default,
 		     LISTPTR Input)
 {
@@ -120,7 +122,10 @@ double GetInitDouble(const char *Section, const char *Key, double Default,
 
   return (Entry);
 }
-
+/*#####################################################################################
+ This function is used to find the matching key word in the input file for the "key" 
+ specified in the fucntion: InitVegTable( )
+ #####################################################################################*/
 unsigned char LocateKey(const char *Key, char *Entry, LISTPTR Input)
 {
   unsigned char Found = FALSE;
@@ -140,15 +145,18 @@ unsigned char LocateKey(const char *Key, char *Entry, LISTPTR Input)
       if (IsKeyEntryPair(Buffer)) {
 	StrPtr = strchr(Buffer, SEPARATOR);
 	*StrPtr = '\0';
-	strcpy(KeyBuffer, Buffer);
+	/* strcpy(KeyBuffer, Buffer); */
+	memmove(KeyBuffer, Buffer, strlen(Buffer)+1);
 	++StrPtr;
-	strcpy(EntryBuffer, StrPtr);
+    /* strcpy(EntryBuffer, StrPtr); */
+	memmove(EntryBuffer, StrPtr, strlen(StrPtr)+1);
 	Strip(KeyBuffer);
 	MakeKeyString(KeyBuffer);
 	if (strcmp(Key, KeyBuffer) == 0) {
 	  Found = TRUE;
 	  Strip(EntryBuffer);
-	  strcpy(Entry, EntryBuffer);
+	  /* strcpy(Entry, EntryBuffer); */
+	  memmove(Entry, EntryBuffer, strlen(EntryBuffer)+1);
 	  break;
 	}
       }
@@ -163,7 +171,7 @@ unsigned char LocateKey(const char *Key, char *Entry, LISTPTR Input)
 
   return Found;
 }
-
+/*#####################################################################################*/
 LISTPTR LocateSection(const char *Section, LISTPTR Input)
 {
   char Buffer[BUFSIZE + 1];
@@ -177,7 +185,8 @@ LISTPTR LocateSection(const char *Section, LISTPTR Input)
 	StartPtr = &Buffer[1];
 	EndPtr = strchr(Buffer, CLOSESECTION);
 	*EndPtr = '\0';
-	strcpy(Buffer, StartPtr);
+	/* strcpy(Buffer, StartPtr);*/
+	memmove(Buffer, StartPtr, strlen(StartPtr)+1);
 	Strip(Buffer);
 	MakeKeyString(Buffer);
 	if (strcmp(Section, Buffer) == 0) {
@@ -191,7 +200,7 @@ LISTPTR LocateSection(const char *Section, LISTPTR Input)
 
   return Input;
 }
-
+/*#####################################################################################*/
 unsigned char IsKeyEntryPair(char *Buffer)
 {
   char *StrSeparator = NULL;
@@ -202,7 +211,7 @@ unsigned char IsKeyEntryPair(char *Buffer)
 
   return TRUE;
 }
-
+/*#####################################################################################*/
 unsigned char IsSection(char *Buffer)
 {
   char *StrEndSection = NULL;
@@ -222,19 +231,18 @@ unsigned char IsSection(char *Buffer)
 
   return TRUE;
 }
-
+/*#####################################################################################*/
 void Strip(char *Buffer)
 {
   char *StrEnd = NULL;
   char *StrStart = Buffer;
 
   /* remove leading whitespace */
-
-  while (*StrStart != '\0' && isspace((int) *StrStart))
+  while (*StrStart != '\0' && isspace((int) *StrStart)) 
     ++StrStart;
 
+  
   /* remove comment */
-
   StrEnd = strchr(Buffer, OPENCOMMENT);
   if (StrEnd != NULL)
     *StrEnd = '\0';
@@ -247,32 +255,41 @@ void Strip(char *Buffer)
     *StrEnd = '\0';
     --StrEnd;
   }
-
-  strcpy(Buffer, StrStart);
+  /* strcpy(Buffer, StrStart); */
+  /* commented out by Ning b/c source and destination overlap */
+  memmove(Buffer, StrStart, strlen(StrStart)+1);
 }
-
+/*#####################################################################################*/
 void MakeKeyString(char *Buffer)
 {
   char Str[BUFSIZE + 1];
   char *PtrStr = Str;
   char *PtrBuffer = Buffer;
 
-  /* Convert the Buffer to uppercase and strip multiple spaces */
+  /* toupper( ) converts the Buffer to uppercase and strip multiple spaces */
+
   while (*PtrBuffer != '\0') {
-    *PtrStr = (char) toupper(*PtrBuffer);
-    if (isspace((int) *PtrBuffer)) {
-      while (isspace((int) *PtrBuffer))
-	PtrBuffer++;
-    }
-    else
-      PtrBuffer++;
-    PtrStr++;
+	    
+	    if (*PtrBuffer == '\t') { //ignore the tab space 
+			PtrBuffer++;
+		}
+		else {
+			*PtrStr = (char) toupper(*PtrBuffer); 
+			if (isspace((int) *PtrBuffer)) {
+				while (isspace((int) *PtrBuffer))
+					PtrBuffer++;
+			}
+			else {
+				*PtrStr = (char) toupper(*PtrBuffer); 
+				PtrBuffer++;}
+			PtrStr++;
+		}
+
+	}
+	*PtrStr = '\0';
+	strcpy(Buffer, Str);
   }
-  *PtrStr = '\0';
-
-  strcpy(Buffer, Str);
-}
-
+/*#####################################################################################*/
 int CopyDouble(double *Value, char *Str, const int NValues)
 {
   char *EndPtr = NULL;
@@ -290,7 +307,7 @@ int CopyDouble(double *Value, char *Str, const int NValues)
 
   return TRUE;
 }
-
+/*#####################################################################################*/
 int CopyFloat(float *Value, char *Str, const int NValues)
 {
   char *EndPtr = NULL;
@@ -308,7 +325,7 @@ int CopyFloat(float *Value, char *Str, const int NValues)
 
   return TRUE;
 }
-
+/*#####################################################################################*/
 int CopyInt(int *Value, char *Str, const int NValues)
 {
   char *EndPtr = NULL;
@@ -326,7 +343,7 @@ int CopyInt(int *Value, char *Str, const int NValues)
 
   return TRUE;
 }
-
+/*#####################################################################################*/
 int CopyLong(long *Value, char *Str, const int NValues)
 {
   char *EndPtr = NULL;
@@ -344,7 +361,7 @@ int CopyLong(long *Value, char *Str, const int NValues)
 
   return TRUE;
 }
-
+/*#####################################################################################*/
 int CopyShort(short *Value, char *Str, const int NValues)
 {
   char *EndPtr = NULL;
@@ -362,7 +379,7 @@ int CopyShort(short *Value, char *Str, const int NValues)
 
   return TRUE;
 }
-
+/*#####################################################################################*/
 int CopyUChar(unsigned char *Value, char *Str, const int NValues)
 {
   char *EndPtr = NULL;
@@ -380,7 +397,7 @@ int CopyUChar(unsigned char *Value, char *Str, const int NValues)
 
   return TRUE;
 }
-
+/*#####################################################################################*/
 int IsEmptyStr(char *Str)
 {
   if (Str == NULL)
@@ -389,15 +406,15 @@ int IsEmptyStr(char *Str)
     return TRUE;
   return FALSE;
 }
-
+/*#####################################################################################*/
 void ReadInitFile(char *TemplateFileName, LISTPTR * Input)
 {
-  FILE *InFile = NULL;		/* File with input information */
-  char Buffer[BUFSIZE + 1];	/* Tempora */
-  int i;			/* counter */
-  int NLines;			/* Number of lines in the input file */
-  LISTPTR Current = NULL;	/* pointer to current node in list */
-  LISTPTR Head = NULL;		/* pointer to the start of the list */
+  FILE *InFile = NULL;			/* File with input information */
+  char Buffer[BUFSIZE + 1];		/* Tempora */
+  int i;						/* counter */
+  int NLines;					/* Number of lines in the input file */
+  LISTPTR Current = NULL;		/* pointer to current node in list */
+  LISTPTR Head = NULL;			/* pointer to the start of the list */
 
   OpenFile(&InFile, (char *) TemplateFileName, "r", FALSE);
 
@@ -409,23 +426,23 @@ void ReadInitFile(char *TemplateFileName, LISTPTR * Input)
     Strip(Buffer);
     if (IsSection(Buffer) || IsKeyEntryPair(Buffer)) {
       if (Head == NULL) {
-	Head = CreateNode();
-	Current = Head;
-	*Input = Head;
-      }
-      else {
-	Current->Next = CreateNode();
-	Current = Current->Next;
-      }
-      strncpy(Current->Str, Buffer, BUFSIZE);
-    }
+		  Head = CreateNode();
+		  Current = Head;
+		  *Input = Head;
+	  }
+	  else {
+		  Current->Next = CreateNode();
+		  Current = Current->Next;
+	  }
+	  strncpy(Current->Str, Buffer, BUFSIZE);
+	}
   }
 
   fclose(InFile);
 
   return;
 }
-
+/*#####################################################################################*/
 LISTPTR CreateNode(void)
 {
   LISTPTR NewNode = NULL;
@@ -437,7 +454,7 @@ LISTPTR CreateNode(void)
 
   return NewNode;
 }
-
+/*#####################################################################################*/
 void DeleteList(LISTPTR Head)
 {
   LISTPTR Current = NULL;
@@ -451,7 +468,7 @@ void DeleteList(LISTPTR Head)
 
   return;
 }
-
+/*#####################################################################################*/
 int CountLines(FILE * InFile)
 {
   int NLines = 0;
@@ -464,3 +481,4 @@ int CountLines(FILE * InFile)
 
   return NLines;
 }
+/*#####################################################################################*/

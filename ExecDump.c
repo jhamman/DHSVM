@@ -13,7 +13,7 @@
  *               DumpPix()
  *               DumpPixSed()
  * COMMENTS:
- * $Id$     
+ * $Id: ExecDump.c,v 1.18 2006/10/12 23:51:02 nathalie Exp $     
  */
 
 #include <stdio.h>
@@ -63,10 +63,8 @@ void ExecDump(MAPSIZE * Map, DATE * Current, DATE * Start, OPTIONSTRUCT * Option
           Total->SedimentOverroadInflow, &(Total->Fine) );
 
   if (Options->Extent != POINT) {
-
     /* check whether the model state needs to be dumped at this timestep, and
        dump state if needed */
-
     if (Dump->NStates < 0) {
       StoreModelState(Dump->Path, Current, Map, Options, TopoMap, PrecipMap,
 		      SnowMap, MetMap, RadMap, VegMap, Veg, SoilMap, Soil,
@@ -84,11 +82,10 @@ void ExecDump(MAPSIZE * Map, DATE * Current, DATE * Start, OPTIONSTRUCT * Option
 	  if (Options->HasNetwork)
 	    StoreChannelState(Dump->Path, Current, ChannelData->streams);
 	}
-      }
-    }
+	  }
+	}
 
     /* check which pixels need to be dumped, and dump if needed */
-
     for (i = 0; i < Dump->NPix; i++) {
       y = Dump->Pix[i].Loc.N;
       x = Dump->Pix[i].Loc.E;
@@ -159,8 +156,7 @@ void ExecDump(MAPSIZE * Map, DATE * Current, DATE * Start, OPTIONSTRUCT * Option
       fprintf(Dump->Pix[i].OutFile.FilePtr, "\n");
     }
 
-    /* check which maps need to be dumped at this timestep, and dump maps 
-       if needed */
+    /* check which maps need to be dumped at this timestep, and dump maps if needed */
 
     for (i = 0; i < Dump->NMaps; i++) {
       for (j = 0; j < Dump->DMap[i].N; j++) {
@@ -237,13 +233,7 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
     if (!(Array = calloc(numPoints, SizeOfNumberType(NC_INT))))
       ReportError((char *) Routine, 1);
     break;
-    /* 8 bit integer not yet implemented in NetCDF 3.4, but anticipated in
-       future versions */
-    /*   case NC_LONG: */
-    /*     if (!(Array = calloc(numPoints, SizeOfNumberType(NC_LONG))))
-     */
-    /*       ReportError((char *) Routine, 1); */
-    /*     break; */
+
   case NC_FLOAT:
     if (!(Array = calloc(numPoints, SizeOfNumberType(NC_FLOAT))))
       ReportError((char *) Routine, 1);
@@ -1502,55 +1492,58 @@ void DumpMap(MAPSIZE * Map, DATE * Current, MAPDUMP * DMap, TOPOPIX ** TopoMap,
 /*****************************************************************************
   DumpPix()
 *****************************************************************************/
+  /*DumpPix(Current, IsEqualTime(Current, Start), &(Dump->Aggregate),
+	  &(Total->Evap),&(Total->Precip), &(Total->RadClass), &(Total->Snow),
+	  &(Total->Soil), Soil->MaxLayers, Veg->MaxLayers, Options);*/
+
 void DumpPix(DATE * Current, int first, FILES * OutFile, EVAPPIX * Evap,
              PRECIPPIX * Precip, RADCLASSPIX * Rad, SNOWPIX * Snow,
-	     SOILPIX * Soil, int NSoil, int NVeg, OPTIONSTRUCT *Options)
+	         SOILPIX * Soil, int NSoil, int NVeg, OPTIONSTRUCT *Options)
 {
-  int i;			/* counter */
-  int j;			/* counter */
+  int i, j;			/* counter */
 
   if (first == 1) {
+	  
+	  // Main Aggregate Values File
+	  fprintf(OutFile->FilePtr, "         Date        ");
+	  fprintf(OutFile->FilePtr, "HasSnow LastSnow    Swq       Melt   ");
+	  fprintf(OutFile->FilePtr, "SurfWater TSurf ColdContent ");
+	  fprintf(OutFile->FilePtr, " TotEvap  "); /*total evapotranspiration*/
+	  for (i = 0; i < NVeg + 1; i++)
+		  fprintf(OutFile->FilePtr, "EPot%d ", i);
+	  for (i = 0; i < NVeg + 1; i++)
+		  fprintf(OutFile->FilePtr, "EAct%d ", i);
+	  for (i = 0; i < NVeg; i++)
+		  fprintf(OutFile->FilePtr, "EInt%d ", i);
+	  for (i = 0; i < NVeg; i++)
+		  for (j = 0; j < NSoil; j++)
+			  fprintf(OutFile->FilePtr, "ESoil%d%d ", i, j);
+	  fprintf(OutFile->FilePtr, "   ESoil   ");
 
-    // Main Aggregate Values File
-    fprintf(OutFile->FilePtr, "Date ");
+	  fprintf(OutFile->FilePtr, "  Precip(m) ");
+	  fprintf(OutFile->FilePtr, " Snow(m) ");
+	  
+	  for (i = 0; i < NVeg; i++)
+		  fprintf(OutFile->FilePtr, "IntRain%d ", i);
+	  for (i = 0; i < NVeg; i++)
+		  fprintf(OutFile->FilePtr, "IntSnow%d ", i);
 
-    fprintf(OutFile->FilePtr,
-	    "HasSnow OverSnow LastSnow Swq Melt PackWater TPack ");
-    fprintf(OutFile->FilePtr, "SurfWater TSurf ColdContent ");
-    fprintf(OutFile->FilePtr, "EvapTot ");
-    for (i = 0; i < NVeg + 1; i++)
-      fprintf(OutFile->FilePtr, "EPot%d ", i);
-    for (i = 0; i < NVeg + 1; i++)
-      fprintf(OutFile->FilePtr, "EAct%d ", i);
-    for (i = 0; i < NVeg; i++)
-      fprintf(OutFile->FilePtr, "EInt%d ", i);
-    for (i = 0; i < NVeg; i++)
-      for (j = 0; j < NSoil; j++)
-	fprintf(OutFile->FilePtr, "ESoil%d%d ", i, j);
-    fprintf(OutFile->FilePtr, "ESoil ");
+	  for (i = 0; i < NSoil; i++)
+		  fprintf(OutFile->FilePtr, "  SoilMoist%d", (i+1));
+	  for (i = 0; i < NSoil; i++)
+		  fprintf(OutFile->FilePtr, "     Perc%d   ", (i+1));
+	  fprintf(OutFile->FilePtr, "  TableDepth   SatFlow   Runoff    IMP-DS    IExcess  ");
+	  fprintf(OutFile->FilePtr, "SoilTemp Qnet Qs Qe Qg Qst Ra"); 
 
-    fprintf(OutFile->FilePtr, "Precip ");
-    for (i = 0; i < NVeg; i++)
-      fprintf(OutFile->FilePtr, "IntRain%d ", i);
-    for (i = 0; i < NVeg; i++)
-      fprintf(OutFile->FilePtr, "IntSnow%d ", i);
-
-    fprintf(OutFile->FilePtr, "RadBeam RadDiff ");
-
-    for (i = 0; i < NSoil; i++)
-      fprintf(OutFile->FilePtr, "SoilMoist%d ", i);
-    for (i = 0; i < NSoil; i++)
-      fprintf(OutFile->FilePtr, "Perc%d ", i);
-    fprintf(OutFile->FilePtr, "TableDepth SatFlow Runoff ");
-    fprintf(OutFile->FilePtr, "SoilTemp Qnet Qs Qe Qg Qst Ra IExcess"); 
-    if (Options->Infiltration == DYNAMIC)
-      fprintf(OutFile->FilePtr, " InfiltAcc"); 
-    fprintf(OutFile->FilePtr, "\n"); 
+	  if (Options->Infiltration == DYNAMIC)
+		  fprintf(OutFile->FilePtr, " InfiltAcc"); 
+	  
+	  fprintf(OutFile->FilePtr, " RadBeam    RadDiff  ");
+	  fprintf(OutFile->FilePtr, "\n"); 
 
   }
 
   /* All variables are dumped in the case of a pixel dump */
-
   // Main Aggregate Values File
 
   // Date
@@ -1560,41 +1553,45 @@ void DumpPix(DATE * Current, int first, FILES * OutFile, EVAPPIX * Evap,
   fprintf(OutFile->FilePtr, " %1d %1d %4d %g %g %g %g",
 	  Snow->HasSnow, Snow->SnowCoverOver, Snow->LastSnow, Snow->Swq,
 	  Snow->Melt, Snow->PackWater, Snow->TPack);
-  fprintf(OutFile->FilePtr, " %g %g %g", Snow->SurfWater, Snow->TSurf,
-	  Snow->ColdContent);
-  fprintf(OutFile->FilePtr, " %g", Evap->ETot);
+    
+  fprintf(OutFile->FilePtr, " %7d %5d   %9.3E %9.3E",
+		Snow->HasSnow, Snow->LastSnow, Snow->Swq, Snow->Melt);
+  fprintf(OutFile->FilePtr, " %9.3E", Evap->ETot);
   for (i = 0; i < NVeg + 1; i++)
-    fprintf(OutFile->FilePtr, " %g", Evap->EPot[i]);
+    fprintf(OutFile->FilePtr, " %g", Evap->EPot[i]);           /* Potential transpiration */
   for (i = 0; i < NVeg + 1; i++)
-    fprintf(OutFile->FilePtr, " %g", Evap->EAct[i]);
+    fprintf(OutFile->FilePtr, " %g", Evap->EAct[i]);           /* Actual transpiration */
   for (i = 0; i < NVeg; i++)
     fprintf(OutFile->FilePtr, " %g", Evap->EInt[i]);
   for (i = 0; i < NVeg; i++)
     for (j = 0; j < NSoil; j++)
-      fprintf(OutFile->FilePtr, " %g", Evap->ESoil[i][j]);
-  fprintf(OutFile->FilePtr, " %g", Evap->EvapSoil);
+      fprintf(OutFile->FilePtr, " %g", Evap->ESoil[i][j]);    /*transpiration from each veg layer*/
+  fprintf(OutFile->FilePtr, " %9.3E", Evap->EvapSoil);
 
-  fprintf(OutFile->FilePtr, " %g", Precip->Precip);
+  fprintf(OutFile->FilePtr, " %9.3E", Precip->Precip);
+  fprintf(OutFile->FilePtr, " %9.3E", Precip->SnowFall);
+
   for (i = 0; i < NVeg; i++)
     fprintf(OutFile->FilePtr, " %g", Precip->IntRain[i]);
   for (i = 0; i < NVeg; i++)
     fprintf(OutFile->FilePtr, " %g", Precip->IntSnow[i]);
 
-  fprintf(OutFile->FilePtr, " %g %g", Rad->Beam, Rad->Diffuse);
 
   for (i = 0; i < NSoil; i++)
-    fprintf(OutFile->FilePtr, " %g", Soil->Moist[i]);
+    fprintf(OutFile->FilePtr, " %9.3E ", Soil->Moist[i]);
   for (i = 0; i < NSoil; i++)
-    fprintf(OutFile->FilePtr, " %g", Soil->Perc[i]);
-  fprintf(OutFile->FilePtr, " %g %g %g", Soil->TableDepth,
-	  Soil->SatFlow, Soil->Runoff);
+    fprintf(OutFile->FilePtr, " %9.3E ", Soil->Perc[i]);
+  fprintf(OutFile->FilePtr, " %9.2E %9.2E %9.2E %9.2E %9.2E", Soil->TableDepth,
+	  Soil->SatFlow, Soil->Runoff, Soil->DetentionStorage, Soil->IExcess);
   
-  fprintf(OutFile->FilePtr, " %g %g %g %g %g %g %g %g", 
+  /*fprintf(OutFile->FilePtr, " %g %g %g %g %g %g %g, 
 	  Soil->TSurf, Soil->Qnet, Soil->Qs, Soil->Qe, Soil->Qg, Soil->Qst,
-	  Soil->Ra, Soil->IExcess);
+	  Soil->Ra);*/
 
   if (Options->Infiltration == DYNAMIC)
     fprintf(OutFile->FilePtr, " %g", Soil->InfiltAcc);
+
+  fprintf(OutFile->FilePtr, " %9.3E %9.3E", Rad->Beam, Rad->Diffuse);
 }
 /*****************************************************************************
   DumpPixSed()

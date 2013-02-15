@@ -11,7 +11,9 @@
  * DESCRIP-END.
  * FUNCTIONS:    FinalMassBalance()
  * COMMENTS:
- * $Id$
+ * $Id: FinalMassBalance.c,v 1.18 2004/08/18 01:01:28 colleen Exp $
+ * Modification made on 2013/1/11
+ * $Id: FinalMassBalance.c, v 4.0 Ning Exp $
  */
 
 #include <stdio.h>
@@ -46,59 +48,44 @@ void FinalMassBalance(FILES * Out, AGGREGATED * Total, WATERBALANCE * Mass,
 
   NewWaterStorage = Total->Soil.IExcess + Total->Road.IExcess + 
     Total->CanopyWater + Total->SoilWater +
-    Total->Snow.Swq + Total->Soil.SatFlow;
+    Total->Snow.Swq + Total->Soil.SatFlow + Total->Soil.DetentionStorage;
 
   Output = Mass->CumChannelInt + ( Mass->CumRoadInt  -
-    Mass->CumCulvertReturnFlow )+ Mass->CumET - Mass->CumSnowVaporFlux;
+    Mass->CumCulvertReturnFlow ) + Mass->CumET;
 
-  Input = Mass->CumPrecipIn;
+  Input = Mass->CumPrecipIn + Mass->CumSnowVaporFlux -
+    Mass->CumCulvertReturnFlow;
+
   MassError = (NewWaterStorage - Mass->StartWaterStorage) +
    Output - Input;
 
-/*   fprintf(Out->FilePtr, "\n Final Mass Balance\n"); */
-/*   fprintf(Out->FilePtr, " Precip (mm): %f\n", Mass->CumPrecipIn * 1000.);  */
-/*   fprintf(Out->FilePtr, " ET (mm): %f\n", Mass->CumET * 1000.);  */
-/*   fprintf(Out->FilePtr, " SnowVaporFlux (mm): %f\n", Mass->CumSnowVaporFlux *
-     1000.);  */
-/*   fprintf(Out->FilePtr, " Runoff (mm): %f\n", Total->Runoff * 1000.);  */
-/*   fprintf(Out->FilePtr, " RoadInt (mm): %f\n", Mass->CumRoadInt * 1000.);  */
-/*   fprintf(Out->FilePtr, " ChannelInt (mm): %f\n", Mass->CumChannelInt *
-     1000.);  */
-/*   fprintf(Out->FilePtr, " Mass Error (mm): %f\n", MassError * 1000.);  */
-
-  fprintf(stderr, "\nFinal Mass Balance\n");
-  fprintf(stderr, " \nInflow, %.2f:\n", Input*1000.);
-  fprintf(stderr, " Precip (mm): %f\n", Mass->CumPrecipIn * 1000.);
-  fprintf(stderr, " \nOutflow %.2f:\n", Output*1000.);
-  fprintf(stderr, " ET (mm): %f\n", Mass->CumET * 1000.);
-  fprintf(stderr, " SnowVaporFlux (mm): %f\n", -1.*Mass->CumSnowVaporFlux * 1000.);
-  fprintf(stderr, " CulvertToChannel (mm): %f\n", Mass->CumCulvertToChannel *
-	  1000.);
-  fprintf(stderr, " ChannelInt (mm): %f\n", Mass->CumChannelInt * 1000.);
-  fprintf(stderr, " \nStorage:\n");
-  fprintf(stderr, " Initial Storage (mm): %f\n", Mass->StartWaterStorage * 1000.);
-  fprintf(stderr, " End of Run Storage (mm): %f\n", NewWaterStorage * 1000.);
-  fprintf(stderr, " \tFinal SWQ (mm): %f\n", Total->Snow.Swq * 1000.);
-  fprintf(stderr, " \tFinal Soil Moisture (mm): %f\n", (Total->SoilWater + Total->Soil.SatFlow) * 1000.);
-  fprintf(stderr, " \tFinal Surface (mm): %f\n", (Total->Soil.IExcess + Total->Road.IExcess + 
-						  Total->CanopyWater) * 1000.);
-  fprintf(stderr, " \tFinal Road Surface (mm): %f\n", Total->Road.IExcess *1000.);
-
-
-  fprintf(stderr, " \nOther:\n");
-  fprintf(stderr, " RoadInt (mm): %f\n", Mass->CumRoadInt * 1000.);
-  fprintf(stderr, " CulvertReturnFlow (mm): %f\n", Mass->CumCulvertReturnFlow *
-	  1000.);
-  fprintf(stderr, " Mass Error (mm): %f\n", MassError * 1000.);
-  fprintf(stderr, " Mass added to glacier (mm) %f\n",
-	  Total->Snow.Glacier * 1000.);
-
+  /* Print the runoff final balance results to the screen */
+  fprintf(stderr, "\n  ********************************               Depth");
+  fprintf(stderr, "\n  Runoff Final Mass Balance                        mm"); 
+  fprintf(stderr, "\n  ********************************        ------------"); 
+  fprintf(stderr, "\n  Total Inflow ...................        %12.3f", Input*1000);
+  fprintf(stderr, "\n      Precip/Inflow ..............        %12.3f", Mass->CumPrecipIn*1000); 
+  fprintf(stderr, "\n      SnowVaporFlux ..............        %12.3f", Mass->CumSnowVaporFlux*1000);
+  fprintf(stderr, "\n  Total Outflow ..................        %12.3f", Output*1000);
+  fprintf(stderr, "\n      ET .........................        %12.3f", Mass->CumET*1000);   
+  fprintf(stderr, "\n      ChannelInt .................        %12.3f", Mass->CumChannelInt*1000); 
+  fprintf(stderr, "\n      RoadInt ....................        %12.3f", (Mass->CumRoadInt  -
+                                                                        Mass->CumCulvertReturnFlow) * 1000);
+  fprintf(stderr, "\n  Storage Change .................        %12.3f", (NewWaterStorage - Mass->StartWaterStorage)*1000);
+  fprintf(stderr, "\n      Initial Storage ............        %12.3f", Mass->StartWaterStorage*1000);
+  fprintf(stderr, "\n      Final Storage ..............        %12.3f", NewWaterStorage*1000);
+  fprintf(stderr, "\n          Final SWQ ..............        %12.3f", Total->Snow.Swq*1000);
+  fprintf(stderr, "\n          Final Soil Moisture ....        %12.3f", (Total->SoilWater + Total->Soil.SatFlow)*1000);
+  fprintf(stderr, "\n          Final Surface ..........        %12.3f", (Total->Soil.IExcess  + 
+						                               Total->CanopyWater + Total->Soil.DetentionStorage)*1000);
+  fprintf(stderr, "\n          Final Road Surface .....        %12.3f\n", Total->Road.IExcess*1000);
+  fprintf(stderr, "\n  Mass added to glacier ..........        %12.3f\n", Total->Snow.Glacier*1000);
+  fprintf(stderr, "  ******************************************************");
+  fprintf(stderr, "\n  Mass Error (mm).................        %12.3f", MassError*1000);
+	  	  
   if(Options->Sediment){
-    
-    fprintf(stderr, "\nFinal Sediment Mass Balance\n");
-    
-    if (Options->MassWaste){
-      
+    fprintf(stderr, "\nFinal Sediment Mass Balance\n");   
+    if (Options->MassWaste){     
       MWMMassError = Mass->CumMassWasting - Mass->CumSedimentToChannel - 
 	Mass->CumMassDeposition;
       /* These are totals, not averages */

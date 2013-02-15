@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    MassEnergyBalance()
  * COMMENTS:
- * $Id$     
+ * $Id: MassEnergyBalance.c,v 1.16 2004/08/18 01:01:31 colleen Exp $     
  */
 
 /* #define NO_ET */
@@ -223,7 +223,7 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
     MS_Rainfall = alpha[MS_Index] * pow(RainfallIntensity, beta[MS_Index]);
     
     /* Calculating mediam raindrop diameter after Laws and Parsons (1943) */
-    LocalPrecip->Dm =  0.00124 * pow(RainfallIntensity, 0.182); 
+    LocalPrecip->Dm =  0.00124 * pow((double)RainfallIntensity, 0.182); 
   }
   else {
     MS_Rainfall = 0;
@@ -464,8 +464,7 @@ void MassEnergyBalance(int y, int x, float SineSolarAltitude, float DX,
   
   
   if(InfiltOption == STATIC)
-    MaxInfiltration = (1. - VType->ImpervFrac) * PercArea * 
-      SType->MaxInfiltrationRate * Dt; 
+    MaxInfiltration = (1. - VType->ImpervFrac) * PercArea * SType->MaxInfiltrationRate * Dt; 
   
   else { /* InfiltOption == DYNAMIC 
 	    Dynamic Infiltration Capacity after Parlange and Smith 1978, 

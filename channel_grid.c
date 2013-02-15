@@ -7,7 +7,7 @@
    ------------------------------------------------------------- */
 /* -------------------------------------------------------------
    Created January  5, 1996 by  William A Perkins
-   $Id$
+   $Id: channel_grid.c,v 1.12 2004/10/07 20:51:08 jlanini Exp $
    ------------------------------------------------------------- */
 
 #include <stdlib.h>
@@ -826,7 +826,7 @@ double channel_grid_flowlength(ChannelMapPtr ** map, int col, int row, float flo
     if(flolen < cell->cut_width)
       flolen = cell->cut_width;
     /* If crowned, only one half goes to ditch. */ 
-    if (cell->channel->class->crown == CHAN_CROWNED) 
+    if (cell->channel->class2->crown == CHAN_CROWNED) 
       flolen *= 0.5;
     
     cell = cell->next;
@@ -877,7 +877,7 @@ ChannelClass* channel_grid_class(ChannelMapPtr ** map, int col, int row)
   while (cell != NULL) {
     area = cell->length * cell->cut_width;
     if(area > maxarea){
-      pntr = cell->channel->class;
+      pntr = cell->channel->class2;
       maxarea = area;
     }
     cell = cell->next;

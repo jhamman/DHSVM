@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    
  * COMMENTS:
- * $Id$     
+ * $Id: AggregateRadiation.c,v 1.4 2003/07/01 21:26:09 olivier Exp $     
  */
 
 #include <stdio.h>

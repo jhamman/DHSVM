@@ -10,17 +10,19 @@
  * DESCRIP-END.
  * FUNCTIONS:    EvapoTranspiration()
  * COMMENTS:
- * $Id$     
+ * $Id: EvapoTranspiration.c,v 1.5 2007/03/02 22:02:01 lancuo Exp $     
  */
 
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <float.h>
 #include "settings.h"
 #include "data.h"
 #include "DHSVMerror.h"
 #include "massenergy.h"
 #include "constants.h"
+#include "functions.h"
 
 /*****************************************************************************
   EvapoTranspiration()
@@ -188,3 +190,12 @@ void EvapoTranspiration(int Layer, int Dt, PIXMET * Met, float NetRad,
   /* clean up */
   free(Rc);
 }
+
+/*------------Define Function cbrt: cubic root--------------*/
+/*  double cbrt(double x)  */
+/*  { */
+
+/*   if (fabs(x) < DBL_EPSILON) return 0.0; */
+/*   if (x > 0.0) return pow(x, 1.0/3.0); */
+/*   return -pow(-x, 1.0/3.0); */
+/*  } */

@@ -11,7 +11,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    Desorption()
  * COMMENTS:
- * $Id$     
+ * $Id: Desorption.c,v 1.4 2003/07/01 21:26:13 olivier Exp $     
  */
 
 #include <math.h>

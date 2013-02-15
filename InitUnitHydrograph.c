@@ -11,7 +11,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    InitUnitHydrograph()
  * COMMENTS:
- * $Id$
+ * $Id: InitUnitHydrograph.c,v 1.4 2003/07/01 21:26:18 olivier Exp $
  */
 
 #include <stdio.h>

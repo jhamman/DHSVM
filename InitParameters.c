@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    InitParameters()
  * COMMENTS:
- * $Id$     
+ * $Id: InitParameters.c,v 1.11 2004/08/10 20:07:47 tbohn Exp $     
  */
 
 #include <ctype.h>

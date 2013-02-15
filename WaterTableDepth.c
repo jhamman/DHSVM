@@ -11,7 +11,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    WaterTableDepth()
  * COMMENTS:
- * $Id$     
+ * $Id: WaterTableDepth.c,v 1.4 2003/07/01 21:26:26 olivier Exp $     
  */
 
 #include <assert.h>
@@ -127,26 +127,32 @@ float WaterTableDepth(int NRootLayers, float TotalDepth, float *RootDepth,
        to the downslope, this water will be taken from the deepest soil layer, which
        can cause the deep layer soil moisture to go negative. */
 
-    TotalStorage += DeepLayerDepth * Adjust[NRootLayers] *
-      (DeepPorosity - DeepFCap);
-    ExcessFCap = DeepLayerDepth * Adjust[NRootLayers] *
-      (Moist[NRootLayers] - DeepFCap);
-    if (ExcessFCap < 0.0)
-      ExcessFCap = 0.0;
-    TotalExcessFCap += ExcessFCap;
+    TotalStorage += DeepLayerDepth * Adjust[NRootLayers] * (DeepPorosity - DeepFCap);
+   
+	ExcessFCap = DeepLayerDepth * Adjust[NRootLayers] * (Moist[NRootLayers] - DeepFCap);
+    
+	if (ExcessFCap < 0.0)
+		ExcessFCap = 0.0;
+	TotalExcessFCap += ExcessFCap;
 
     for (i = 0; i < NRootLayers; i++) {
-      TotalStorage += RootDepth[i] * Adjust[i] * (Porosity[i] - FCap[i]);
-      ExcessFCap = RootDepth[i] * Adjust[i] * (Moist[i] - FCap[i]);
-      if (ExcessFCap < 0.0)
-	ExcessFCap = 0.0;
-      TotalExcessFCap += ExcessFCap;
+		TotalStorage += RootDepth[i] * Adjust[i] * (Porosity[i] - FCap[i]);
+		ExcessFCap = RootDepth[i] * Adjust[i] * (Moist[i] - FCap[i]);
+		if (ExcessFCap < 0.0)
+			ExcessFCap = 0.0;
+		TotalExcessFCap += ExcessFCap;
     }
     TableDepth = TotalDepth * (1 - TotalExcessFCap / TotalStorage);
   
     if (TableDepth < 0)
-      TableDepth = -(TotalExcessFCap - TotalStorage);
+		TableDepth = -(TotalExcessFCap - TotalStorage);
   }
+
+  if (TableDepth > TotalDepth)
+	  printf("TableDepth = %.2f, TotalDepth = %.2f\n", TableDepth, TotalDepth);
+  if (TableDepth != TableDepth)
+	  printf("TableDepth = %.2f", TableDepth);
+  
   assert(TableDepth <= TotalDepth);
   return TableDepth;
 }

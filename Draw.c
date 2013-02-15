@@ -11,7 +11,7 @@
  * DESCRIP-END.
  * FUNCTIONS:   
  * COMMENTS:
- * $Id$     
+ * $Id: Draw.c,v 1.12 2006/10/03 22:50:22 nathalie Exp $     
  */
 
 #include <stdio.h>

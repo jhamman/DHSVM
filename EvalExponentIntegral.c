@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:   
  * COMMENTS:
- * $Id$     
+ * $Id: EvalExponentIntegral.c,v 1.5 2006/10/03 22:50:22 nathalie Exp $     
  */
 
 #include <math.h>

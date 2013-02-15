@@ -12,7 +12,7 @@
  * FUNCTIONS:    init_float_table()
  *               float float_lookup(float x, FLOATTABLE *table)
  * COMMENTS:
- * $Id$     
+ * $Id: LookupTable.c,v 1.4 2003/07/01 21:26:19 olivier Exp $     
  */
 
 #include <stdio.h>

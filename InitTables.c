@@ -13,7 +13,7 @@
  *               InitVegTable() 
  *               InitSnowTable()
  * COMMENTS:
- * $Id$     
+ * $Id: InitTables.c,v 1.8 2004/03/11 22:25:04 colleen Exp $     
  */
 
 #include <ctype.h>
@@ -278,6 +278,8 @@ int InitVegTable(VEGTABLE ** VType, LISTPTR Input, OPTIONSTRUCT * Options,
     "MASS RELEASE DRIP RATIO",
     "SNOW INTERCEPTION EFF",
     "IMPERVIOUS FRACTION",
+	"DETENTION FRACTION",
+    "DETENTION DECAY",
     "HEIGHT",
     "MAXIMUM RESISTANCE",
     "MINIMUM RESISTANCE",
@@ -365,8 +367,14 @@ int InitVegTable(VEGTABLE ** VType, LISTPTR Input, OPTIONSTRUCT * Options,
       ReportError(KeyName[number_of_root_zones], 51);
 
     if (!CopyFloat(&((*VType)[i].ImpervFrac), VarStr[imperv_frac], 1))
-      ReportError(KeyName[imperv_frac], 51);
-    impervious += (*VType)[i].ImpervFrac;
+		ReportError(KeyName[imperv_frac], 51);
+	impervious += (*VType)[i].ImpervFrac;
+
+	 if (!CopyFloat(&((*VType)[i].DetentionFrac), VarStr[detention_frac], 1))
+		 ReportError(KeyName[detention_frac], 51);
+
+    if (!CopyFloat(&((*VType)[i].DetentionDecay), VarStr[detention_decay], 1))
+		ReportError(KeyName[detention_decay], 51);
 
     /* allocate memory for the vegetation layers */
 
@@ -443,48 +451,42 @@ int InitVegTable(VEGTABLE ** VType, LISTPTR Input, OPTIONSTRUCT * Options,
     /* allocation of zero memory is not supported on some
        compilers */
     if ((*VType)[i].OverStory == TRUE) {
-
-      if (!CopyFloat(&((*VType)[i].Fract[0]), VarStr[fraction], 1))
-	ReportError(KeyName[fraction], 51);
-      
-      if (Options->CanopyRadAtt == VARIABLE) {
-	if (!CopyFloat(&((*VType)[i].HemiFract[0]), VarStr[hemifraction], 1))
-	  ReportError(KeyName[hemifraction], 51);
-
-	if (!CopyFloat(&((*VType)[i].ClumpingFactor),
-		       VarStr[clumping_factor], 1))
-	  ReportError(KeyName[clumping_factor], 51);
-
-	if (!CopyFloat(&((*VType)[i].LeafAngleA), VarStr[leaf_angle_a], 1))
-	  ReportError(KeyName[leaf_angle_a], 51);
-
-	if (!CopyFloat(&((*VType)[i].LeafAngleB), VarStr[leaf_angle_b], 1))
-	  ReportError(KeyName[leaf_angle_b], 51);
-
-	if (!CopyFloat(&((*VType)[i].Scat), VarStr[scat], 1))
-	  ReportError(KeyName[scat], 51);
-	(*VType)[i].Atten = NOT_APPLICABLE;
-      }
-      else if (Options->CanopyRadAtt == FIXED) {
-	if (!CopyFloat(&((*VType)[i].Atten), VarStr[radiation_att], 1))
-	  ReportError(KeyName[radiation_att], 51);
-	(*VType)[i].ClumpingFactor = NOT_APPLICABLE;
-	(*VType)[i].Scat = NOT_APPLICABLE;
-	(*VType)[i].LeafAngleA = NOT_APPLICABLE;
-	(*VType)[i].LeafAngleB = NOT_APPLICABLE;
-      }
-
-      if (!CopyFloat(&((*VType)[i].Trunk), VarStr[trunk_space], 1))
-	ReportError(KeyName[trunk_space], 51);
-
-      if (!CopyFloat(&((*VType)[i].Cn), VarStr[aerodynamic_att], 1))
-	ReportError(KeyName[aerodynamic_att], 51);
+		if (!CopyFloat(&((*VType)[i].Fract[0]), VarStr[fraction], 1))
+			ReportError(KeyName[fraction], 51);
+		
+		if (Options->CanopyRadAtt == VARIABLE) {
+			if (!CopyFloat(&((*VType)[i].HemiFract[0]), VarStr[hemifraction], 1))
+				ReportError(KeyName[hemifraction], 51);
+			if (!CopyFloat(&((*VType)[i].ClumpingFactor),VarStr[clumping_factor], 1))
+			   ReportError(KeyName[clumping_factor], 51);
+			if (!CopyFloat(&((*VType)[i].LeafAngleA), VarStr[leaf_angle_a], 1))
+				ReportError(KeyName[leaf_angle_a], 51);
+			if (!CopyFloat(&((*VType)[i].LeafAngleB), VarStr[leaf_angle_b], 1))
+				ReportError(KeyName[leaf_angle_b], 51);
+			if (!CopyFloat(&((*VType)[i].Scat), VarStr[scat], 1))
+				ReportError(KeyName[scat], 51);
+			(*VType)[i].Atten = NOT_APPLICABLE;
+		}
+		else if (Options->CanopyRadAtt == FIXED) {
+			if (!CopyFloat(&((*VType)[i].Atten), VarStr[radiation_att], 1))
+				ReportError(KeyName[radiation_att], 51);
+			(*VType)[i].ClumpingFactor = NOT_APPLICABLE;
+			(*VType)[i].Scat = NOT_APPLICABLE;
+			(*VType)[i].LeafAngleA = NOT_APPLICABLE;
+			(*VType)[i].LeafAngleB = NOT_APPLICABLE;
+		}
+		
+		if (!CopyFloat(&((*VType)[i].Trunk), VarStr[trunk_space], 1))
+			ReportError(KeyName[trunk_space], 51);
+		
+		if (!CopyFloat(&((*VType)[i].Cn), VarStr[aerodynamic_att], 1))
+			ReportError(KeyName[aerodynamic_att], 51);
 
       if (!CopyFloat(&((*VType)[i].MaxSnowInt), VarStr[snow_int_cap], 1))
-	ReportError(KeyName[snow_int_cap], 51);
+		  ReportError(KeyName[snow_int_cap], 51);
 
       if (!CopyFloat(&((*VType)[i].MDRatio), VarStr[mass_drip_ratio], 1))
-	ReportError(KeyName[mass_drip_ratio], 51);
+		  ReportError(KeyName[mass_drip_ratio], 51);
 
       if (!CopyFloat(&((*VType)[i].SnowIntEff), VarStr[snow_int_eff], 1))
 	ReportError(KeyName[snow_int_eff], 51);

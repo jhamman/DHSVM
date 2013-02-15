@@ -10,7 +10,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    
  * COMMENTS:
- * $Id$     
+ * $Id: massenergy.h,v 1.5 2003/11/12 20:01:53 colleen Exp $     
  */
 
 #ifndef MASSENERGY_H

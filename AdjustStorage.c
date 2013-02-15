@@ -12,7 +12,7 @@
  * DESCRIP-END.
  * FUNCTIONS:    AdjustStorage()
  * COMMENTS:
- * $Id$     
+ * $Id: AdjustStorage.c,v 1.4 2003/07/01 21:26:08 olivier Exp $     
  */
 
 #include <stdio.h>
