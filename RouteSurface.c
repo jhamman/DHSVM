@@ -111,44 +111,44 @@ void RouteSurface(MAPSIZE * Map, TIMESTRUCT * Time, TOPOPIX ** TopoMap,
 	  }
 	/* Option->Routing = false when routing = conventional */
 	if(!Options->Routing) {
-		for (y = 0; y < Map->NY; y++) {
-			for (x = 0; x < Map->NX; x++) {
-				if (INBASIN(TopoMap[y][x].Mask)) {
-					SoilMap[y][x].Runoff = SoilMap[y][x].IExcess; 
-					SoilMap[y][x].IExcess = 0;
-					SoilMap[y][x].DetentionIn = 0;
-		        }
-			 }
+	   for (y = 0; y < Map->NY; y++) {
+		for (x = 0; x < Map->NX; x++) {
+		     if (INBASIN(TopoMap[y][x].Mask)) {
+			SoilMap[y][x].Runoff = SoilMap[y][x].IExcess; 
+			SoilMap[y][x].IExcess = 0;
+			SoilMap[y][x].DetentionIn = 0;
+		     }
+		}
 	   } 
 	   for (y = 0; y < Map->NY; y++) {
 	     for (x = 0; x < Map->NX; x++) {
 		if (INBASIN(TopoMap[y][x].Mask)) {
 		   if (!channel_grid_has_channel(ChannelData->stream_map, x, y)) {
-			if (VType[VegMap[y][x].Veg - 1].ImpervFrac > 0.0) {
-				/* Calculate the outflow from impervious portion of urban cell straight to nearest channel cell */		
-				SoilMap[TopoMap[y][x].drains_y][TopoMap[y][x].drains_x].IExcess += 
-					(1 - VType[VegMap[y][x].Veg - 1].DetentionFrac) * 
-					VType[VegMap[y][x].Veg - 1].ImpervFrac * SoilMap[y][x].Runoff;
-				/* Retained water in detention storage */
-				SoilMap[y][x].DetentionIn = VType[VegMap[y][x].Veg - 1].DetentionFrac * 
-					VType[VegMap[y][x].Veg - 1].ImpervFrac * SoilMap[y][x].Runoff;		
-				/* Retained water in Detention storage routed to channel */   
-				SoilMap[y][x].DetentionStorage += SoilMap[y][x].DetentionIn;
-				SoilMap[y][x].DetentionOut = SoilMap[y][x].DetentionStorage * VType[VegMap[y][x].Veg - 1].DetentionDecay;
-				SoilMap[TopoMap[y][x].drains_y][TopoMap[y][x].drains_x].IExcess += SoilMap[y][x].DetentionOut;
-				SoilMap[y][x].DetentionStorage -= SoilMap[y][x].DetentionOut;
-			        if (SoilMap[y][x].DetentionStorage < 0.0) 
-					SoilMap[y][x].DetentionStorage = 0.0;
-					/* Route the runoff from pervious portion of urban cell to the neighboring cell */       
-				        for (n = 0; n < NDIRS; n++) {
-						int xn = x + xdirection[n];
-						int yn = y + ydirection[n];
-						if (valid_cell(Map, xn, yn)) {
-							SoilMap[yn][xn].IExcess += (1 - VType[VegMap[y][x].Veg - 1].ImpervFrac) * SoilMap[y][x].Runoff 
-									*((float) TopoMap[y][x].Dir[n] /(float) TopoMap[y][x].TotalDir);
-						}
-					}
+		      if (VType[VegMap[y][x].Veg - 1].ImpervFrac > 0.0) {
+			  /* Calculate the outflow from impervious portion of urban cell straight to nearest channel cell */		
+			  SoilMap[TopoMap[y][x].drains_y][TopoMap[y][x].drains_x].IExcess += 
+				(1 - VType[VegMap[y][x].Veg - 1].DetentionFrac) * 
+				VType[VegMap[y][x].Veg - 1].ImpervFrac * SoilMap[y][x].Runoff;
+			   /* Retained water in detention storage */
+			   SoilMap[y][x].DetentionIn = VType[VegMap[y][x].Veg - 1].DetentionFrac * 
+				VType[VegMap[y][x].Veg - 1].ImpervFrac * SoilMap[y][x].Runoff;		
+			   /* Retained water in Detention storage routed to channel */   
+			   SoilMap[y][x].DetentionStorage += SoilMap[y][x].DetentionIn;
+			   SoilMap[y][x].DetentionOut = SoilMap[y][x].DetentionStorage * VType[VegMap[y][x].Veg - 1].DetentionDecay;
+			   SoilMap[TopoMap[y][x].drains_y][TopoMap[y][x].drains_x].IExcess += SoilMap[y][x].DetentionOut;
+			   SoilMap[y][x].DetentionStorage -= SoilMap[y][x].DetentionOut;
+			   if (SoilMap[y][x].DetentionStorage < 0.0) 
+				SoilMap[y][x].DetentionStorage = 0.0;
+			   /* Route the runoff from pervious portion of urban cell to the neighboring cell */       
+		           for (n = 0; n < NDIRS; n++) {
+				int xn = x + xdirection[n];
+				int yn = y + ydirection[n];
+				if (valid_cell(Map, xn, yn)) {
+					SoilMap[yn][xn].IExcess += (1 - VType[VegMap[y][x].Veg - 1].ImpervFrac) * SoilMap[y][x].Runoff 
+						*((float) TopoMap[y][x].Dir[n] /(float) TopoMap[y][x].TotalDir);
 				}
+			    }
+			}
 		else {
 			for (n = 0; n < NDIRS; n++) {
 				int xn = x + xdirection[n];
