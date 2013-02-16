@@ -11,10 +11,10 @@
  * FUNCTIONS:    RouteSurface()
  * Modification: Changes are made to exclude the impervious channel cell (with 
                  a non-zero impervious fraction) from surface routing. In the original
-				 code, some impervious channel cells are routed to themselves causing 
-				 overestimated runoff in those cells (Ning, 2013).
+		 code, some impervious channel cells are routed to themselves causing 
+		 overestimated runoff in those cells (Ning, 2013).
               
- * $Id: RouteSurface.c, v 4.0  2013/1/7   Ning Exp $  
+ * $Id: RouteSurface.c, v 3.0  2013/1/7   Ning Exp $  
  */
 #include <assert.h>
 #include <stdio.h>
